@@ -1,0 +1,503 @@
+---
+// "Marginalia" design system template, shared by the "es" and "en" pages.
+// Static document (only the theme toggle is interactive).
+import Layout from "../layouts/Layout.astro";
+import Terminal from "./Terminal.astro";
+import type { Lang } from "../scripts/store";
+import { pageUrl, altPageUrl } from "../utils/urls";
+import { resolvePersonal } from "../utils/personal";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const copy = {
+  es: {
+    version: "v1.0 · sistema de diseño",
+    nav: ["Principios", "Color", "Tipografía", "Espacio", "Componentes", "Tailwind", "Movimiento"],
+    portfolio: "Portafolio",
+    heroKicker: "Sistema de diseño · Portafolio de ingeniería y datos",
+    heroLead:
+      "Un sistema editorial-técnico: la claridad de una revista científica aplicada a un portafolio de ingeniería. Papel, tinta, un solo acento y datos tratados como figuras.",
+    principles: "§ 01 — Principios",
+    principleItems: [
+      { n: "I.", t: "Rigor antes que decoración", d: "Cada elemento se justifica como en un paper: numerado, citado, medible. Sin ornamento que no informe." },
+      { n: "II.", t: "La tipografía es la interfaz", d: "Serif para ideas, sans para interfaz, mono para datos y código. La jerarquía se construye con escala y reglas, no con cajas." },
+      { n: "III.", t: "Datos como figuras", d: "Métricas, gráficas y código siempre llevan leyenda (Fig., Listado, Tabla). Así sirve igual a ingeniería que a datos." },
+    ],
+    color: "§ 02 — Color",
+    colorSub: "OKLCH · claro / oscuro",
+    colToken: "Token",
+    colLight: "Claro",
+    colDark: "Oscuro",
+    colUse: "Uso",
+    swatchUses: [
+      "Fondo principal, papel.",
+      "Hover de filas, pistas de gráficas, placeholders.",
+      "Texto, reglas de sección, botón primario.",
+      "Texto secundario y metadatos (≥ 4.5:1).",
+      "Reglas finas y bordes de etiquetas.",
+      "Bermellón: énfasis, métricas, estado. Uso escaso.",
+      "Serie secundaria en gráficas de datos.",
+      "Fondo de terminal y bloques de código.",
+      "Prompt y resaltados dentro de la terminal.",
+    ],
+    type: "§ 03 — Tipografía",
+    typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    displayEx: "De punta",
+    displayEm: "a punta",
+    h1Ex: "Trabajo seleccionado",
+    h3Ex: "Motor de recomendaciones",
+    leadEx: "Separamos la ingesta de eventos del cálculo de saldos e introdujimos un libro contable de doble entrada.",
+    uiEx: "Navegación, botones, descripciones cortas y controles.",
+    space: "§ 04 — Espacio y retícula",
+    spaceSub: "base 4 px · máx. 1320 px · margen clamp(20–56)",
+    spaceNote:
+      "Las secciones se separan con una regla de tinta (1 px, --ink) y los elementos internos con reglas finas (--rule). Sin tarjetas ni sombras: la estructura es la línea.",
+    comp: "§ 05 — Componentes",
+    compItems: [
+      "5.1 Acciones — texto con regla, sin cápsulas",
+      "5.2 Conmutadores de edición — texto, activo subrayado en acento",
+      "5.3 Etiquetas y métricas",
+      "5.4 Encabezado de sección",
+      "5.5 Fila de proyecto (hover: --paper-2)",
+      "5.6 Figura con leyenda",
+      "5.7 Tabla de resultados",
+      "5.8 Terminal interactiva — siempre oscura, en ambos temas. Pruébala.",
+    ],
+    seeWork: "Ver trabajo",
+    downloadCv: "Descargar CV",
+    textLink: "Enlace de texto",
+    editionLabel: "Edición",
+    engineering: "Ingeniería",
+    dataLabel: "Datos",
+    darkBadge: "◐ Oscuro",
+    available: "Disponible",
+    toolkitMeta: "Lo que uso a diario",
+    toolkitTitle: "Herramientas",
+    projectTitle: "Predicción de abandono",
+    projectSum: "Modelo de churn con explicaciones por cliente.",
+    figCaption: "Toda imagen lleva número y descripción.",
+    figPlaceholder: "captura / gráfica",
+    metric: "Métrica",
+    before: "Antes",
+    after: "Después",
+    latency: "Latencia p95",
+    tailwind: "§ 07 — Tema para Tailwind",
+    tailwindSub: "v4 (@theme)",
+    tailwindIntro: `Todos los tokens existen como tema de Tailwind. Los colores apuntan a variables que cambian con <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, así que <code class="font-mono text-base text-accent">bg-paper</code> o <code class="font-mono text-base text-accent">text-ink</code> sirven en ambos temas sin escribir <code class="font-mono text-base">dark:</code>. El espaciado usa la escala por defecto de Tailwind (base 4 px).`,
+    tokensTitle: "7.1 Token → clase",
+    setupTitle: "7.2 Instalación (v4)",
+    setupHeadlineA: "Construyo productos",
+    setupHeadlineEm: "de punta a punta",
+    recipesTitle: "7.3 Recetas de componentes",
+    recipeNames: ["Acción primaria", "Acción secundaria", "Etiqueta", "Encabezado de sección", "Título de sección", "Fila de proyecto", "Leyenda de figura", "Terminal", "Entrada animada"],
+    motion: "§ 08 — Movimiento",
+    motionItems: [
+      { k: "reveal", d: "Opacidad 0→1 y desplazamiento 18 px→0 al entrar en pantalla. 900 ms." },
+      { k: "curva", d: "cubic-bezier(.2, .7, .2, 1) — salida suave, sin rebote." },
+      { k: "escalonado", d: "80–100 ms entre elementos del hero: etiqueta → titular → texto → acciones." },
+      { k: "tema", d: "Transición de fondo y tinta en 400 ms al cambiar claro/oscuro." },
+    ],
+    termRole: "Ingeniería · Datos",
+    termBio: "Terminal de muestra del sistema Marginalia.",
+  },
+  en: {
+    version: "v1.0 · design system",
+    nav: ["Principles", "Color", "Typography", "Space", "Components", "Tailwind", "Motion"],
+    portfolio: "Portfolio",
+    heroKicker: "Design system · Engineering and data portfolio",
+    heroLead:
+      "An editorial-technical system: the clarity of a scientific journal applied to an engineering portfolio. Paper, ink, a single accent, and data treated as figures.",
+    principles: "§ 01 — Principles",
+    principleItems: [
+      { n: "I.", t: "Rigor before decoration", d: "Every element is justified like in a paper: numbered, cited, measurable. No ornament that does not inform." },
+      { n: "II.", t: "Typography is the interface", d: "Serif for ideas, sans for interface, mono for data and code. Hierarchy is built with scale and rules, not boxes." },
+      { n: "III.", t: "Data as figures", d: "Metrics, charts and code always carry a caption (Fig., Listing, Table). It serves engineering and data alike." },
+    ],
+    color: "§ 02 — Color",
+    colorSub: "OKLCH · light / dark",
+    colToken: "Token",
+    colLight: "Light",
+    colDark: "Dark",
+    colUse: "Usage",
+    swatchUses: [
+      "Main background, paper.",
+      "Row hover, chart tracks, placeholders.",
+      "Text, section rules, primary button.",
+      "Secondary text and metadata (≥ 4.5:1).",
+      "Hairline rules and tag borders.",
+      "Vermilion: emphasis, metrics, status. Use sparingly.",
+      "Secondary series in data charts.",
+      "Terminal and code block background.",
+      "Prompt and highlights inside the terminal.",
+    ],
+    type: "§ 03 — Typography",
+    typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    displayEx: "Start",
+    displayEm: "to finish",
+    h1Ex: "Selected work",
+    h3Ex: "Recommendation engine",
+    leadEx: "We split event ingestion from balance computation and introduced a double-entry ledger.",
+    uiEx: "Navigation, buttons, short descriptions and controls.",
+    space: "§ 04 — Space and grid",
+    spaceSub: "4px base · max 1320px · clamp(20–56) margins",
+    spaceNote:
+      "Sections are separated by an ink rule (1px, --ink) and inner elements by hairlines (--rule). No cards or shadows: the structure is the line.",
+    comp: "§ 05 — Components",
+    compItems: [
+      "5.1 Actions — text with a rule, no pills",
+      "5.2 Edition switchers — text, active underlined in accent",
+      "5.3 Tags and metrics",
+      "5.4 Section heading",
+      "5.5 Project row (hover: --paper-2)",
+      "5.6 Figure with caption",
+      "5.7 Results table",
+      "5.8 Interactive terminal — always dark, in both themes. Try it.",
+    ],
+    seeWork: "See work",
+    downloadCv: "Download CV",
+    textLink: "Text link",
+    editionLabel: "Edition",
+    engineering: "Engineering",
+    dataLabel: "Data",
+    darkBadge: "◐ Dark",
+    available: "Available",
+    toolkitMeta: "What I use daily",
+    toolkitTitle: "Toolkit",
+    projectTitle: "Churn prediction",
+    projectSum: "Churn model with per-customer explanations.",
+    figCaption: "Every image carries a number and a caption.",
+    figPlaceholder: "screenshot / chart",
+    metric: "Metric",
+    before: "Before",
+    after: "After",
+    latency: "API p95 latency",
+    tailwind: "§ 07 — Tailwind theme",
+    tailwindSub: "v4 (@theme)",
+    tailwindIntro: `Every token exists as a Tailwind theme. Colors point to variables that switch with <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, so <code class="font-mono text-base text-accent">bg-paper</code> or <code class="font-mono text-base text-accent">text-ink</code> work in both themes without writing <code class="font-mono text-base">dark:</code>. Spacing uses the default Tailwind scale (4px base).`,
+    tokensTitle: "7.1 Token → class",
+    setupTitle: "7.2 Setup (v4)",
+    setupHeadlineA: "I build products",
+    setupHeadlineEm: "end to end",
+    recipesTitle: "7.3 Component recipes",
+    recipeNames: ["Primary action", "Secondary action", "Tag", "Section heading", "Section title", "Project row", "Figure caption", "Terminal", "Animated entry"],
+    motion: "§ 08 — Motion",
+    motionItems: [
+      { k: "reveal", d: "Opacity 0→1 and an 18px rise on entering the viewport. 900 ms." },
+      { k: "curve", d: "cubic-bezier(.2, .7, .2, 1) — smooth exit, no bounce." },
+      { k: "stagger", d: "80–100 ms between hero elements: label → headline → text → actions." },
+      { k: "theme", d: "Background and ink transition in 400 ms when switching light/dark." },
+    ],
+    termRole: "Engineering · Data",
+    termBio: "Sample terminal from the Marginalia system.",
+  },
+}[lang];
+
+const swatches = [
+  { token: "--paper", light: "oklch(0.975 0.008 85)", dark: "oklch(0.17 0.008 60)" },
+  { token: "--paper-2", light: "oklch(0.94 0.012 85)", dark: "oklch(0.22 0.01 60)" },
+  { token: "--ink", light: "oklch(0.21 0.012 60)", dark: "oklch(0.93 0.01 85)" },
+  { token: "--ink-2", light: "oklch(0.43 0.012 60)", dark: "oklch(0.72 0.012 85)" },
+  { token: "--rule", light: "oklch(0.21 0.012 60 / 0.16)", dark: "oklch(0.93 0.01 85 / 0.14)" },
+  { token: "--accent", light: "oklch(0.55 0.17 35)", dark: "oklch(0.72 0.14 40)" },
+  { token: "--accent-2", light: "oklch(0.52 0.12 250)", dark: "oklch(0.72 0.1 250)" },
+  { token: "--term-bg", light: "oklch(0.21 0.012 60)", dark: "oklch(0.12 0.006 60)" },
+  { token: "--term-accent", light: "oklch(0.76 0.13 55)", dark: "oklch(0.76 0.13 55)" },
+];
+
+const twTokens = [
+  { t: "--paper / --paper-2", c: "bg-paper · bg-paper-2" },
+  { t: "--ink / --ink-2", c: "text-ink · text-ink-2 · bg-ink" },
+  { t: "--rule", c: "border-rule · divide-rule" },
+  { t: "--accent / --accent-2", c: "text-accent · bg-accent · fill-accent-2" },
+  { t: "--term-*", c: "bg-term · text-term-ink · text-term-dim · text-term-accent" },
+  { t: "serif · sans · mono", c: "font-serif · font-sans · font-mono" },
+  { t: "escala tipográfica · type scale", c: "text-display · text-h1 · text-h2 · text-h3 · text-lead · text-body-serif · text-label" },
+  { t: "peso display 350 · display weight 350", c: "font-display" },
+  { t: "anchos · widths", c: "max-w-page (1320) · max-w-prose (720)" },
+  { t: "radios · sombra · radii · shadow", c: "rounded-pill · rounded-term · shadow-term" },
+  { t: "movimiento · motion", c: "ease-editorial · animate-reveal" },
+];
+
+const twRecipes = [
+  "mg-btn-primary  ≡  inline-flex items-baseline gap-2.5 pb-1.25 border-b-[1.5px] border-accent font-serif italic text-[22px] text-ink hover:text-accent",
+  "mg-btn-secondary  ≡  inline-flex items-baseline gap-2 pb-1.5 border-b border-rule font-mono text-label uppercase text-ink-2 hover:text-ink hover:border-ink",
+  "mg-tag  ≡  font-mono text-[11px] px-2.25 py-1 border border-rule rounded-pill",
+  "mg-section-head  ≡  flex justify-between border-t border-ink pt-3.5 font-mono text-label uppercase",
+  "font-serif font-display text-h1 mt-6 mb-12",
+  "flex flex-wrap items-baseline gap-x-8 gap-y-3.5 py-7.5 border-t border-rule hover:bg-paper-2 transition-colors",
+  "mg-figcaption  ≡  font-serif text-[15px] text-ink-2 mt-3",
+  "bg-term text-term-ink font-mono text-[13px] rounded-term shadow-term",
+  "animate-reveal [animation-delay:80ms]",
+];
+
+const space = [4, 8, 12, 16, 24, 32, 48, 64, 96].map((v, i) => ({ t: "s-" + (i + 1), px: v + "px", w: v * 3 + "px" }));
+const anchors = ["principios", "color", "tipo", "espacio", "componentes", "tailwind", "movimiento"];
+const personal = resolvePersonal(lang);
+
+const termData = {
+  name: personal.name,
+  role: copy.termRole,
+  bio: copy.termBio,
+  projects: [
+    { title: "Plataforma de pagos · Payments platform", year: "2026", metric: "p95 120 ms", stack: ["Go", "PostgreSQL"] },
+    { title: "Predicción de abandono · Churn prediction", year: "2026", metric: "AUC 0.91", stack: ["XGBoost", "SHAP"] },
+  ],
+  stack: [
+    { g: "Frontend", items: ["React", "TypeScript"] },
+    { g: "ML", items: ["PyTorch", "XGBoost"] },
+  ],
+  email: personal.email,
+  links: ["GitHub", "LinkedIn"],
+  profile: "fullstack",
+  theme: "light",
+  lang,
+  langAltUrl: altPageUrl(lang, "system"),
+};
+---
+
+<Layout title={`Marginalia — ${copy.color}`} description={copy.heroLead} lang={lang}>
+  <div class="min-h-screen bg-paper text-ink font-sans antialiased">
+    <header class="sticky top-0 z-30 bg-paper border-b border-ink">
+      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-3 flex flex-wrap items-center justify-between gap-x-7 gap-y-3">
+        <div class="flex items-baseline gap-3.5">
+          <span class="font-serif text-2xl">Marginalia</span>
+          <span class="font-mono text-[11px] text-ink-2">{copy.version}</span>
+        </div>
+        <nav class="flex flex-wrap gap-x-5 gap-y-1 text-sm" aria-label="System">
+          {copy.nav.map((label, i) => (
+            <a href={`#${anchors[i]}`} class="no-underline">{label}</a>
+          ))}
+        </nav>
+        <div class="flex gap-2.5">
+          <a href={pageUrl(lang, "home")} class="font-mono text-xs px-3 py-2 border border-rule rounded-pill no-underline">{copy.portfolio} ↗</a>
+          <button type="button" data-toggle-theme class="font-mono text-xs px-3 py-2 border border-ink rounded-pill bg-transparent text-ink cursor-pointer">◐ <span data-theme-label={lang === "es" ? "Claro|Oscuro" : "Light|Dark"}>{lang === "es" ? "Oscuro" : "Dark"}</span></button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
+      <section class="py-[clamp(56px,8vw,120px)] pb-[clamp(40px,5vw,72px)]">
+        <div class="font-mono text-label uppercase text-accent">{copy.heroKicker}</div>
+        <h1 class="font-serif font-display text-[clamp(56px,10vw,160px)] leading-[0.92] tracking-[-0.035em] mt-6 mb-0">Marginalia</h1>
+        <p class="font-serif text-[clamp(20px,2vw,26px)] leading-[1.45] text-ink-2 max-w-[44ch] mt-7 mb-0 text-pretty">{copy.heroLead}</p>
+      </section>
+
+      <section id="principios" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="font-mono text-label uppercase mb-8">{copy.principles}</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {copy.principleItems.map((item) => (
+            <div class="border-t border-rule pt-[18px]">
+              <div class="font-mono text-xs text-accent">{item.n}</div>
+              <h3 class="font-serif font-normal text-[30px] my-2.5">{item.t}</h3>
+              <p class="text-[15px] leading-[1.6] text-ink-2 m-0">{item.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="color" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.color}</span><span class="text-ink-2">{copy.colorSub}</span></div>
+        <div class="border-t border-rule">
+          <div class="hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-2.5 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 border-b border-rule">
+            <span>{copy.colToken}</span><span>{copy.colLight}</span><span>{copy.colDark}</span><span>{copy.colUse}</span>
+          </div>
+          {swatches.map((s, i) => (
+            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-3.5 border-b border-rule items-center">
+              <span class="font-mono text-[13px]">{s.token}</span>
+              <div class="flex flex-col gap-1.5"><div class="h-11 border border-black/20" style={`background:${s.light}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.light}</span></div>
+              <div class="flex flex-col gap-1.5"><div class="h-11 border border-black/20" style={`background:${s.dark}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.dark}</span></div>
+              <span class="text-sm leading-[1.5] text-ink-2">{copy.swatchUses[i]}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="tipo" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.type}</span><span class="text-ink-2">{copy.typeSub}</span></div>
+        <div class="flex flex-col">
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">display<br />Newsreader 350 · clamp 46–118 · lh .96 · −2.8%</div>
+            <div class="flex-1 basis-[400px] min-w-0 font-serif font-display text-display">{copy.displayEx} <em class="text-accent font-light">{copy.displayEm}</em></div>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">h1 · {lang === "es" ? "sección" : "section"}<br />Newsreader 350 · clamp 40–80 · lh 1</div>
+            <div class="flex-1 basis-[400px] min-w-0 font-serif font-display text-h1">{copy.h1Ex}</div>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">h3 · {lang === "es" ? "proyecto" : "project"}<br />Newsreader 400 · 26–40 · lh 1.08</div>
+            <div class="flex-1 basis-[400px] min-w-0 font-serif text-h3">{copy.h3Ex}</div>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">lead · {lang === "es" ? "cuerpo largo" : "long body"}<br />Newsreader 400 · 21 · lh 1.6</div>
+            <p class="flex-1 basis-[400px] min-w-0 m-0 font-serif text-body-serif max-w-[60ch]">{copy.leadEx}</p>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">ui · {lang === "es" ? "interfaz" : "interface"}<br />IBM Plex Sans 400/500 · 14–16 · lh 1.55</div>
+            <p class="flex-1 basis-[400px] min-w-0 m-0 text-[15px] leading-[1.55]">{copy.uiEx}</p>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule border-b border-rule">
+            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">label · {lang === "es" ? "datos · código" : "data · code"}<br />IBM Plex Mono 400/500 · 11–13 · +8% {lang === "es" ? "mayúsculas" : "uppercase"}</div>
+            <div class="flex-1 basis-[400px] min-w-0 flex flex-wrap gap-6 font-mono text-xs">
+              <span class="tracking-[0.08em] uppercase">§ 01 — {lang === "es" ? "Trabajo" : "Work"}</span><span class="text-accent">AUC 0.91</span><span>p95 120 ms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="espacio" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.space}</span><span class="text-ink-2">{copy.spaceSub}</span></div>
+        <div class="flex flex-col gap-2.5">
+          {space.map((s) => (
+            <div class="flex items-center gap-5 font-mono text-xs">
+              <span class="w-16 text-ink-2">{s.t}</span><span class="w-12">{s.px}</span><div class="h-3 bg-ink" style={`width:${s.w}`}></div>
+            </div>
+          ))}
+        </div>
+        <p class="text-sm leading-[1.6] text-ink-2 max-w-[60ch] mt-7 mb-0">{copy.spaceNote}</p>
+      </section>
+
+      <section id="componentes" class="py-14 border-t-2 border-ink scroll-mt-20">
+        <div class="mg-label mb-10">{copy.comp}</div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-12">
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[0]}</div>
+            <div class="flex flex-wrap gap-3 items-center">
+              <a href="#" class="mg-btn-primary">{copy.seeWork}<span aria-hidden="true">→</span></a>
+              <a href="#" class="mg-btn-secondary">{copy.downloadCv} <span aria-hidden="true">↓</span></a>
+              <a href="#" class="font-sans text-[14px] underline underline-offset-4">{copy.textLink}</a>
+            </div>
+          </div>
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[1]}</div>
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="flex items-center gap-2">
+                <span class="font-sans text-[13px] font-medium text-ink-2">{copy.editionLabel}</span>
+                <span class="flex items-center gap-1 bg-paper-2 rounded-[6px] p-1">
+                  <span class="font-sans text-[14px] font-medium bg-ink text-paper rounded-[4px] px-3 py-2">{copy.engineering}</span>
+                  <span class="font-sans text-[14px] text-ink-2 px-3 py-2">{copy.dataLabel}</span>
+                </span>
+              </div>
+              <span class="w-px h-6 bg-rule" aria-hidden="true"></span>
+              <div class="flex gap-1 font-sans text-[13px]">
+                <span class="font-medium underline decoration-accent decoration-2 underline-offset-4">ES</span>
+                <span class="text-ink-2">/</span><span class="text-ink-2">EN</span>
+              </div>
+              <span class="w-px h-6 bg-rule" aria-hidden="true"></span>
+              <span class="font-sans text-[13px] text-ink-2">{copy.darkBadge}</span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[2]}</div>
+            <div class="flex flex-wrap gap-1.5 items-center">
+              <span class="mg-tag">PyTorch</span><span class="mg-tag">PostgreSQL</span><span class="mg-tag">React</span>
+              <span class="font-mono text-[13px] font-medium text-ink ml-3">+18% CTR</span>
+              <span class="flex items-center gap-2 font-sans text-[13px] ml-3"><span class="w-2 h-2 rounded-full bg-accent"></span>{copy.available}</span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[3]}</div>
+            <div>
+              <div class="flex justify-between border-t-2 border-ink pt-3 font-sans text-[13px] font-medium"><span><span class="text-accent">§&nbsp;</span>02</span><span class="text-ink-2 font-normal">{copy.toolkitMeta}</span></div>
+              <div class="font-serif font-display text-[48px] tracking-[-0.025em] mt-4 leading-none">{copy.toolkitTitle}</div>
+            </div>
+          </div>
+          <div class="lg:col-span-2 flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[4]}</div>
+            <a href={pageUrl(lang, "case")} class="group flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-7 border-t border-rule border-b border-rule no-underline hover:bg-paper-2 hover:text-ink">
+              <span class="font-sans text-[13px] text-ink-2 w-8">01</span>
+              <div class="flex-1 basis-[320px] min-w-0">
+                <div class="font-serif text-h3">{copy.projectTitle}</div>
+                <p class="font-sans text-[15px] text-ink-2 mt-2 mb-0">{copy.projectSum}</p>
+              </div>
+              <div class="flex flex-wrap gap-1.5"><span class="mg-tag">XGBoost</span><span class="mg-tag">SHAP</span></div>
+              <span class="font-mono text-[13px] text-ink-2">2026</span>
+              <span class="font-mono text-[13px] font-medium text-ink">AUC 0.91</span>
+              <span class="font-sans text-[20px] text-ink-2 group-hover:text-accent" aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[5]}</div>
+            <figure class="m-0">
+              <div class="aspect-video mg-placeholder rounded-[6px]"><span class="font-sans text-[13px] px-3 py-2 bg-paper border border-rule rounded-[4px]">{copy.figPlaceholder}</span></div>
+              <figcaption class="mg-figcaption"><strong class="font-semibold text-ink">Fig. 2 —</strong> {copy.figCaption}</figcaption>
+            </figure>
+          </div>
+          <div class="flex flex-col gap-[18px]">
+            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[6]}</div>
+            <div class="border-t-2 border-ink border-b-2 border-ink overflow-x-auto">
+              <table class="w-full border-collapse min-w-[380px]">
+                <thead><tr class="border-b border-rule font-sans text-[13px] font-medium text-ink-2 text-left"><th scope="col" class="py-2.5 pr-3 font-medium">{copy.metric}</th><th scope="col" class="py-2.5 px-3 font-medium text-right">{copy.before}</th><th scope="col" class="py-2.5 pl-3 font-medium text-right">{copy.after}</th></tr></thead>
+                <tbody>
+                <tr class="border-b border-rule"><th scope="row" class="py-3.5 pr-3 font-sans text-[15px] font-normal text-left">{copy.latency}</th><td class="py-3.5 px-3 font-mono text-sm text-ink-2 text-right">840 ms</td><td class="py-3.5 pl-3 font-mono text-sm font-medium text-accent text-right">120 ms</td></tr>
+                <tr><th scope="row" class="py-3.5 pr-3 font-sans text-[15px] font-normal text-left">AUC-ROC</th><td class="py-3.5 px-3 font-mono text-sm text-ink-2 text-right">0.74</td><td class="py-3.5 pl-3 font-mono text-sm font-medium text-accent text-right">0.91</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="lg:col-span-2 flex flex-col gap-[18px]">
+            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.compItems[7]}</div>
+            <Terminal data={termData} height={240} id="term-system" />
+          </div>
+        </div>
+      </section>
+
+      <section id="tailwind" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.tailwind}</span><span class="text-ink-2">{copy.tailwindSub}</span></div>
+        <p class="font-serif text-body-serif max-w-[60ch] mt-0 mb-9 text-pretty" set:html={copy.tailwindIntro} />
+        <div class="flex flex-wrap gap-x-12 gap-y-10 items-start">
+          <div class="flex-1 basis-[420px] min-w-0">
+            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.tokensTitle}</div>
+            {twTokens.map((x) => (
+              <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4 py-2.5 border-b border-rule font-mono text-[12.5px]">
+                <span class="text-ink-2">{x.t}</span><span class="text-accent break-words">{x.c}</span>
+              </div>
+            ))}
+          </div>
+          <div class="flex-1 basis-[420px] min-w-0 flex flex-col gap-3.5">
+            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.setupTitle}</div>
+            <pre class="m-0 bg-term text-term-ink font-mono text-[12.5px] leading-[1.7] p-[18px_20px] rounded-term overflow-x-auto">{`/* app.css */
+@import "./marginalia.css";
+
+<html data-theme="light">
+<h1 class="font-serif font-display text-display">
+  ${copy.setupHeadlineA}
+  <em class="text-accent font-light">${copy.setupHeadlineEm}</em>
+</h1>`}</pre>
+          </div>
+        </div>
+        <div class="mt-12">
+          <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.recipesTitle}</div>
+          {twRecipes.map((recipe, i) => (
+            <div class="flex flex-wrap gap-x-8 gap-y-2 py-4 border-b border-rule items-baseline">
+              <span class="flex-[0_0_200px] font-serif text-xl">{copy.recipeNames[i]}</span>
+              <code class="flex-1 basis-[400px] min-w-0 font-mono text-[12.5px] leading-[1.6] text-ink-2 break-words">{recipe}</code>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="movimiento" class="py-14 pb-24 border-t border-ink scroll-mt-20">
+        <div class="font-mono text-label uppercase mb-8">{copy.motion}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {copy.motionItems.map((item) => (
+            <div class="border-t border-rule pt-4">
+              <div class="font-mono text-xs text-accent">{item.k}</div>
+              <p class="text-[15px] leading-[1.6] text-ink-2 mt-2 mb-0">{item.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    import { initChrome } from "../scripts/site";
+    import { initTerminals } from "../scripts/terminal";
+    initChrome();
+    initTerminals();
+  </script>
+</Layout>

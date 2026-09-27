@@ -1,0 +1,370 @@
+---
+// Home (portfolio) template, shared by the "es" and "en" pages.
+// The `lang` prop selects the locale; Astro resolves all copy at build time
+// and embeds it as JSON for client-side profile switches.
+import Layout from "../layouts/Layout.astro";
+import SiteHeader from "./SiteHeader.astro";
+import SectionHead from "./SectionHead.astro";
+import Terminal from "./Terminal.astro";
+import { ui, profiles, pick, type Profile } from "../data/content";
+import type { Lang } from "../scripts/store";
+import { resolvePersonal, buildContactRows } from "../utils/personal";
+import { pageUrl, altPageUrl } from "../utils/urls";
+import { site } from "../data/site";
+import type { TermData } from "../scripts/terminal";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = pick(ui, lang);
+const getProfileData = (profile: Profile) => pick(profiles[profile], lang);
+const withNumbers = (projects: any[]) => projects.map((x: any, i: number) => ({ ...x, no: "0" + (i + 1) }));
+const personal = resolvePersonal(lang);
+const caseHref = pageUrl(lang, "case");
+const systemHref = pageUrl(lang, "system");
+const langAltUrl = altPageUrl(lang, "home");
+
+const resolved = {
+  fullstack: { ...getProfileData("fullstack"), projects: withNumbers(getProfileData("fullstack").projects) },
+  data: { ...getProfileData("data"), projects: withNumbers(getProfileData("data").projects) },
+};
+const contactRows = {
+  fullstack: buildContactRows({
+    lang,
+    linkIds: profiles.fullstack.links,
+    mailLabel: t.mail,
+    locationLabel: t.loc,
+    statusLabel: t.avK,
+  }),
+  data: buildContactRows({
+    lang,
+    linkIds: profiles.data.links,
+    mailLabel: t.mail,
+    locationLabel: t.loc,
+    statusLabel: t.avK,
+  }),
+};
+
+const termFor = (profile: Profile): TermData => {
+  const pp = resolved[profile];
+  return {
+    name: personal.name,
+    role: pp.role,
+    bio: pp.intro,
+    projects: pp.projects,
+    stack: pp.stack,
+    email: personal.email,
+    links: pp.links.map((id: string) => (id === "cv" ? site.socials.cv.label : site.socials[id].label)),
+    profile,
+    theme: "light",
+    lang,
+    langAltUrl,
+  };
+};
+const termDataMap = { fullstack: termFor("fullstack"), data: termFor("data") };
+
+const p = resolved.fullstack;
+const index1 = t.index.slice(0, 3);
+const index2 = t.index.slice(3);
+
+// Locale-resolved payload for client-side profile switches (no { es, en } pairs left).
+const pageData = {
+  ui: t,
+  fullstack: { ...resolved.fullstack, contactRows: contactRows.fullstack },
+  data: { ...resolved.data, contactRows: contactRows.data },
+  personal,
+  meta: { lang, homeUrl: pageUrl(lang, "home"), caseHref },
+};
+const contentJson = JSON.stringify(pageData);
+const termJson = JSON.stringify(termDataMap);
+---
+
+<Layout title={`${personal.name} — ${p.role}`} description={p.intro} lang={lang}>
+  <div class="min-h-screen bg-paper text-ink font-sans antialiased">
+    <SiteHeader lang={lang} page="home" themeLabels={`${t.light}|${t.dark}`} spyFallback={p.role} />
+
+    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
+      {/* § 00 — Summary */}
+      <section class="pt-[clamp(56px,9vw,128px)] pb-[clamp(48px,6vw,88px)] border-b border-rule">
+        <div data-reveal="0" data-t="ui.sum" class="font-mono text-label uppercase text-ink-2">{t.sum}</div>
+        <h1 data-reveal="90" class="font-serif font-display text-display mt-7 max-w-[17ch] text-balance">
+          <span data-tp="h1a">{p.h1a}</span>{` `}<em data-tp="h1em" class="text-accent font-light">{p.h1em}</em>{` `}<span data-tp="h1b">{p.h1b}</span>
+        </h1>
+        <div class="flex flex-wrap gap-x-16 gap-y-8 mt-[clamp(40px,5vw,72px)] items-end justify-between">
+          <p data-reveal="200" data-tp="intro" class="font-serif text-lead text-ink-2 max-w-[40ch] m-0 text-pretty">{p.intro}</p>
+          <div data-reveal="280" class="flex flex-col gap-[18px] items-start">
+            <div class="flex items-center gap-2.5 font-mono text-xs">
+              <span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span><span>{personal.availabilityLong}</span>
+            </div>
+            <div class="flex flex-wrap items-baseline gap-x-8 gap-y-3.5">
+              <a href="#trabajo" class="mg-btn-primary"><span data-t="ui.work">{t.work}</span><span class="font-mono not-italic text-sm text-accent">→</span></a>
+              <a href="#" class="mg-btn-secondary"><span data-t="ui.cv">{t.cv}</span> ↓</a>
+            </div>
+          </div>
+        </div>
+        <div data-reveal="360" class="mt-[clamp(48px,6vw,88px)]">
+          <div class="flex justify-between gap-3 border-t border-ink pt-3 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
+            <span data-t="ui.inIssue">{t.inIssue}</span><span data-t="ui.pages">{t.pages}</span>
+          </div>
+          <nav class="grid grid-cols-1 md:grid-cols-2 mt-1" aria-label="Index">
+            <div id="index1" class="grid grid-cols-3">
+              {index1.map((x: any) => (
+                <a href={x.h} class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">
+                  <span class="font-mono text-[11px] text-accent">{x.n}</span>
+                  <span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">{x.l}</span>
+                </a>
+              ))}
+            </div>
+            <div id="index2" class="grid grid-cols-3">
+              {index2.map((x: any) => (
+                <a href={x.h} class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">
+                  <span class="font-mono text-[11px] text-accent">{x.n}</span>
+                  <span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">{x.l}</span>
+                </a>
+              ))}
+            </div>
+          </nav>
+        </div>
+      </section>
+
+      {/* § 00.1 — Console */}
+      <section id="consola" class="py-[clamp(48px,6vw,80px)] border-b border-rule flex flex-wrap gap-x-14 gap-y-8">
+        <div data-reveal="0" class="flex-1 basis-[240px] flex flex-col gap-4">
+          <div data-t="ui.cons" class="font-mono text-label uppercase text-ink-2">{t.cons}</div>
+          <h2 data-t="ui.consTitle" class="font-serif font-normal text-h2 m-0 text-balance">{t.consTitle}</h2>
+          <p data-t="ui.consNote" class="text-[15px] leading-[1.6] text-ink-2 m-0 max-w-[34ch]">{t.consNote}</p>
+        </div>
+        <figure data-reveal="120" class="flex-[3_1_520px] min-w-0 m-0">
+          <Terminal data={termDataMap.fullstack} height={300} id="term-main" />
+          <figcaption data-t="ui.fig0" class="mg-figcaption italic">{t.fig0}</figcaption>
+        </figure>
+      </section>
+
+      {/* § 01 — Selected work */}
+      <section id="trabajo" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <SectionHead num="01" metaKey="ui.s1m" metaFallback={t.s1m} titleKey="ui.s1t" titleFallback={t.s1t} />
+        <div id="projects-list" class="border-b border-rule">
+          {p.projects.map((pr: any) => (
+            <a data-reveal="0" href={caseHref} class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-[30px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">
+              <span class="font-mono text-[13px] text-ink-2 w-8">{pr.no}</span>
+              <div class="flex-1 basis-[340px] min-w-0">
+                <h3 class="font-serif font-normal text-h3 m-0">{pr.title}</h3>
+                <p class="text-[15px] leading-[1.55] text-ink-2 mt-2 mb-0 max-w-[52ch]">{pr.sum}</p>
+              </div>
+              <div class="flex-[0_1_250px] flex flex-wrap gap-1.5">
+                {pr.stack.map((s: string) => (<span class="mg-tag">{s}</span>))}
+              </div>
+              <span class="font-mono text-[13px] w-11">{pr.year}</span>
+              <span class="font-mono text-[13px] text-accent flex-[0_0_150px] text-right">{pr.metric}</span>
+              <span class="font-serif text-[26px] leading-none" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* § 02 — About */}
+      <section id="sobre-mi" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <SectionHead num="02" metaKey="ui.abM" metaFallback={t.abM} titleKey="ui.abT" titleFallback={t.abT} />
+        <div class="flex flex-wrap gap-x-10 gap-y-10 items-start">
+          <figure data-reveal="0" class="flex-[0_1_340px] min-w-[240px] m-0">
+            <div class="aspect-[4/5] mg-placeholder">
+              <span data-t="ui.portrait" class="font-mono text-xs px-3 py-1.5 bg-paper border border-rule">{t.portrait}</span>
+            </div>
+            <figcaption class="font-serif text-[15px] text-ink-2 mt-2.5"><strong class="font-semibold text-ink">Fig. 2 —</strong>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
+          </figure>
+          <div id="about-list" data-reveal="100" class="flex-1 basis-[400px] min-w-0 max-w-[640px] flex flex-col gap-[22px]">
+            {p.about.map((a: any) => (
+              <p class="font-serif text-[clamp(20px,1.8vw,23px)] leading-[1.6] m-0 text-pretty">{a.t}<sup class="font-mono text-[11px] text-accent ml-0.5">{a.n}</sup></p>
+            ))}
+          </div>
+          <aside data-reveal="200" class="flex-[0_1_230px] min-w-[200px] flex flex-col gap-[18px]">
+            <div data-t="ui.notes" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{t.notes}</div>
+            <div id="notes-list" class="flex flex-col gap-[18px]">
+              {p.notes.map((nt: any) => (
+                <div class="flex gap-2.5 border-t border-rule pt-2.5">
+                  <span class="font-mono text-[11px] text-accent">{nt.n}</span>
+                  <span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">{nt.t}</span>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* § 03 — Toolkit */}
+      <section id="herramientas" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <SectionHead num="03" metaKey="ui.s2m" metaFallback={t.s2m} titleKey="ui.s2t" titleFallback={t.s2t} />
+        <div id="stack-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+          {p.stack.map((g: any) => (
+            <div data-reveal="0">
+              <div class="font-mono text-label uppercase text-accent pb-3">{g.g}</div>
+              {g.items.map((it: string) => (<div class="font-serif text-[23px] py-3 border-t border-rule">{it}</div>))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* § 04 — Writing */}
+      <section id="escritos" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <SectionHead num="04" metaKey="ui.wrM" metaFallback={t.wrM} titleKey="ui.wrT" titleFallback={t.wrT} />
+        <div id="writing-list" class="border-b border-rule">
+          {p.writing.map((w: any) => (
+            <a data-reveal="0" href="#" class="flex flex-wrap gap-x-8 gap-y-2 items-baseline px-4 -mx-4 py-[22px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">
+              <span class="font-mono text-[13px] text-ink-2 flex-[0_0_90px]">{w.d}</span>
+              <span class="flex-1 basis-[360px] min-w-0 font-serif text-[clamp(22px,2.2vw,28px)] leading-[1.2]">{w.t}</span>
+              <span class="font-mono text-[11px] tracking-[0.06em] uppercase text-accent flex-[0_0_170px]">{w.k}</span>
+              <span class="font-serif text-[22px] leading-none" aria-hidden="true">↗</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* § 05 — Experience */}
+      <section id="trayectoria" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <SectionHead num="05" metaKey="ui.s3m" metaFallback={t.s3m} titleKey="ui.s3t" titleFallback={t.s3t} />
+        <div id="exp-list" class="border-b border-rule">
+          {p.exp.map((e: any) => (
+            <div data-reveal="0" class="flex flex-wrap gap-x-10 gap-y-2.5 py-7 border-t border-rule">
+              <span class="font-mono text-[13px] text-ink-2 flex-[0_0_150px]">{e.y}</span>
+              <div class="flex-1 basis-[280px]">
+                <div class="font-serif text-[26px] leading-[1.15]">{e.r}</div>
+                <div class="text-sm text-ink-2 mt-1">{e.c}</div>
+              </div>
+              <p class="flex-1 basis-[320px] text-base leading-[1.6] text-ink-2 m-0 max-w-[48ch]">{e.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* § 06 — Correspondence */}
+      <section id="contacto" class="pt-[clamp(56px,7vw,104px)] pb-[clamp(56px,7vw,96px)] scroll-mt-20">
+        <div data-reveal="0" class="mg-section-head">
+          <span>§ 06 — <span data-t="ui.s4t">{t.s4t}</span></span><span data-t="ui.s4m" class="text-ink-2">{t.s4m}</span>
+        </div>
+        <div class="flex flex-wrap gap-x-14 gap-y-14 mt-[clamp(40px,5vw,72px)] items-start">
+          <div data-reveal="60" class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-7">
+            <span data-t="ui.salute" class="font-serif italic text-[21px] text-ink-2">{t.salute}</span>
+            <p id="letter" data-tp="letter" class="font-serif font-display text-[clamp(30px,3.4vw,48px)] leading-[1.2] tracking-[-0.015em] m-0 max-w-[24ch] text-pretty">{p.letter}</p>
+            <div class="flex flex-col gap-1.5 mt-2">
+              <span data-t="ui.sign" class="font-serif italic text-[19px] text-ink-2">{t.sign}</span>
+              <span class="font-serif text-[30px] tracking-[-0.01em]">{site.firstName} <em class="font-light">{site.lastName}</em></span>
+              <span data-tp="role" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{p.role}</span>
+            </div>
+            <p class="font-serif text-[17px] leading-[1.5] text-ink-2 mt-3 mb-0 pt-4 border-t border-rule max-w-[44ch]">
+              <strong data-t="ui.psL" class="font-semibold text-ink">{t.psL}</strong>{` `}<span data-t="ui.ps">{t.ps}</span>
+            </p>
+          </div>
+          <aside data-reveal="160" class="flex-1 basis-[320px] min-w-0 flex flex-col">
+            <div data-t="ui.dir" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 pb-3 border-b border-ink">{t.dir}</div>
+            <div id="contact-rows">
+              {contactRows.fullstack.map((r) => (
+                <a href={r.href} class="grid grid-cols-[110px_minmax(0,1fr)_auto] gap-4 items-baseline py-4 border-b border-rule no-underline hover:text-accent">
+                  <span class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{r.key}</span>
+                  <span class="font-serif text-xl break-words">{r.value}</span>
+                  <span class="font-mono text-xs text-accent">{r.icon}</span>
+                </a>
+              ))}
+            </div>
+            <div class="mt-8">
+              <a href={`mailto:${personal.email}`} class="mg-btn-primary"><span data-t="ui.write">{t.write}</span><span class="font-mono not-italic text-sm text-accent">→</span></a>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-ink">
+      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] pt-5 pb-[88px] flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
+        <span>© 2026 {personal.name}</span>
+        <span data-t="ui.foot1">{t.foot1}</span>
+        <div class="flex gap-5">
+          <a href={systemHref} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
+          <a href={caseHref} class="no-underline"><span data-t="ui.cs">{t.cs}</span> ↗</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="application/json" id="mg-content" set:html={contentJson} />
+  <script type="application/json" id="mg-terminals" set:html={termJson} />
+  <script>
+    import { initSite, type PageData } from "../scripts/site";
+    import { initTerminals } from "../scripts/terminal";
+    import type { Profile } from "../scripts/store";
+
+    const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
+    window.__mgTermData = JSON.parse(document.getElementById("mg-terminals")!.textContent || "{}");
+    const esc = (s: string) =>
+      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+    const caseHref = page.meta.caseHref as string;
+
+    function indexCell(x: any) {
+      return `<a href="${esc(x.h)}" class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">`
+        + `<span class="font-mono text-[11px] text-accent">${esc(x.n)}</span>`
+        + `<span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">${esc(x.l)}</span></a>`;
+    }
+
+    function contactRow(r: any) {
+      return `<a href="${esc(r.href)}" class="grid grid-cols-[110px_minmax(0,1fr)_auto] gap-4 items-baseline py-4 border-b border-rule no-underline hover:text-accent">`
+        + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">${esc(r.key)}</span>`
+        + `<span class="font-serif text-xl break-words">${esc(r.value)}</span>`
+        + `<span class="font-mono text-xs text-accent">${esc(r.icon)}</span></a>`;
+    }
+
+    window.__mgRender = (pg: PageData, profile: Profile) => {
+      const p = pg[profile] as any;
+      const idx = pg.ui.index || [];
+      document.getElementById("index1")!.innerHTML = idx.slice(0, 3).map(indexCell).join("");
+      document.getElementById("index2")!.innerHTML = idx.slice(3).map(indexCell).join("");
+
+      document.getElementById("projects-list")!.innerHTML = p.projects.map((pr: any) => (
+        `<a href="${caseHref}" class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-[30px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">`
+        + `<span class="font-mono text-[13px] text-ink-2 w-8">${esc(pr.no)}</span>`
+        + `<div class="flex-1 basis-[340px] min-w-0"><h3 class="font-serif font-normal text-h3 m-0">${esc(pr.title)}</h3>`
+        + `<p class="text-[15px] leading-[1.55] text-ink-2 mt-2 mb-0 max-w-[52ch]">${esc(pr.sum)}</p></div>`
+        + `<div class="flex-[0_1_250px] flex flex-wrap gap-1.5">${pr.stack.map((s: string) => `<span class="mg-tag">${esc(s)}</span>`).join("")}</div>`
+        + `<span class="font-mono text-[13px] w-11">${esc(pr.year)}</span>`
+        + `<span class="font-mono text-[13px] text-accent flex-[0_0_150px] text-right">${esc(pr.metric)}</span>`
+        + `<span class="font-serif text-[26px] leading-none" aria-hidden="true">→</span></a>`
+      )).join("");
+
+      document.getElementById("about-list")!.innerHTML = p.about.map((a: any) =>
+        `<p class="font-serif text-[clamp(20px,1.8vw,23px)] leading-[1.6] m-0 text-pretty">${esc(a.t)}<sup class="font-mono text-[11px] text-accent ml-0.5">${esc(a.n)}</sup></p>`
+      ).join("");
+
+      document.getElementById("notes-list")!.innerHTML = p.notes.map((nt: any) =>
+        `<div class="flex gap-2.5 border-t border-rule pt-2.5"><span class="font-mono text-[11px] text-accent">${esc(nt.n)}</span>`
+        + `<span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">${esc(nt.t)}</span></div>`
+      ).join("");
+
+      document.getElementById("stack-grid")!.innerHTML = p.stack.map((g: any) =>
+        `<div><div class="font-mono text-label uppercase text-accent pb-3">${esc(g.g)}</div>`
+        + g.items.map((it: string) => `<div class="font-serif text-[23px] py-3 border-t border-rule">${esc(it)}</div>`).join("") + `</div>`
+      ).join("");
+
+      document.getElementById("writing-list")!.innerHTML = p.writing.map((w: any) =>
+        `<a href="#" class="flex flex-wrap gap-x-8 gap-y-2 items-baseline px-4 -mx-4 py-[22px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">`
+        + `<span class="font-mono text-[13px] text-ink-2 flex-[0_0_90px]">${esc(w.d)}</span>`
+        + `<span class="flex-1 basis-[360px] min-w-0 font-serif text-[clamp(22px,2.2vw,28px)] leading-[1.2]">${esc(w.t)}</span>`
+        + `<span class="font-mono text-[11px] tracking-[0.06em] uppercase text-accent flex-[0_0_170px]">${esc(w.k)}</span>`
+        + `<span class="font-serif text-[22px] leading-none" aria-hidden="true">↗</span></a>`
+      ).join("");
+
+      document.getElementById("exp-list")!.innerHTML = p.exp.map((e: any) =>
+        `<div class="flex flex-wrap gap-x-10 gap-y-2.5 py-7 border-t border-rule">`
+        + `<span class="font-mono text-[13px] text-ink-2 flex-[0_0_150px]">${esc(e.y)}</span>`
+        + `<div class="flex-1 basis-[280px]"><div class="font-serif text-[26px] leading-[1.15]">${esc(e.r)}</div>`
+        + `<div class="text-sm text-ink-2 mt-1">${esc(e.c)}</div></div>`
+        + `<p class="flex-1 basis-[320px] text-base leading-[1.6] text-ink-2 m-0 max-w-[48ch]">${esc(e.d)}</p></div>`
+      ).join("");
+
+      document.getElementById("contact-rows")!.innerHTML = (p.contactRows || []).map(contactRow).join("");
+    };
+
+    initSite(page, { spy: ["trabajo", "sobre-mi", "herramientas", "escritos", "trayectoria", "contacto"], roleFallback: page.fullstack.role });
+    initTerminals();
+  </script>
+</Layout>

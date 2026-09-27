@@ -1,0 +1,114 @@
+/* Marginalia — tema para Tailwind CSS v4
+   Los colores apuntan a variables que cambian con [data-theme="dark"],
+   así que bg-paper / text-ink funcionan en ambos temas sin prefijo dark:. */
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --mg-paper: oklch(0.975 0.008 85);
+  --mg-paper-2: oklch(0.94 0.012 85);
+  --mg-ink: oklch(0.21 0.012 60);
+  --mg-ink-2: oklch(0.43 0.012 60);
+  --mg-rule: oklch(0.21 0.012 60 / 0.16);
+  --mg-accent: oklch(0.55 0.17 35);
+  --mg-accent-2: oklch(0.52 0.12 250);
+  --mg-term: oklch(0.21 0.012 60);
+  --mg-term-ink: oklch(0.93 0.01 85);
+  --mg-term-dim: oklch(0.7 0.012 85);
+  --mg-term-accent: oklch(0.76 0.13 55);
+}
+[data-theme="dark"] {
+  --mg-paper: oklch(0.17 0.008 60);
+  --mg-paper-2: oklch(0.22 0.01 60);
+  --mg-ink: oklch(0.93 0.01 85);
+  --mg-ink-2: oklch(0.72 0.012 85);
+  --mg-rule: oklch(0.93 0.01 85 / 0.14);
+  --mg-accent: oklch(0.72 0.14 40);
+  --mg-accent-2: oklch(0.72 0.1 250);
+  --mg-term: oklch(0.12 0.006 60);
+}
+
+@theme inline {
+  --color-paper: var(--mg-paper);
+  --color-paper-2: var(--mg-paper-2);
+  --color-ink: var(--mg-ink);
+  --color-ink-2: var(--mg-ink-2);
+  --color-rule: var(--mg-rule);
+  --color-accent: var(--mg-accent);
+  --color-accent-2: var(--mg-accent-2);
+  --color-term: var(--mg-term);
+  --color-term-ink: var(--mg-term-ink);
+  --color-term-dim: var(--mg-term-dim);
+  --color-term-accent: var(--mg-term-accent);
+}
+
+@theme {
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --text-display: clamp(46px, 7.4vw, 118px);
+  --text-display--line-height: 0.96;
+  --text-display--letter-spacing: -0.028em;
+  --text-h1: clamp(40px, 5.4vw, 80px);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.025em;
+  --text-h2: clamp(30px, 3.2vw, 44px);
+  --text-h2--line-height: 1.05;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h3: clamp(26px, 2.8vw, 40px);
+  --text-h3--line-height: 1.08;
+  --text-h3--letter-spacing: -0.015em;
+  --text-lead: clamp(19px, 1.7vw, 23px);
+  --text-lead--line-height: 1.45;
+  --text-body-serif: 21px;
+  --text-body-serif--line-height: 1.6;
+  --text-label: 12px;
+  --text-label--letter-spacing: 0.08em;
+
+  --font-weight-display: 350;
+
+  --container-page: 1320px;
+  --container-prose: 720px;
+
+  --radius-pill: 999px;
+  --radius-term: 6px;
+
+  --ease-editorial: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --shadow-term: 0 40px 80px -40px oklch(0.2 0.02 60 / 0.55);
+
+  --animate-reveal: reveal 0.9s var(--ease-editorial) both;
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html {
+    @apply bg-paper text-ink font-sans antialiased;
+    transition: background 0.4s, color 0.4s;
+    scroll-behavior: smooth;
+  }
+  a { color: inherit; }
+  a:hover { color: var(--color-accent); }
+  ::selection { background: var(--color-accent); color: var(--color-paper); }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* Utilidades de componente */
+@utility mg-label { @apply font-mono text-label uppercase text-ink-2; }
+@utility mg-btn { @apply inline-flex items-baseline whitespace-nowrap no-underline transition-colors; }
+@utility mg-btn-primary { @apply mg-btn gap-2.5 pb-1.25 border-b-[1.5px] border-accent font-serif italic text-[22px] leading-[1.1] text-ink hover:text-accent; }
+@utility mg-btn-secondary { @apply mg-btn gap-2 pb-1.5 border-b border-rule font-mono text-label uppercase text-ink-2 hover:text-ink hover:border-ink; }
+@utility mg-tag { @apply font-mono text-[11px] px-2.25 py-1 border border-rule rounded-pill; }
+@utility mg-section-head { @apply flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 border-t border-ink pt-3.5 font-mono text-label uppercase; }
+@utility mg-figcaption { @apply font-serif text-[15px] text-ink-2 mt-3; }
+@utility mg-placeholder { @apply border border-rule flex items-center justify-center bg-[repeating-linear-gradient(135deg,var(--color-paper-2)_0_10px,transparent_10px_20px)]; }

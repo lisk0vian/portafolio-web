@@ -1,0 +1,43 @@
+---
+/* Marginalia interactive terminal. Always dark, in both themes. */
+import type { TermData } from "../scripts/terminal";
+
+interface Props {
+  data: TermData;
+  height?: number;
+  id?: string;
+}
+
+const { data, height = 300, id } = Astro.props;
+const config = JSON.stringify(data);
+---
+
+<div
+  data-terminal-root
+  id={id}
+  role="region"
+  aria-label="Terminal"
+  class="bg-term text-term-ink font-mono text-[13px] leading-[1.65] rounded-term overflow-hidden flex flex-col shadow-term text-left cursor-text"
+>
+  <div class="flex justify-between gap-3 px-4 py-2.5 border-b border-white/10 text-[11px] tracking-[0.06em] uppercase text-term-dim">
+    <span>~/portafolio — marginalia-sh</span>
+    <span data-term-hint></span>
+  </div>
+  <div data-term-body class="overflow-y-auto px-[18px] pt-4 pb-2.5" style={`height:${height}px`}>
+    <div data-term-lines></div>
+    <div class="flex gap-2.5 items-center">
+      <span class="text-term-accent" aria-hidden="true">❯</span>
+      <input
+        data-term-input
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        aria-label="Terminal"
+        class="flex-1 min-w-0 bg-transparent border-0 outline-none text-term-ink font-mono text-[13px] p-0"
+        style="caret-color:var(--term-accent)"
+      />
+    </div>
+  </div>
+  <div data-term-chips class="flex flex-wrap gap-1.5 px-3.5 py-2.5 border-t border-white/10"></div>
+  <script type="application/json" class="term-config" set:html={config} />
+</div>

@@ -1,0 +1,85 @@
+---
+/* Sticky Marginalia header for the portfolio and case pages: brand, running
+   section head, edition switcher (serif italic), locale links and theme toggle.
+   The locale switcher uses plain Astro i18n links ("/" and "/en/..."). */
+import type { Lang } from "../scripts/store";
+import type { SitePage } from "../utils/urls";
+import { pageUrl } from "../utils/urls";
+import { site } from "../data/site";
+
+interface Props {
+  lang: Lang;
+  page: SitePage;
+  themeLabels: string;
+  spyFallback?: string;
+}
+
+const { lang, page, themeLabels, spyFallback = "" } = Astro.props;
+const esUrl = pageUrl("es", page);
+const enUrl = pageUrl("en", page);
+
+const linkStyle = (active: boolean): string =>
+  active
+    ? "color:var(--color-ink);text-decoration-line:underline;text-decoration-color:var(--color-accent);text-decoration-thickness:1.5px;text-underline-offset:5px;"
+    : "color:var(--color-ink-2);text-decoration-line:none;";
+---
+
+<header class="sticky top-0 z-30 bg-paper border-b border-ink">
+  <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-3.5 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+    <a
+      href={pageUrl(lang, "home")}
+      class="font-serif font-normal text-2xl tracking-[-0.015em] leading-none no-underline whitespace-nowrap"
+    >
+      {site.firstName} <em class="font-light">{site.lastName}</em>
+    </a>
+    <div
+      aria-live="polite"
+      class="flex-1 basis-[200px] min-w-0 flex justify-center items-baseline gap-2.5 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 whitespace-nowrap overflow-hidden"
+    >
+      <span data-run-n class="text-accent">●</span><span data-run-l data-tp="role" class="overflow-hidden text-ellipsis">{spyFallback}</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-[18px] gap-y-2">
+      <div class="flex items-baseline gap-2">
+        <span data-t="ui.edition" class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 mr-0.5">Edición</span>
+        <span class="flex items-baseline gap-2">
+          <button
+            type="button"
+            data-set-profile="fullstack"
+            data-profile-btn="fullstack"
+            class="font-serif italic text-lg px-0 py-0.5 border-0 bg-transparent cursor-pointer whitespace-nowrap hover:text-ink"
+            ><span data-t="ui.eng">Ingeniería</span></button
+          >
+        </span>
+        <span class="flex items-baseline gap-2">
+          <span class="font-serif text-[17px] text-ink-2">/</span><button
+            type="button"
+            data-set-profile="data"
+            data-profile-btn="data"
+            class="font-serif italic text-lg px-0 py-0.5 border-0 bg-transparent cursor-pointer whitespace-nowrap hover:text-ink"
+            ><span data-t="ui.dat">Datos</span></button
+          >
+        </span>
+      </div>
+      <span class="w-px h-4 bg-rule" aria-hidden="true"></span>
+      <nav class="flex items-baseline gap-1.5 font-mono text-[11px] tracking-[0.08em]" aria-label="Language">
+        <span class="flex items-baseline gap-1.5">
+          <a href={esUrl} aria-current={lang === "es" ? "page" : undefined} style={linkStyle(lang === "es")}>ES</a>
+        </span>
+        <span class="flex items-baseline gap-1.5">
+          <span class="text-ink-2">/</span><a
+            href={enUrl}
+            aria-current={lang === "en" ? "page" : undefined}
+            style={linkStyle(lang === "en")}>EN</a
+          >
+        </span>
+      </nav>
+      <span class="w-px h-4 bg-rule" aria-hidden="true"></span>
+      <button
+        type="button"
+        data-toggle-theme
+        class="font-mono text-[11px] tracking-[0.08em] uppercase px-0 py-0.5 border-0 bg-transparent text-ink-2 cursor-pointer whitespace-nowrap hover:text-ink"
+        >◐&nbsp;<span data-theme-label={themeLabels}>Oscuro</span></button
+      >
+    </div>
+  </div>
+</header>
