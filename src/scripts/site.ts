@@ -3,6 +3,7 @@
 // (PageData) as JSON; profile switches re-render from it without reload.
 
 import { getProfile, getTheme, setProfile, setTheme, onEvent, initProfile, type Profile } from "./store";
+import { initLangLinks, restoreLangScroll } from "./lang-switch";
 
 /** One locale, fully resolved at build time (no { es, en } pairs left). */
 export type PageData = {
@@ -130,6 +131,8 @@ export function initChrome() {
   onEvent("mg:theme", () => paintSwitchers());
   paintSwitchers();
   initReveal();
+  initLangLinks();
+  restoreLangScroll();
 }
 
 /** Full init for pages with profile-switchable content. */

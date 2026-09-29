@@ -16,6 +16,10 @@ It applies to these pages (ES at `/…`, EN at `/en/…`):
 | Portfolio | `/` , `/en/` |
 | Case study | `/caso-de-estudio` , `/en/case-study` |
 | Design system | `/sistema-diseno` , `/en/design-system` |
+| Certification group | `/certificaciones/:grupo` , `/en/certifications/:group` |
+
+There is no certifications index page: §03 of the home lists the groups and
+each group has its own page.
 
 ## 2. Reference deletion map
 
@@ -67,13 +71,19 @@ IBM Plex Mono (400–500) with `display=swap`.
 
 | Role | Font | Spec |
 | ---- | ---- | ---- |
-| Display | Newsreader 350 | `clamp(46px, 7.4vw, 118px)`, lh 0.96, −0.028em |
-| Section H1 | Newsreader 350 | `clamp(40px, 5.4vw, 80px)`, lh 1, −0.025em |
-| H2 | Newsreader 400 | `clamp(30px, 3.2vw, 44px)`, lh 1.05, −0.015em |
-| Project H3 | Newsreader 400 | `clamp(26px, 2.8vw, 40px)`, lh 1.08, −0.015em |
-| Lead / long body | Newsreader 400 | `clamp(19px, 1.7vw, 23px)` or 21px, lh 1.45–1.6 |
+| Display (hero only) — `text-display` | Newsreader 350 | `clamp(46px, 7.4vw, 118px)`, lh 0.96, −0.028em |
+| Section title — `text-h1` | Newsreader 350 | `clamp(36px, 4.4vw, 64px)`, lh 1, −0.022em |
+| Featured — `text-h2` | Newsreader 400 | `clamp(30px, 3.2vw, 46px)`, lh 1.05, −0.018em |
+| Item — `text-h3` | Newsreader 400 | `clamp(22px, 2vw, 28px)`, lh 1.15, −0.01em |
+| Quote / letter — `text-quote` | Newsreader 300 italic | `clamp(22px, 2.2vw, 30px)`, lh 1.25 |
+| Lead — `text-lead` | Newsreader 300 italic | `clamp(19px, 1.6vw, 22px)`, lh 1.4 |
+| Editorial body — `text-body-serif` | Newsreader 400 | `clamp(18px, 1.5vw, 20px)`, lh 1.65 |
+| UI body — `text-body` | Plex Sans 400 | 15px, lh 1.6 |
 | UI (nav, buttons, descriptions) | Plex Sans 400/500 | 14–16px, lh 1.55 |
 | Label / data / code | Plex Mono 400/500 | 11–13px, uppercase +0.08em for labels only |
+
+One large piece per screen: each level is clearly smaller than the previous
+one, and inner elements never compete with the section title.
 
 Rules: serif for ideas, sans for interface, mono for data and code only.
 Build hierarchy with scale and rules, never with boxes. No cards or shadows
@@ -136,7 +146,7 @@ The header is sticky with a paper background and an ink `border-b`. It holds:
 1. Newsreader 24px brand: first name + last name in a light `em`.
 2. Running head (`aria-live`): `● role` by default; on scroll it shows
    `§ n · section` for these anchors: `trabajo, sobre-mi, herramientas,
-   escritos, trayectoria, contacto` (the last one with `top < 140px` wins).
+   investigacion, trayectoria, contacto` (the last one with `top < 140px` wins).
 3. Edition switcher: 18px italic serif (`Ingeniería / Datos`); it switches the
    whole page profile with no reload.
 4. `ES / EN` language in mono: plain Astro links (`/` and `/en/…`); the active
@@ -158,24 +168,58 @@ Fixed section order:
 4. **§ 02 About.** 4:5 portrait with placeholder + `Fig. 2`, two serif
    paragraphs with accent superscript margin notes, plus a side rail of italic
    notes.
-5. **§ 03 Toolkit.** 4 groups; uppercase accent mono header + 23px serif
-   items with a top rule.
-6. **§ 04 Writing.** Rows of mono date / serif title / accent mono kind / `↗`.
-7. **§ 05 Experience.** Rows of mono year / 26px serif role + company /
-   description.
+5. **§ 03 Capacidades.** `§ 03` mono rule + display serif title, then two
+   columns. Left: `Habilidades` with area filters (italic serif options,
+   `/` separators, count superscripts), groups as label/count + auto-fill skill
+   grid (7px dot = validated by a live certification, serif 21px name, mono
+   year range right), dotted separators, `+ N más` per group (8 visible).
+   Right: `Certificaciones` group rows (serif 26px name + accent count, italic
+   latest title, mono year range, `→`). Groups link to their own page.
+6. **§ 04 Research.** `§ 04` mono rule + display serif title, then a
+   filter bar between ink rules: `TIPO` and `AÑO` mono labels with italic
+   serif options (active = accent underline, count as superscript) and the
+   filtered total on the right. Entries: accent `[n]` in a 48px left column,
+   type label (plus a `DESTACADO` badge for featured: paper on accent, the only
+   filled label in the system), serif 26–38px title (DOI link), citation line
+   with the site owner in semibold ink, abstract in serif with an accent left
+   border, then `DOI ↗`, `PDF ↓` and `#keyword` tags in italic serif.
+7. **§ 05 Trayectoria.** Display serif title, then two columns (`1.6fr / 1fr`).
+   Left: `EXPERIENCIA` timeline — a 28px column with rule, 11px node (filled
+   accent = current, hollow = past) and rule; each stage has period
+   (+ `● ACTUAL` + duration), serif role, company, serif description,
+   `→ Logro` lines and a mono stack. Right: sticky `FORMACIÓN` aside (period /
+   degree / italic school / description) and a `CV completo ↓` primary link.
 8. **§ 06 Correspondence.** Display serif letter + signature + ruled P.S.;
    directory (email, socials, location, status) and a `Write an email →` CTA.
 9. Footer with ink `border-t`, 11px uppercase mono: `© 2026`, typefaces, and
    links to the design system and case study.
 
-## 9. Interactive terminal
+## 9. Certifications page (single page, group state in `?grupo=`)
+
+`CertsIndexPage.astro` (`certificaciones.astro`, `en/certifications.astro`):
+`§ 03.2` mono rule + total, display title, italic deck, then a `GRUPO` nav of
+italic serif options with counts (state lives in `?grupo=`, so any view is
+shareable; `todas` renders one section per group). Credential cards in a
+ `repeat(auto-fill, minmax(380px, 1fr))` grid: `no · category` + status
+ (`● Vigente` / `Vence este año` / `Vencida` / `Sin vencimiento` from
+ `expiryDate`), serif title, three-cell meta row (`Emitida` / `Vence` / `ID`),
+ italic serif skills, and `Verificar credencial ↗` + `PDF ↓` actions.
+`CertsGroupPage.astro` (`certificaciones/[grupo].astro`,
+`en/certifications/[group].astro`) stays as the per-group deep link with
+ `?q=` search and batches of 10. `getStaticPaths` reads
+`/certifications/groups` at build with `certGroupFallback`
+(`aws, cloud, devops` — edit with real slugs) when the API is down.
+Home §03 links each group to `/certificaciones?grupo=<slug>`. Groups over 50 need an `offset` param in
+the API.
+
+## 10. Interactive terminal
 
 Always dark in both themes. Header reads `~/portafolio — marginalia-sh` plus
 a hint (`escribe help` / `type help`). Body is 13px mono at lh 1.65 with
 scroll; accent `❯` prompt and accent `caret-color`. Pill-shaped 11.5px mono
 chips: `help · whoami · projects · stack · profile/theme · theme`.
 
-### 9.1 Base commands
+### 10.1 Base commands
 
 | Command | ES | EN |
 | ------- | -- | -- |
@@ -194,7 +238,7 @@ chips: `help · whoami · projects · stack · profile/theme · theme`.
 History with `↑/↓`, `Enter` runs, clicking focuses the input. Profile/theme
 commands sync both ways via `mg:profile`/`mg:theme` events.
 
-### 9.2 Game: quests
+### 10.2 Game: quests
 
 Type `play` for the menu, `quest ledger` or `quest churn` to start,
 `a`/`b`/`c` (or `answer a`) to answer, `score` for your scoreboard,
@@ -231,13 +275,16 @@ tickets/semana, ¿qué elimina más ruido? / saldos editados a mano, ¿qué
 modelo?* and *AUC 0.74, ¿qué mejora generalización? / solo llaman al top 10%,
 ¿qué optimizas? / nadie usa el modelo, ¿qué falta?* — answered with `a`.)
 
-## 10. Data, profiles, and languages
+## 11. Data, profiles, and languages
 
 - Content lives in `src/data/content.ts` as `{ es, en }` pairs plus
   `fullstack`/`data` profiles; `pick()` resolves one locale at build time.
-  Personal data (name, email, socials, availability) lives in
-  `src/data/site.ts`; the contact directory is composed in
-  `src/utils/personal.ts` (email ↗, socials, CV ↓, location, ● status).
+  Research mocks live in `pubs[]` per profile with exact `PublicationDto`
+  shape (the API has no `/publications` yet); education fallback lives in
+  root `education[]` (replaced live by `GET /education`).
+  Personal data (name, email, socials, availability, `cvUrl`) lives in
+  `src/data/site.ts` + `src/utils/personal.ts`; profile `about`/`letter`
+  and project `metric` come from the API when present, else local.
 - Language lives in the URL (Astro i18n, `prefixDefaultLocale: false`).
   Profile and theme persist in `localStorage` (`mg-profile`, `mg-theme`) and
   propagate through `mg:profile`/`mg:theme` events; each page re-renders from
@@ -245,7 +292,7 @@ modelo?* and *AUC 0.74, ¿qué mejora generalización? / solo llaman al top 10%,
 - `src/scripts/site.ts`: switchers, reveal (§5), scrollspy (§7), i18n via
   `data-t` (UI) and `data-tp` (profile). `src/scripts/store.ts`: global state.
 
-## 11. Case study and design system pages
+## 12. Case study and design system pages
 
 **Case** (`CasePage.astro`): `← Back to index` breadcrumb + `Case study ·
 01/04`; `clamp(48px, 8vw, 128px)` hero title + light italic deck; 4-cell meta
@@ -259,10 +306,28 @@ rigor, II typography, III data; token table (§3); type scale; grid (§5);
 component §6 with the §6 recipes; Tailwind v4 theme (`@theme inline` for
 colors, `@theme` for fonts, `mg-*` via `@utility`); motion (§5).
 
-## 12. Deletion checklist
+## 13. Deletion checklist
 
 1. Verify `src/styles/global.css` holds the 9 tokens from §3.
-2. Verify `help` lists all 12 commands from §9.1–§9.2 in ES and EN.
-3. Verify the build emits the 6 routes from §1 (`pnpm astro build`).
+2. Verify `help` lists all 12 commands from §10.1–§10.2 in ES and EN.
+3. Verify the build emits the 6 base + 2×N group routes from §1 (`pnpm astro build`).
 4. Delete the `Portafolio web multidisciplinario/` folder.
 5. This file becomes the only reference.
+
+## 14. Data source, DI y mock-first (Astro)
+
+- Puertos en `src/lib/ports.ts` (`PortfolioSource`); contratos espejo API en
+  `src/lib/contracts.ts`; mock plantilla en `src/lib/mock-data.ts` +
+  `MockPortfolioSource`; live en `src/lib/live-source.ts` (wrapper axios).
+- Composición en `src/lib/composition.ts`: `createPortfolioSource(kind)` con
+  `PUBLIC_USE_MOCK=true` por defecto en dev. Las páginas crean la fuente y la
+  inyectan por props (`<HomePage lang sourceKind>`); ningún `.astro` importa
+  axios directo. En cliente, `refreshHomeFromApi(page, source)` recibe el mismo
+  puerto. Badge `#api-status`: `Mock API · datos plantilla` vs `API en vivo`.
+- Mock bilingüe `es/en` con slugs idénticos (paridad API): `payments-platform`,
+  `collaborative-editor`, `churn-prediction`, `recommendation-engine`,
+  `aws-*`, `immutable-ledgers`, `crdts-sin-miedo`. Replica filtros en memoria,
+  `fields=` con allowlist + 400 y 404 por slug.
+- Cambios API se prototipan aquí primero y se portan después: ver
+  `docs/api-changes/` (001 publications, 002 projects fields+metric,
+  003 offset+level+cvUrl).

@@ -8,6 +8,7 @@
 // swapping strings. Profile/theme commands still update the whole page.
 
 import { setProfile, setTheme, onEvent, type Lang, type Profile } from "./store";
+import { switchLang } from "./lang-switch";
 
 type TermProject = { title: string; year: string; metric: string; stack: string[] };
 type TermGroup = { g: string; items: string[] };
@@ -402,7 +403,7 @@ function initOne(root: HTMLElement) {
         push(s.lang(target), "acc");
         if (target !== lang) {
           window.setTimeout(() => {
-            window.location.href = data.langAltUrl;
+            switchLang(data.langAltUrl);
           }, 600);
         }
         break;
