@@ -1,0 +1,169 @@
+---
+// Certification group page: full list, local search (?q=), batch reveal.
+// Prerenders with the group's data when the API answers at build.
+import Layout from "../layouts/Layout.astro";
+import SiteHeader from "./SiteHeader.astro";
+import { ui, pick } from "../data/content";
+import type { Lang } from "../scripts/store";
+import { resolvePersonal } from "../utils/personal";
+import { pageUrl } from "../utils/urls";
+import { CERTS_FIELDS } from "../lib/api";
+import { createPortfolioSource } from "../lib/composition";
+import { mapCertifications } from "../lib/adapters";
+
+interface Props {
+  lang: Lang;
+  group: string;
+}
+
+const { lang, group } = Astro.props;
+const t = pick(ui, lang);
+const personal = resolvePersonal(lang);
+const certsUrl = pageUrl(lang, "certs");
+
+// DI en prerender: mock por defecto para build estable sin API levantada.
+let initial: any[] = [];
+try {
+  const source = createPortfolioSource();
+  initial = mapCertifications(await source.fetchCertificationsByGroup(lang, group, { limit: 50, fields: CERTS_FIELDS }));
+} catch {
+  initial = [];
+}
+
+const pageData = { ui: t, group, certs: initial, personal, meta: { lang, certsUrl } };
+const contentJson = JSON.stringify(pageData);
+const BATCH = 10;
+---
+
+<Layout title={`${group} — ${t.certsT}`} description={`${initial.length} ${t.certsCount}`} lang={lang}>
+  <div class="min-h-screen bg-paper text-ink font-sans antialiased">
+    <SiteHeader lang={lang} page="certs" themeLabels={`${t.light}|${t.dark}`} spyFallback={group} />
+
+    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
+      <div class="flex flex-wrap justify-between gap-x-6 gap-y-2 py-[18px] font-mono text-xs tracking-[0.06em] uppercase text-ink-2">
+        <a href={`${pageUrl(lang, "home")}#herramientas`} class="no-underline">← <span>{t.skillT}</span></a>
+        <span id="group-meta"></span>
+      </div>
+
+      <section class="py-[clamp(40px,6vw,88px)] pb-[clamp(32px,4vw,56px)] border-t border-ink">
+        <h1 data-reveal="0" class="font-serif font-display text-[clamp(48px,8vw,128px)] leading-[0.95] tracking-[-0.03em] m-0 text-balance">{group}</h1>
+        <p data-reveal="100" class="font-serif italic font-light text-[clamp(22px,2.4vw,34px)] leading-[1.3] text-ink-2 mt-7 mb-0 max-w-[34ch] text-pretty">{t.s2m}</p>
+      </section>
+
+      <div data-reveal="160" class="flex flex-wrap gap-3 items-center pb-6">
+        <input id="group-search" type="search" placeholder={t.certSearch} aria-label={t.certSearch}
+          class="flex-1 basis-[240px] min-w-0 bg-transparent border-b border-rule focus:border-accent outline-none font-mono text-[13px] py-2 placeholder:text-ink-2" />
+      </div>
+
+      <div id="group-list" class="border-b border-rule"></div>
+      <div id="group-more" class="py-6"></div>
+    </main>
+
+    <footer class="border-t border-ink">
+      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-5 pb-10 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
+        <span>© 2026 {personal.name}</span>
+        <span id="api-status" data-state="local">datos locales</span>
+        <a href={pageUrl(lang, "system")} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="application/json" id="mg-content" set:html={contentJson} />
+  <script>
+    import { initSite, type PageData } from "../scripts/site";
+    import { CERTS_FIELDS } from "../lib/api";
+    import { createPortfolioSource } from "../lib/composition";
+    import { mapCertifications } from "../lib/adapters";
+    import type { Lang } from "../scripts/store";
+
+    const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
+    const esc = (s: string) =>
+      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+    const BATCH = 10;
+    const state = { q: "", shown: BATCH };
+    const store = { certs: ((page as any).certs || []) as any[] };
+
+    function setStatus(mode: string) {
+      const el = document.getElementById("api-status");
+      if (el) {
+        el.dataset.state = mode;
+        el.textContent = mode === "live" ? "API en vivo" : mode === "mock" ? "Mock API · datos plantilla" : mode === "error" ? "API no disponible · datos locales" : "datos locales";
+      }
+    }
+
+    function matches(c: any, q: string) {
+      if (!q) return true;
+      const hay = `${c.title} ${c.issuer} ${(c.skills || []).join(" ")} ${(c.tags || []).join(" ")}`.toLowerCase();
+      return q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
+    }
+
+    function row(c: any, ui: any) {
+      const inner = `<span class="font-mono text-[12px] text-ink-2 flex-[0_0_64px]">${esc(c.date || "")}</span>`
+        + `<div class="flex-1 basis-[220px] min-w-0"><div class="font-serif text-[19px] leading-[1.25]">${esc(c.title)}${c.featured ? ` <span class="font-mono text-[11px] text-accent">★</span>` : ""}</div>`
+        + `<div class="text-[13px] text-ink-2 mt-0.5">${esc(c.issuer)}${c.category ? ` · <span class="font-mono text-[11px] uppercase tracking-[0.06em]">${esc(c.category)}</span>` : ""}${c.expired ? ` · <span class="font-mono text-[11px] uppercase tracking-[0.06em]">${esc(ui.certExpired || "expirada")}</span>` : ""}</div></div>`
+        + `<div class="flex-[0_1_180px] flex flex-wrap gap-1.5">${(c.tags || []).map((s: string) => `<span class="mg-tag">${esc(s)}</span>`).join("")}</div>`
+        + (c.url
+          ? `<a href="${esc(c.url)}" target="_blank" rel="noreferrer" class="font-serif text-[20px] leading-none no-underline" aria-label="${esc(c.title)}">↗</a>`
+          : `<span class="font-mono text-[11px] text-ink-2">${esc(c.ref || "")}</span>`);
+      return `<div class="flex flex-wrap gap-x-6 gap-y-2 items-baseline py-4 border-t border-rule ${c.expired ? "opacity-70" : ""}">${inner}</div>`;
+    }
+
+    function render() {
+      const ui = (page as any).ui;
+      const listEl = document.getElementById("group-list")!;
+      const moreEl = document.getElementById("group-more")!;
+      const metaEl = document.getElementById("group-meta")!;
+      const shown = store.certs.filter((c: any) => matches(c, state.q));
+      metaEl.textContent = `${store.certs.length} ${ui.certsCount || ""}`;
+      listEl.innerHTML = shown.length === 0
+        ? `<p class="font-serif italic text-[15px] text-ink-2 py-4 border-t border-rule">${esc(ui.certEmpty || "")}</p>`
+        : shown.slice(0, state.shown).map((c: any) => row(c, ui)).join("");
+      const rest = shown.length - state.shown;
+      moreEl.innerHTML = rest > 0
+        ? `<button type="button" id="group-more-btn" class="mg-btn-secondary">${esc(ui.certMore || "Ver más")} (${rest}) ↓</button>`
+        : "";
+      document.getElementById("group-more-btn")?.addEventListener("click", () => {
+        state.shown += BATCH;
+        render();
+      });
+    }
+
+    function syncUrl() {
+      const url = new URL(window.location.href);
+      if (state.q) url.searchParams.set("q", state.q);
+      else url.searchParams.delete("q");
+      window.history.replaceState(null, "", url);
+    }
+
+    async function refresh() {
+      const lang = (((page.meta as any)?.lang) === "en" ? "en" : "es") as Lang;
+      const group = (page as any).group as string;
+      const source = createPortfolioSource();
+      try {
+        const fresh = await source.fetchCertificationsByGroup(lang, group, { limit: 50, fields: CERTS_FIELDS });
+        store.certs = mapCertifications(fresh as any);
+        setStatus(store.certs.length ? source.kind : "local");
+      } catch {
+        setStatus(store.certs.length ? "local" : "error");
+      }
+      render();
+    }
+
+    initSite(page);
+    try {
+      state.q = new URL(window.location.href).searchParams.get("q") || "";
+      const input = document.getElementById("group-search") as HTMLInputElement | null;
+      if (input) {
+        input.value = state.q;
+        input.addEventListener("input", () => {
+          state.q = input.value.trim();
+          state.shown = BATCH;
+          syncUrl();
+          render();
+        });
+      }
+    } catch { /* sin URL: filtro vacío */ }
+    render();
+    void refresh();
+  </script>
+</Layout>

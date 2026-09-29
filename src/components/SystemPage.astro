@@ -1,11 +1,24 @@
 ---
 // "Marginalia" design system template, shared by the "es" and "en" pages.
-// Static document (only the theme toggle is interactive).
+// Reference: "Sistema de Diseno.dc.html" (v1.0). Components 5.3–5.16 render
+// real data from the injected PortfolioSource (mock|live) at build time and
+// fall back to the reference copy when a field is missing.
 import Layout from "../layouts/Layout.astro";
 import Terminal from "./Terminal.astro";
 import type { Lang } from "../scripts/store";
+import type { TermData } from "../scripts/terminal";
 import { pageUrl, altPageUrl } from "../utils/urls";
 import { resolvePersonal } from "../utils/personal";
+import { createPortfolioSource } from "../lib/composition";
+import { normalizeSkillItems } from "../lib/adapters";
+import type {
+  CertificationGroupDto,
+  ExperienceDto,
+  ProfileDto,
+  ProjectDto,
+  PublicationDto,
+  SkillGroupDto,
+} from "../lib/contracts";
 
 interface Props {
   lang: Lang;
@@ -18,6 +31,7 @@ const copy = {
     version: "v1.0 · sistema de diseño",
     nav: ["Principios", "Color", "Tipografía", "Espacio", "Componentes", "Tailwind", "Movimiento"],
     portfolio: "Portafolio",
+    themeLabels: "Claro|Oscuro",
     heroKicker: "Sistema de diseño · Portafolio de ingeniería y datos",
     heroLead:
       "Un sistema editorial-técnico: la claridad de una revista científica aplicada a un portafolio de ingeniería. Papel, tinta, un solo acento y datos tratados como figuras.",
@@ -29,10 +43,7 @@ const copy = {
     ],
     color: "§ 02 — Color",
     colorSub: "OKLCH · claro / oscuro",
-    colToken: "Token",
-    colLight: "Claro",
-    colDark: "Oscuro",
-    colUse: "Uso",
+    colHead: ["Token", "Claro", "Oscuro", "Uso"],
     swatchUses: [
       "Fondo principal, papel.",
       "Hover de filas, pistas de gráficas, placeholders.",
@@ -46,12 +57,23 @@ const copy = {
     ],
     type: "§ 03 — Tipografía",
     typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    typeIntro:
+      "Una sola pieza grande por pantalla. Cada nivel es claramente menor que el anterior: display solo en el hero, un título por sección y los elementos internos nunca compiten con él.",
+    typeSpecs: [
+      "display · solo hero<br>Newsreader 350 · 46–118 · lh .96 · −2.8%",
+      "h1 · título de sección<br>Newsreader 350 · 36–64 · lh 1 · −2.2%",
+      "h2 · destacado<br>Newsreader 400 · 30–46 · lh 1.05",
+      "h3 · elemento<br>Newsreader 400 · 22–28 · lh 1.15",
+      "cita · carta<br>Newsreader 300 itálica · 22–34",
+      "lead<br>Newsreader 300 itálica · 19–22 · lh 1.4",
+      "cuerpo editorial<br>Newsreader 400 · 18–20 · lh 1.65",
+      "cuerpo UI · descripciones<br>IBM Plex Sans 400 · 14–16 · lh 1.6",
+      "label · datos · código<br>IBM Plex Mono 400/500 · 11–12 · +8% mayúsculas",
+    ],
     displayEx: "De punta",
     displayEm: "a punta",
     h1Ex: "Trabajo seleccionado",
-    h3Ex: "Motor de recomendaciones",
-    leadEx: "Separamos la ingesta de eventos del cálculo de saldos e introdujimos un libro contable de doble entrada.",
-    uiEx: "Navegación, botones, descripciones cortas y controles.",
+    workLabel: "§ 01 — Trabajo",
     space: "§ 04 — Espacio y retícula",
     spaceSub: "base 4 px · máx. 1320 px · margen clamp(20–56)",
     spaceNote:
@@ -62,10 +84,18 @@ const copy = {
       "5.2 Conmutadores de edición — texto, activo subrayado en acento",
       "5.3 Etiquetas y métricas",
       "5.4 Encabezado de sección",
-      "5.5 Fila de proyecto (hover: --paper-2)",
+      "5.5 Proyecto — destacado + filas desplegables (+ / −)",
       "5.6 Figura con leyenda",
       "5.7 Tabla de resultados",
       "5.8 Terminal interactiva — siempre oscura, en ambos temas. Pruébala.",
+      "5.9 Filtros editoriales — texto + contador en superíndice",
+      "5.10 Habilidad — ● uso diario, ○ ocasional, años a la derecha",
+      "5.11 Grupo de certificaciones → página del grupo",
+      "5.12 Entrada bibliográfica — número, autores (tú en negrita), ficha lateral",
+      "5.13 Línea de tiempo — ● actual relleno, ○ anterior",
+      "5.14 Letra capital + cita destacada",
+      "5.15 Directorio — bloques A / B / C, correo con copiar",
+      "5.16 Bloque “Ahora mismo” — única superficie con fondo --paper-2",
     ],
     seeWork: "Ver trabajo",
     downloadCv: "Descargar CV",
@@ -73,27 +103,53 @@ const copy = {
     editionLabel: "Edición",
     engineering: "Ingeniería",
     dataLabel: "Datos",
-    darkBadge: "◐ Oscuro",
-    available: "Disponible",
-    toolkitMeta: "Lo que uso a diario",
-    toolkitTitle: "Herramientas",
-    projectTitle: "Predicción de abandono",
-    projectSum: "Modelo de churn con explicaciones por cliente.",
-    figCaption: "Toda imagen lleva número y descripción.",
-    figPlaceholder: "captura / gráfica",
+    dark: "Oscuro",
+    light: "Claro",
+    headMeta: "Lo que uso, validado",
+    headTitle: "Capacidades",
+    featured: "Destacado",
     metric: "Métrica",
     before: "Antes",
     after: "Después",
-    latency: "Latencia p95",
+    problem: "Problema",
+    approach: "Enfoque",
+    result: "Resultado",
+    figPlaceholder: "captura / gráfica",
+    figCaption: "Toda imagen lleva número y descripción.",
+    filterType: "Tipo",
+    all: "Todas",
+    journal: "Revista",
+    conference: "Congreso",
+    pubOne: "publicación",
+    pubMany: "publicaciones",
+    more: "más",
+    less: "Mostrar menos −",
+    yearUnit: "a",
+    abstract: "Resumen",
+    copied: "Copiado",
+    now: "hoy",
+    current: "● Actual",
+    directory: "Directorio",
+    dirMail: "A — Correo",
+    writeMail: "Escribir un correo",
+    copy: "Copiar",
+    nowTitle: "Ahora mismo",
     tailwind: "§ 07 — Tema para Tailwind",
     tailwindSub: "v4 (@theme)",
-    tailwindIntro: `Todos los tokens existen como tema de Tailwind. Los colores apuntan a variables que cambian con <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, así que <code class="font-mono text-base text-accent">bg-paper</code> o <code class="font-mono text-base text-accent">text-ink</code> sirven en ambos temas sin escribir <code class="font-mono text-base">dark:</code>. El espaciado usa la escala por defecto de Tailwind (base 4 px).`,
+    tailwindIntro: `Todos los tokens existen como tema de Tailwind. Los colores apuntan a variables que cambian con <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, así que <code class="font-mono text-base text-accent">bg-paper</code> o <code class="font-mono text-base text-accent">text-ink</code> sirven en ambos temas sin escribir <code class="font-mono text-base">dark:</code>. El espaciado usa la escala por defecto de Tailwind (base 4 px), la misma de § 04.`,
     tokensTitle: "7.1 Token → clase",
     setupTitle: "7.2 Instalación (v4)",
     setupHeadlineA: "Construyo productos",
     setupHeadlineEm: "de punta a punta",
+    themeFile: "Archivo del tema:",
+    themeFileNote: "— tokens, escala y utilidades mg-*",
     recipesTitle: "7.3 Recetas de componentes",
-    recipeNames: ["Acción primaria", "Acción secundaria", "Etiqueta", "Encabezado de sección", "Título de sección", "Fila de proyecto", "Leyenda de figura", "Terminal", "Entrada animada"],
+    recipeNames: [
+      "Acción primaria", "Acción secundaria", "Encabezado de sección", "Título de sección", "Título de elemento",
+      "Filtro editorial", "Habilidad", "Punto uso diario", "Tabla antes/después", "Fila desplegable",
+      "Línea de tiempo", "Superficie destacada", "Leyenda de figura", "Conmutador", "Terminal", "Entrada animada",
+    ],
+    typeScale: "escala tipográfica",
     motion: "§ 08 — Movimiento",
     motionItems: [
       { k: "reveal", d: "Opacidad 0→1 y desplazamiento 18 px→0 al entrar en pantalla. 900 ms." },
@@ -108,6 +164,7 @@ const copy = {
     version: "v1.0 · design system",
     nav: ["Principles", "Color", "Typography", "Space", "Components", "Tailwind", "Motion"],
     portfolio: "Portfolio",
+    themeLabels: "Light|Dark",
     heroKicker: "Design system · Engineering and data portfolio",
     heroLead:
       "An editorial-technical system: the clarity of a scientific journal applied to an engineering portfolio. Paper, ink, a single accent, and data treated as figures.",
@@ -119,10 +176,7 @@ const copy = {
     ],
     color: "§ 02 — Color",
     colorSub: "OKLCH · light / dark",
-    colToken: "Token",
-    colLight: "Light",
-    colDark: "Dark",
-    colUse: "Usage",
+    colHead: ["Token", "Light", "Dark", "Usage"],
     swatchUses: [
       "Main background, paper.",
       "Row hover, chart tracks, placeholders.",
@@ -136,12 +190,23 @@ const copy = {
     ],
     type: "§ 03 — Typography",
     typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    typeIntro:
+      "One large piece per screen. Each level is clearly smaller than the one above: display only in the hero, one title per section, and inner elements never compete with it.",
+    typeSpecs: [
+      "display · hero only<br>Newsreader 350 · 46–118 · lh .96 · −2.8%",
+      "h1 · section title<br>Newsreader 350 · 36–64 · lh 1 · −2.2%",
+      "h2 · featured<br>Newsreader 400 · 30–46 · lh 1.05",
+      "h3 · item<br>Newsreader 400 · 22–28 · lh 1.15",
+      "quote · letter<br>Newsreader 300 italic · 22–34",
+      "lead<br>Newsreader 300 italic · 19–22 · lh 1.4",
+      "editorial body<br>Newsreader 400 · 18–20 · lh 1.65",
+      "UI body · descriptions<br>IBM Plex Sans 400 · 14–16 · lh 1.6",
+      "label · data · code<br>IBM Plex Mono 400/500 · 11–12 · +8% uppercase",
+    ],
     displayEx: "Start",
     displayEm: "to finish",
     h1Ex: "Selected work",
-    h3Ex: "Recommendation engine",
-    leadEx: "We split event ingestion from balance computation and introduced a double-entry ledger.",
-    uiEx: "Navigation, buttons, short descriptions and controls.",
+    workLabel: "§ 01 — Work",
     space: "§ 04 — Space and grid",
     spaceSub: "4px base · max 1320px · clamp(20–56) margins",
     spaceNote:
@@ -152,10 +217,18 @@ const copy = {
       "5.2 Edition switchers — text, active underlined in accent",
       "5.3 Tags and metrics",
       "5.4 Section heading",
-      "5.5 Project row (hover: --paper-2)",
+      "5.5 Project — featured + expandable rows (+ / −)",
       "5.6 Figure with caption",
       "5.7 Results table",
       "5.8 Interactive terminal — always dark, in both themes. Try it.",
+      "5.9 Editorial filters — text + superscript count",
+      "5.10 Skill — ● daily use, ○ occasional, years on the right",
+      "5.11 Certification group → group page",
+      "5.12 Bibliography entry — number, authors (you in bold), side actions",
+      "5.13 Timeline — ● current filled, ○ previous",
+      "5.14 Drop cap + pull quote",
+      "5.15 Directory — A / B / C blocks, email with copy",
+      "5.16 “Right now” block — the only surface with a --paper-2 background",
     ],
     seeWork: "See work",
     downloadCv: "Download CV",
@@ -163,27 +236,53 @@ const copy = {
     editionLabel: "Edition",
     engineering: "Engineering",
     dataLabel: "Data",
-    darkBadge: "◐ Dark",
-    available: "Available",
-    toolkitMeta: "What I use daily",
-    toolkitTitle: "Toolkit",
-    projectTitle: "Churn prediction",
-    projectSum: "Churn model with per-customer explanations.",
-    figCaption: "Every image carries a number and a caption.",
-    figPlaceholder: "screenshot / chart",
+    dark: "Dark",
+    light: "Light",
+    headMeta: "What I use, validated",
+    headTitle: "Capabilities",
+    featured: "Featured",
     metric: "Metric",
     before: "Before",
     after: "After",
-    latency: "API p95 latency",
+    problem: "Problem",
+    approach: "Approach",
+    result: "Result",
+    figPlaceholder: "screenshot / chart",
+    figCaption: "Every image carries a number and a caption.",
+    filterType: "Type",
+    all: "All",
+    journal: "Journal",
+    conference: "Conference",
+    pubOne: "publication",
+    pubMany: "publications",
+    more: "more",
+    less: "Show less −",
+    yearUnit: "y",
+    abstract: "Abstract",
+    copied: "Copied",
+    now: "now",
+    current: "● Current",
+    directory: "Directory",
+    dirMail: "A — Email",
+    writeMail: "Write an email",
+    copy: "Copy",
+    nowTitle: "Right now",
     tailwind: "§ 07 — Tailwind theme",
     tailwindSub: "v4 (@theme)",
-    tailwindIntro: `Every token exists as a Tailwind theme. Colors point to variables that switch with <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, so <code class="font-mono text-base text-accent">bg-paper</code> or <code class="font-mono text-base text-accent">text-ink</code> work in both themes without writing <code class="font-mono text-base">dark:</code>. Spacing uses the default Tailwind scale (4px base).`,
+    tailwindIntro: `Every token exists as a Tailwind theme. Colors point to variables that switch with <code class="font-mono text-base text-accent">[data-theme="dark"]</code>, so <code class="font-mono text-base text-accent">bg-paper</code> or <code class="font-mono text-base text-accent">text-ink</code> work in both themes without writing <code class="font-mono text-base">dark:</code>. Spacing uses the default Tailwind scale (4px base), the same as § 04.`,
     tokensTitle: "7.1 Token → class",
     setupTitle: "7.2 Setup (v4)",
     setupHeadlineA: "I build products",
     setupHeadlineEm: "end to end",
+    themeFile: "Theme file:",
+    themeFileNote: "— tokens, scale and mg-* utilities",
     recipesTitle: "7.3 Component recipes",
-    recipeNames: ["Primary action", "Secondary action", "Tag", "Section heading", "Section title", "Project row", "Figure caption", "Terminal", "Animated entry"],
+    recipeNames: [
+      "Primary action", "Secondary action", "Section heading", "Section title", "Item title",
+      "Editorial filter", "Skill", "Daily-use dot", "Before/after table", "Expandable row",
+      "Timeline", "Highlighted surface", "Figure caption", "Switcher", "Terminal", "Animated entry",
+    ],
+    typeScale: "type scale",
     motion: "§ 08 — Motion",
     motionItems: [
       { k: "reveal", d: "Opacity 0→1 and an 18px rise on entering the viewport. 900 ms." },
@@ -196,6 +295,93 @@ const copy = {
   },
 }[lang];
 
+/* ---------- Datos (DI): fuente por env, mock como red de seguridad ---------- */
+const source = createPortfolioSource();
+const mock = createPortfolioSource("mock");
+async function load<T>(fn: (s: typeof source) => Promise<T>): Promise<T | undefined> {
+  try {
+    return await fn(source);
+  } catch {
+    try {
+      return await fn(mock);
+    } catch {
+      return undefined;
+    }
+  }
+}
+const [profile, projects, skills, pubs, experience, certGroups] = await Promise.all([
+  load<ProfileDto>((s) => s.fetchProfile(lang)),
+  load<ProjectDto[]>((s) => s.fetchProjects(lang, { limit: 20 })),
+  load<SkillGroupDto[]>((s) => s.fetchSkills(lang)),
+  load<Partial<PublicationDto>[]>((s) => s.fetchPublications(lang, { limit: 20 })),
+  load<ExperienceDto[]>((s) => s.fetchExperience(lang)),
+  load<CertificationGroupDto[]>((s) => s.fetchCertificationGroups(lang)),
+]);
+
+const personal = resolvePersonal(lang);
+const name = profile?.name ?? personal.name;
+const email = profile?.email ?? personal.email;
+const cvUrl = profile?.cvUrl ?? personal.cvUrl;
+
+// 5.5 — destacado (featured con resultados) + filas del resto.
+const projectList = projects ?? [];
+const featured = projectList.find((p) => p.featured && p.results?.length) ?? projectList.find((p) => p.featured) ?? projectList[0];
+const rows = projectList.filter((p) => p !== featured).slice(0, 2);
+const featuredNo = String(projectList.indexOf(featured!) + 1).padStart(2, "0");
+const rowNo = (p: ProjectDto) => String(projectList.indexOf(p) + 1).padStart(2, "0");
+// 5.7 — tabla con los resultados de todos los proyectos.
+const resultRows = projectList.flatMap((p) => p.results ?? []).slice(0, 3);
+
+// 5.3 — etiquetas del destacado, métrica de otro proyecto, estado del perfil.
+const tags = (featured?.stack ?? ["PyTorch", "PostgreSQL", "React"]).slice(0, 3);
+const tagMetric = [...projectList].reverse().find((p) => p.metric && p !== featured)?.metric ?? "+18% CTR";
+const status = profile?.availability?.split("·")[0].trim() ?? (lang === "es" ? "Disponible" : "Available");
+
+// 5.9 — conteo por tipo de publicación.
+const pubList = pubs ?? [];
+const pubCounts = {
+  all: pubList.length,
+  journal: pubList.filter((p) => p.type === "journal").length,
+  conference: pubList.filter((p) => p.type === "conference").length,
+};
+
+// 5.10 — habilidades: diarias primero, vista previa de 6.
+const skillItems = (skills ?? [])
+  .flatMap((g) => normalizeSkillItems(g.items as unknown[]))
+  .sort((a, b) => Number(!!b.daily) - Number(!!a.daily) || (b.years ?? 0) - (a.years ?? 0));
+const SKILL_PREVIEW = 6;
+
+// 5.11 — el grupo con más certificaciones.
+const certGroup = [...(certGroups ?? [])].sort((a, b) => b.count - a.count)[0];
+const certsBase = pageUrl(lang, "certs").replace(/\/+$/, "");
+const certRange = certGroup?.fromYear
+  ? certGroup.fromYear === certGroup.toYear ? String(certGroup.fromYear) : `${certGroup.fromYear}–${certGroup.toYear}`
+  : "";
+
+// 5.12 — primera publicación.
+const pub = pubList[0];
+const bibtex = pub
+  ? `@${pub.type === "conference" ? "inproceedings" : "article"}{${String(pub.slug ?? "ref").replace(/[^a-z0-9]+/gi, "")},\n  title={${pub.title}},\n  author={${(pub.authors ?? []).join(" and ")}},\n  ${pub.type === "conference" ? "booktitle" : "journal"}={${pub.venue}},\n  year={${pub.year}}${pub.doi ? `,\n  doi={${pub.doi}}` : ""}\n}`
+  : "";
+
+// 5.13 — actual + anterior.
+const timeline = (experience ?? []).slice(0, 2).map((e) => ({
+  ...e,
+  period: `${e.startDate.slice(0, 4)} — ${e.current || !e.endDate ? copy.now : e.endDate.slice(0, 4)}`,
+}));
+
+// 5.14 / 5.15 / 5.16
+const dropText = profile?.about?.[0] ?? (lang === "es"
+  ? "Empecé haciendo sitios para amigos y terminé diseñando sistemas que mueven dinero real."
+  : "I started building sites for friends and ended up designing systems that move real money.");
+const pullQuote = profile?.quote ?? (lang === "es" ? "El mejor código es el que no tuviste que escribir." : "The best code is the code you didn’t have to write.");
+const social = profile?.socials?.[0];
+const nowBlock = profile?.now;
+const nowDate = nowBlock?.updatedAt
+  ? new Intl.DateTimeFormat(lang, { month: "short", year: "numeric" }).format(new Date(`${nowBlock.updatedAt}-01T12:00:00`))
+  : "";
+
+/* ---------- Tablas del sistema ---------- */
 const swatches = [
   { token: "--paper", light: "oklch(0.975 0.008 85)", dark: "oklch(0.17 0.008 60)" },
   { token: "--paper-2", light: "oklch(0.94 0.012 85)", dark: "oklch(0.22 0.01 60)" },
@@ -215,51 +401,56 @@ const twTokens = [
   { t: "--accent / --accent-2", c: "text-accent · bg-accent · fill-accent-2" },
   { t: "--term-*", c: "bg-term · text-term-ink · text-term-dim · text-term-accent" },
   { t: "serif · sans · mono", c: "font-serif · font-sans · font-mono" },
-  { t: "escala tipográfica · type scale", c: "text-display · text-h1 · text-h2 · text-h3 · text-lead · text-body-serif · text-label" },
-  { t: "peso display 350 · display weight 350", c: "font-display" },
-  { t: "anchos · widths", c: "max-w-page (1320) · max-w-prose (720)" },
-  { t: "radios · sombra · radii · shadow", c: "rounded-pill · rounded-term · shadow-term" },
-  { t: "movimiento · motion", c: "ease-editorial · animate-reveal" },
+  { t: copy.typeScale, c: "text-display · text-h1 · text-h2 · text-h3 · text-quote · text-lead · text-body-serif · text-body · text-label" },
+  { t: "font-weight 350", c: "font-display" },
+  { t: "max-width", c: "max-w-page (1320) · max-w-prose (720)" },
+  { t: "radius · shadow", c: "rounded-pill · rounded-term · shadow-term" },
+  { t: "motion", c: "ease-editorial · animate-reveal" },
 ];
 
 const twRecipes = [
   "mg-btn-primary  ≡  inline-flex items-baseline gap-2.5 pb-1.25 border-b-[1.5px] border-accent font-serif italic text-[22px] text-ink hover:text-accent",
   "mg-btn-secondary  ≡  inline-flex items-baseline gap-2 pb-1.5 border-b border-rule font-mono text-label uppercase text-ink-2 hover:text-ink hover:border-ink",
-  "mg-tag  ≡  font-mono text-[11px] px-2.25 py-1 border border-rule rounded-pill",
   "mg-section-head  ≡  flex justify-between border-t border-ink pt-3.5 font-mono text-label uppercase",
-  "font-serif font-display text-h1 mt-6 mb-12",
-  "flex flex-wrap items-baseline gap-x-8 gap-y-3.5 py-7.5 border-t border-rule hover:bg-paper-2 transition-colors",
+  "font-serif font-display text-h1 mt-5 mb-10",
+  "font-serif text-h3",
+  "mg-filter  ≡  font-serif italic text-[18px] text-ink-2 aria-pressed:text-ink aria-pressed:underline decoration-accent decoration-[1.5px] underline-offset-[5px]",
+  "mg-skill  ≡  flex items-baseline gap-2.25 py-1.75 border-b border-dotted border-rule font-serif text-[19px]",
+  "mg-dot-daily  ≡  size-1.75 rounded-full bg-accent  |  mg-dot: shadow-[inset_0_0_0_1px_var(--color-ink-2)]",
+  "grid grid-cols-[1.4fr_1fr_1fr] gap-3 py-4 border-b border-rule  ·  before: font-mono line-through text-ink-2  ·  after: font-serif text-[26px] text-accent",
+  "mg-row  ≡  flex flex-wrap items-baseline gap-x-7 py-5 border-b border-rule hover:text-accent  ·  mg-toggle-sign: size-5 rounded-full border border-rule aria-expanded:border-accent",
+  "grid grid-cols-[28px_1fr] gap-x-4.5  ·  dot: size-2.75 rounded-full border-[1.5px] border-accent",
+  "mg-surface  ≡  bg-paper-2 p-5",
   "mg-figcaption  ≡  font-serif text-[15px] text-ink-2 mt-3",
+  "mg-filter  (aria-pressed)",
   "bg-term text-term-ink font-mono text-[13px] rounded-term shadow-term",
   "animate-reveal [animation-delay:80ms]",
 ];
 
 const space = [4, 8, 12, 16, 24, 32, 48, 64, 96].map((v, i) => ({ t: "s-" + (i + 1), px: v + "px", w: v * 3 + "px" }));
 const anchors = ["principios", "color", "tipo", "espacio", "componentes", "tailwind", "movimiento"];
-const personal = resolvePersonal(lang);
 
-const termData = {
-  name: personal.name,
-  role: copy.termRole,
-  bio: copy.termBio,
-  projects: [
-    { title: "Plataforma de pagos · Payments platform", year: "2026", metric: "p95 120 ms", stack: ["Go", "PostgreSQL"] },
-    { title: "Predicción de abandono · Churn prediction", year: "2026", metric: "AUC 0.91", stack: ["XGBoost", "SHAP"] },
-  ],
-  stack: [
-    { g: "Frontend", items: ["React", "TypeScript"] },
-    { g: "ML", items: ["PyTorch", "XGBoost"] },
-  ],
-  email: personal.email,
-  links: ["GitHub", "LinkedIn"],
+const termData: TermData = {
+  name,
+  role: profile?.role ?? copy.termRole,
+  bio: profile?.bio ?? copy.termBio,
+  projects: projectList.slice(0, 4).map((p) => ({ title: p.title, year: String(p.year), metric: p.metric ?? "", stack: p.stack })),
+  stack: (skills ?? []).map((g) => ({ g: g.category, items: normalizeSkillItems(g.items as unknown[]).map((s) => s.name) })),
+  email,
+  links: (profile?.socials ?? []).map((s) => s.label),
   profile: "fullstack",
   theme: "light",
   lang,
   langAltUrl: altPageUrl(lang, "system"),
-};
+} as TermData;
+
+const specLabel = "flex-[0_0_220px] font-mono text-[11px] leading-[1.6] text-ink-2";
+const specRow = "flex flex-wrap gap-x-10 gap-y-3 items-baseline py-[22px] border-t border-rule";
+const compLabel = "font-mono text-[11px] text-ink-2 border-b border-rule pb-2";
+const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
 ---
 
-<Layout title={`Marginalia — ${copy.color}`} description={copy.heroLead} lang={lang}>
+<Layout title={`Marginalia — ${copy.version}`} description={copy.heroLead} lang={lang}>
   <div class="min-h-screen bg-paper text-ink font-sans antialiased">
     <header class="sticky top-0 z-30 bg-paper border-b border-ink">
       <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-3 flex flex-wrap items-center justify-between gap-x-7 gap-y-3">
@@ -267,28 +458,27 @@ const termData = {
           <span class="font-serif text-2xl">Marginalia</span>
           <span class="font-mono text-[11px] text-ink-2">{copy.version}</span>
         </div>
-        <nav class="flex flex-wrap gap-x-5 gap-y-1 text-sm" aria-label="System">
-          {copy.nav.map((label, i) => (
-            <a href={`#${anchors[i]}`} class="no-underline">{label}</a>
-          ))}
+        <nav class="flex flex-wrap gap-x-5 gap-y-1 text-sm" aria-label={copy.version}>
+          {copy.nav.map((label, i) => (<a href={`#${anchors[i]}`} class="no-underline">{label}</a>))}
         </nav>
         <div class="flex gap-2.5">
           <a href={pageUrl(lang, "home")} class="font-mono text-xs px-3 py-2 border border-rule rounded-pill no-underline">{copy.portfolio} ↗</a>
-          <button type="button" data-toggle-theme class="font-mono text-xs px-3 py-2 border border-ink rounded-pill bg-transparent text-ink cursor-pointer">◐ <span data-theme-label={lang === "es" ? "Claro|Oscuro" : "Light|Dark"}>{lang === "es" ? "Oscuro" : "Dark"}</span></button>
+          <button type="button" data-toggle-theme class="font-mono text-xs px-3 py-2 border border-ink rounded-pill bg-transparent text-ink cursor-pointer">◐ <span data-theme-label={copy.themeLabels}>{copy.dark}</span></button>
         </div>
       </div>
     </header>
 
     <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
-      <section class="py-[clamp(56px,8vw,120px)] pb-[clamp(40px,5vw,72px)]">
-        <div class="font-mono text-label uppercase text-accent">{copy.heroKicker}</div>
-        <h1 class="font-serif font-display text-[clamp(56px,10vw,160px)] leading-[0.92] tracking-[-0.035em] mt-6 mb-0">Marginalia</h1>
-        <p class="font-serif text-[clamp(20px,2vw,26px)] leading-[1.45] text-ink-2 max-w-[44ch] mt-7 mb-0 text-pretty">{copy.heroLead}</p>
+      <section class="pt-[clamp(56px,8vw,120px)] pb-[clamp(40px,5vw,72px)]">
+        <div data-reveal="0" class="font-mono text-label uppercase text-accent">{copy.heroKicker}</div>
+        <h1 data-reveal="90" class="font-serif font-display text-[clamp(56px,10vw,160px)] leading-[0.92] tracking-[-0.035em] mt-6 mb-0">Marginalia</h1>
+        <p data-reveal="180" class="font-serif text-[clamp(20px,2vw,26px)] leading-[1.45] text-ink-2 max-w-[44ch] mt-7 mb-0 text-pretty">{copy.heroLead}</p>
       </section>
 
+      {/* § 01 — Principios */}
       <section id="principios" class="py-14 border-t border-ink scroll-mt-20">
         <div class="font-mono text-label uppercase mb-8">{copy.principles}</div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-8">
           {copy.principleItems.map((item) => (
             <div class="border-t border-rule pt-[18px]">
               <div class="font-mono text-xs text-accent">{item.n}</div>
@@ -299,158 +489,336 @@ const termData = {
         </div>
       </section>
 
+      {/* § 02 — Color */}
       <section id="color" class="py-14 border-t border-ink scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.color}</span><span class="text-ink-2">{copy.colorSub}</span></div>
         <div class="border-t border-rule">
           <div class="hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-2.5 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 border-b border-rule">
-            <span>{copy.colToken}</span><span>{copy.colLight}</span><span>{copy.colDark}</span><span>{copy.colUse}</span>
+            {copy.colHead.map((h) => (<span>{h}</span>))}
           </div>
           {swatches.map((s, i) => (
-            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-3.5 border-b border-rule items-center">
-              <span class="font-mono text-[13px]">{s.token}</span>
-              <div class="flex flex-col gap-1.5"><div class="h-11 border border-black/20" style={`background:${s.light}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.light}</span></div>
-              <div class="flex flex-col gap-1.5"><div class="h-11 border border-black/20" style={`background:${s.dark}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.dark}</span></div>
-              <span class="text-sm leading-[1.5] text-ink-2">{copy.swatchUses[i]}</span>
+            <div class="grid grid-cols-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-3.5 border-b border-rule items-center">
+              <span class="col-span-2 md:col-span-1 font-mono text-[13px]">{s.token}</span>
+              <div class="flex flex-col gap-1.5"><div class="h-11 border border-[oklch(0.5_0_0/0.2)]" style={`background:${s.light}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.light}</span></div>
+              <div class="flex flex-col gap-1.5"><div class="h-11 border border-[oklch(0.5_0_0/0.2)]" style={`background:${s.dark}`}></div><span class="font-mono text-[10.5px] text-ink-2 break-all">{s.dark}</span></div>
+              <span class="col-span-2 md:col-span-1 text-sm leading-[1.5] text-ink-2">{copy.swatchUses[i]}</span>
             </div>
           ))}
         </div>
       </section>
 
+      {/* § 03 — Tipografía */}
       <section id="tipo" class="py-14 border-t border-ink scroll-mt-20">
-        <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.type}</span><span class="text-ink-2">{copy.typeSub}</span></div>
+        <div class="flex flex-wrap justify-between gap-2 mb-5 font-mono text-label uppercase"><span>{copy.type}</span><span class="text-ink-2">{copy.typeSub}</span></div>
+        <p class="font-serif text-[19px] leading-[1.55] text-ink-2 max-w-[62ch] mt-0 mb-7">{copy.typeIntro}</p>
         <div class="flex flex-col">
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">display<br />Newsreader 350 · clamp 46–118 · lh .96 · −2.8%</div>
-            <div class="flex-1 basis-[400px] min-w-0 font-serif font-display text-display">{copy.displayEx} <em class="text-accent font-light">{copy.displayEm}</em></div>
-          </div>
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">h1 · {lang === "es" ? "sección" : "section"}<br />Newsreader 350 · clamp 40–80 · lh 1</div>
-            <div class="flex-1 basis-[400px] min-w-0 font-serif font-display text-h1">{copy.h1Ex}</div>
-          </div>
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">h3 · {lang === "es" ? "proyecto" : "project"}<br />Newsreader 400 · 26–40 · lh 1.08</div>
-            <div class="flex-1 basis-[400px] min-w-0 font-serif text-h3">{copy.h3Ex}</div>
-          </div>
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">lead · {lang === "es" ? "cuerpo largo" : "long body"}<br />Newsreader 400 · 21 · lh 1.6</div>
-            <p class="flex-1 basis-[400px] min-w-0 m-0 font-serif text-body-serif max-w-[60ch]">{copy.leadEx}</p>
-          </div>
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">ui · {lang === "es" ? "interfaz" : "interface"}<br />IBM Plex Sans 400/500 · 14–16 · lh 1.55</div>
-            <p class="flex-1 basis-[400px] min-w-0 m-0 text-[15px] leading-[1.55]">{copy.uiEx}</p>
-          </div>
-          <div class="flex flex-wrap gap-x-10 gap-y-3 items-baseline py-6 border-t border-rule border-b border-rule">
-            <div class="flex-[0_0_200px] font-mono text-[11px] leading-[1.6] text-ink-2">label · {lang === "es" ? "datos · código" : "data · code"}<br />IBM Plex Mono 400/500 · 11–13 · +8% {lang === "es" ? "mayúsculas" : "uppercase"}</div>
-            <div class="flex-1 basis-[400px] min-w-0 flex flex-wrap gap-6 font-mono text-xs">
-              <span class="tracking-[0.08em] uppercase">§ 01 — {lang === "es" ? "Trabajo" : "Work"}</span><span class="text-accent">AUC 0.91</span><span>p95 120 ms</span>
-            </div>
-          </div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[0]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif font-display text-[clamp(46px,7vw,112px)] leading-[.96] tracking-[-0.028em]">{copy.displayEx} <em class="text-accent font-light">{copy.displayEm}</em></span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[1]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif font-display text-h1">{copy.h1Ex}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[2]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif text-h2">{featured?.title}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[3]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif text-h3">{timeline[0]?.role}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[4]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif italic font-light text-quote">{pullQuote}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[5]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif italic font-light text-lead text-ink-2">{featured?.problem}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[6]} /><div class="flex-1 basis-[400px] min-w-0"><p class="m-0 font-serif text-body-serif max-w-[60ch]">{dropText}</p></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[7]} /><div class="flex-1 basis-[400px] min-w-0"><p class="m-0 text-body max-w-[60ch]">{featured?.approach ?? featured?.description}</p></div></div>
+          <div class={`${specRow} border-b`}><div class={specLabel} set:html={copy.typeSpecs[8]} /><div class="flex-1 basis-[400px] min-w-0"><div class="flex flex-wrap gap-6 font-mono text-xs"><span class="tracking-[0.08em] uppercase">{copy.workLabel}</span>{projectList.filter((p) => p.metric).slice(0, 2).map((p, i) => (<span class={i === 0 ? "text-accent" : ""}>{p.metric}</span>))}</div></div></div>
         </div>
       </section>
 
+      {/* § 04 — Espacio */}
       <section id="espacio" class="py-14 border-t border-ink scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.space}</span><span class="text-ink-2">{copy.spaceSub}</span></div>
         <div class="flex flex-col gap-2.5">
           {space.map((s) => (
             <div class="flex items-center gap-5 font-mono text-xs">
-              <span class="w-16 text-ink-2">{s.t}</span><span class="w-12">{s.px}</span><div class="h-3 bg-ink" style={`width:${s.w}`}></div>
+              <span class="w-16 text-ink-2">{s.t}</span><span class="w-12">{s.px}</span><div class="h-3 bg-ink max-w-[calc(100%-8rem)]" style={`width:${s.w}`}></div>
             </div>
           ))}
         </div>
         <p class="text-sm leading-[1.6] text-ink-2 max-w-[60ch] mt-7 mb-0">{copy.spaceNote}</p>
       </section>
 
-      <section id="componentes" class="py-14 border-t-2 border-ink scroll-mt-20">
-        <div class="mg-label mb-10">{copy.comp}</div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-12">
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[0]}</div>
-            <div class="flex flex-wrap gap-3 items-center">
-              <a href="#" class="mg-btn-primary">{copy.seeWork}<span aria-hidden="true">→</span></a>
-              <a href="#" class="mg-btn-secondary">{copy.downloadCv} <span aria-hidden="true">↓</span></a>
-              <a href="#" class="font-sans text-[14px] underline underline-offset-4">{copy.textLink}</a>
+      {/* § 05 — Componentes */}
+      <section id="componentes" class="py-14 border-t border-ink scroll-mt-20">
+        <div class="font-mono text-label uppercase mb-10">{copy.comp}</div>
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-x-10 gap-y-12">
+
+          {/* 5.1 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[0]}</div>
+            <div class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline">
+              <a href={`${pageUrl(lang, "home")}#trabajo`} class="mg-btn-primary">{copy.seeWork}<span class="font-mono not-italic text-sm text-accent">→</span></a>
+              <a href={cvUrl} class="mg-btn-secondary">{copy.downloadCv} ↓</a>
+              <a href={pageUrl(lang, "case")} class="text-sm underline underline-offset-4">{copy.textLink}</a>
             </div>
           </div>
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[1]}</div>
-            <div class="flex flex-wrap items-center gap-4">
-              <div class="flex items-center gap-2">
-                <span class="font-sans text-[13px] font-medium text-ink-2">{copy.editionLabel}</span>
-                <span class="flex items-center gap-1 bg-paper-2 rounded-[6px] p-1">
-                  <span class="font-sans text-[14px] font-medium bg-ink text-paper rounded-[4px] px-3 py-2">{copy.engineering}</span>
-                  <span class="font-sans text-[14px] text-ink-2 px-3 py-2">{copy.dataLabel}</span>
-                </span>
+
+          {/* 5.2 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[1]}</div>
+            <div class="flex flex-wrap items-center gap-x-[18px] gap-y-2">
+              <div class="flex items-baseline gap-2" data-edition>
+                <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2">{copy.editionLabel}</span>
+                <button type="button" data-set-edition="fullstack" aria-pressed="true" class="mg-filter bg-transparent border-0 p-0">{copy.engineering}</button>
+                <span class="font-serif text-[17px] text-ink-2" aria-hidden="true">/</span>
+                <button type="button" data-set-edition="data" aria-pressed="false" class="mg-filter bg-transparent border-0 p-0">{copy.dataLabel}</button>
               </div>
-              <span class="w-px h-6 bg-rule" aria-hidden="true"></span>
-              <div class="flex gap-1 font-sans text-[13px]">
-                <span class="font-medium underline decoration-accent decoration-2 underline-offset-4">ES</span>
-                <span class="text-ink-2">/</span><span class="text-ink-2">EN</span>
+              <span class="w-px h-4 bg-rule" aria-hidden="true"></span>
+              <div class="flex gap-1.5 font-mono text-[11px] tracking-[0.08em]">
+                {lang === "es"
+                  ? (<><span class="underline decoration-accent decoration-[1.5px] underline-offset-[5px]">ES</span><span class="text-ink-2">/</span><a href={altPageUrl(lang, "system")} data-lang-link hreflang="en" class="text-ink-2 no-underline">EN</a></>)
+                  : (<><a href={altPageUrl(lang, "system")} data-lang-link hreflang="es" class="text-ink-2 no-underline">ES</a><span class="text-ink-2">/</span><span class="underline decoration-accent decoration-[1.5px] underline-offset-[5px]">EN</span></>)}
               </div>
-              <span class="w-px h-6 bg-rule" aria-hidden="true"></span>
-              <span class="font-sans text-[13px] text-ink-2">{copy.darkBadge}</span>
+              <span class="w-px h-4 bg-rule" aria-hidden="true"></span>
+              <button type="button" data-toggle-theme class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 p-0 cursor-pointer hover:text-ink">◐ <span data-theme-label={copy.themeLabels}>{copy.dark}</span></button>
             </div>
           </div>
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[2]}</div>
+
+          {/* 5.3 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[2]}</div>
             <div class="flex flex-wrap gap-1.5 items-center">
-              <span class="mg-tag">PyTorch</span><span class="mg-tag">PostgreSQL</span><span class="mg-tag">React</span>
-              <span class="font-mono text-[13px] font-medium text-ink ml-3">+18% CTR</span>
-              <span class="flex items-center gap-2 font-sans text-[13px] ml-3"><span class="w-2 h-2 rounded-full bg-accent"></span>{copy.available}</span>
+              {tags.map((tg) => (<span translate="no" class="mg-tag">{tg}</span>))}
+              <span class="font-mono text-[13px] text-accent ml-3">{tagMetric}</span>
+              <span class="flex items-center gap-2 font-mono text-xs ml-3"><span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span>{status}</span>
             </div>
           </div>
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[3]}</div>
+
+          {/* 5.4 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[3]}</div>
             <div>
-              <div class="flex justify-between border-t-2 border-ink pt-3 font-sans text-[13px] font-medium"><span><span class="text-accent">§&nbsp;</span>02</span><span class="text-ink-2 font-normal">{copy.toolkitMeta}</span></div>
-              <div class="font-serif font-display text-[48px] tracking-[-0.025em] mt-4 leading-none">{copy.toolkitTitle}</div>
+              <div class="mg-section-head"><span>§ 02</span><span class="text-ink-2">{copy.headMeta}</span></div>
+              <div class="font-serif font-display text-[clamp(36px,4.4vw,56px)] tracking-[-0.022em] mt-4 leading-none">{copy.headTitle}</div>
             </div>
           </div>
-          <div class="lg:col-span-2 flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[4]}</div>
-            <a href={pageUrl(lang, "case")} class="group flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-7 border-t border-rule border-b border-rule no-underline hover:bg-paper-2 hover:text-ink">
-              <span class="font-sans text-[13px] text-ink-2 w-8">01</span>
-              <div class="flex-1 basis-[320px] min-w-0">
-                <div class="font-serif text-h3">{copy.projectTitle}</div>
-                <p class="font-sans text-[15px] text-ink-2 mt-2 mb-0">{copy.projectSum}</p>
+
+          {/* 5.5 */}
+          {featured && (
+            <div class="col-span-full flex flex-col gap-[18px] min-w-0">
+              <div class={compLabel}>{copy.compItems[4]}</div>
+              <div class="flex flex-wrap gap-y-7 gap-x-[clamp(32px,5vw,72px)] py-6 border-t border-ink">
+                <div class="flex-[1.4_1_380px] min-w-0 flex flex-col gap-3.5">
+                  <div class="flex flex-wrap gap-3.5 items-baseline">
+                    <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-paper bg-accent px-[7px] py-0.5">{copy.featured}</span>
+                    <span class={kicker}>{[featuredNo, featured.year, featured.role].filter(Boolean).join(" · ")}</span>
+                  </div>
+                  <a href={pageUrl(lang, "case")} class="font-serif text-h2 no-underline">{featured.title}</a>
+                  {featured.problem && (<span class="font-serif italic font-light text-[20px] leading-[1.4] text-ink-2">{featured.problem}</span>)}
+                  <span class="text-body max-w-[56ch]">{featured.description}</span>
+                </div>
+                {featured.results?.length ? (
+                  <div class="flex-[1_1_280px] min-w-0 border-t border-ink" role="table">
+                    <div role="row" class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 py-2.5 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2"><span role="columnheader">{copy.metric}</span><span role="columnheader" class="text-right">{copy.before}</span><span role="columnheader" class="text-right">{copy.after}</span></div>
+                    {featured.results.map((r) => (
+                      <div role="row" class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 py-4 border-b border-rule items-baseline">
+                        <span role="cell" class="text-body">{r.label}</span>
+                        <span role="cell" class="font-mono text-sm text-ink-2 text-right line-through">{r.before}</span>
+                        <span role="cell" class="font-serif text-[26px] text-accent text-right leading-none">{r.after}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-              <div class="flex flex-wrap gap-1.5"><span class="mg-tag">XGBoost</span><span class="mg-tag">SHAP</span></div>
-              <span class="font-mono text-[13px] text-ink-2">2026</span>
-              <span class="font-mono text-[13px] font-medium text-ink">AUC 0.91</span>
-              <span class="font-sans text-[20px] text-ink-2 group-hover:text-accent" aria-hidden="true">→</span>
-            </a>
-          </div>
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[5]}</div>
+              <div class="border-t border-ink" data-rows>
+                {rows.map((p, i) => (
+                  <div>
+                    <button type="button" data-row-toggle aria-expanded={i === 0 ? "true" : "false"} aria-controls={`row-${p.slug}`} class="mg-row w-full text-left bg-transparent border-x-0 border-t-0 px-0 cursor-pointer text-ink">
+                      <span class="flex-[1_1_300px] min-w-0 grid grid-cols-[48px_minmax(0,1fr)] items-baseline">
+                        <span class="font-mono text-xs text-ink-2">{rowNo(p)}</span>
+                        <span class="flex flex-col gap-1"><span class="font-serif text-[clamp(22px,2vw,27px)] leading-[1.15]">{p.title}</span><span class="font-sans text-sm text-ink-2">{p.description}</span></span>
+                      </span>
+                      <span class="flex-[0_1_480px] min-w-0 grid grid-cols-[minmax(0,1fr)_52px_128px_20px] gap-4 items-baseline font-mono text-xs">
+                        <span translate="no" class="text-ink-2 whitespace-nowrap overflow-hidden text-ellipsis">{p.stack.join(" · ")}</span>
+                        <span>{p.year}</span>
+                        <span class="text-accent text-right">{p.metric}</span>
+                        <span data-sign class="mg-toggle-sign self-center" aria-expanded={i === 0 ? "true" : "false"} aria-hidden="true">{i === 0 ? "−" : "+"}</span>
+                      </span>
+                    </button>
+                    <div id={`row-${p.slug}`} hidden={i !== 0} class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-8 gap-y-5 pt-1 pb-6 pl-12 border-b border-rule">
+                      {[{ k: copy.problem, v: p.problem }, { k: copy.approach, v: p.approach }, { k: copy.result, v: p.result }].filter((x) => x.v).map((x) => (
+                        <div class="flex flex-col gap-1.5 pt-2.5 border-t border-rule"><span class="font-mono text-[11px] tracking-[0.08em] uppercase text-accent">{x.k}</span><span class="text-body">{x.v}</span></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 5.6 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[5]}</div>
             <figure class="m-0">
-              <div class="aspect-video mg-placeholder rounded-[6px]"><span class="font-sans text-[13px] px-3 py-2 bg-paper border border-rule rounded-[4px]">{copy.figPlaceholder}</span></div>
-              <figcaption class="mg-figcaption"><strong class="font-semibold text-ink">Fig. 2 —</strong> {copy.figCaption}</figcaption>
+              <div class="aspect-video mg-placeholder"><span class="font-mono text-xs px-3 py-1.5 bg-paper border border-rule">{copy.figPlaceholder}</span></div>
+              <figcaption class="font-serif text-[15px] text-ink-2 mt-2.5"><strong class="font-semibold text-ink">Fig. 2 —</strong> {copy.figCaption}</figcaption>
             </figure>
           </div>
-          <div class="flex flex-col gap-[18px]">
-            <div class="font-sans text-[13px] text-ink-2 border-b border-rule pb-2">{copy.compItems[6]}</div>
-            <div class="border-t-2 border-ink border-b-2 border-ink overflow-x-auto">
-              <table class="w-full border-collapse min-w-[380px]">
-                <thead><tr class="border-b border-rule font-sans text-[13px] font-medium text-ink-2 text-left"><th scope="col" class="py-2.5 pr-3 font-medium">{copy.metric}</th><th scope="col" class="py-2.5 px-3 font-medium text-right">{copy.before}</th><th scope="col" class="py-2.5 pl-3 font-medium text-right">{copy.after}</th></tr></thead>
-                <tbody>
-                <tr class="border-b border-rule"><th scope="row" class="py-3.5 pr-3 font-sans text-[15px] font-normal text-left">{copy.latency}</th><td class="py-3.5 px-3 font-mono text-sm text-ink-2 text-right">840 ms</td><td class="py-3.5 pl-3 font-mono text-sm font-medium text-accent text-right">120 ms</td></tr>
-                <tr><th scope="row" class="py-3.5 pr-3 font-sans text-[15px] font-normal text-left">AUC-ROC</th><td class="py-3.5 px-3 font-mono text-sm text-ink-2 text-right">0.74</td><td class="py-3.5 pl-3 font-mono text-sm font-medium text-accent text-right">0.91</td></tr>
-                </tbody>
-              </table>
-            </div>
+
+          {/* 5.7 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[6]}</div>
+            <table class="w-full border-collapse border-y border-ink">
+              <thead><tr class="border-b border-rule font-mono text-[11px] uppercase tracking-[0.08em] text-ink-2"><th scope="col" class="py-2.5 pr-3 font-normal text-left w-1/2">{copy.metric}</th><th scope="col" class="py-2.5 px-3 font-normal text-right">{copy.before}</th><th scope="col" class="py-2.5 pl-3 font-normal text-right">{copy.after}</th></tr></thead>
+              <tbody>
+                {resultRows.map((r, i) => (
+                  <tr class={i < resultRows.length - 1 ? "border-b border-rule" : ""}><th scope="row" class="py-3.5 pr-3 text-body font-normal text-left">{r.label}</th><td class="py-3.5 px-3 font-mono text-sm text-ink-2 text-right">{r.before}</td><td class="py-3.5 pl-3 font-mono text-sm text-accent text-right">{r.after}</td></tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div class="lg:col-span-2 flex flex-col gap-[18px]">
-            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.compItems[7]}</div>
+
+          {/* 5.8 */}
+          <div class="col-span-full flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[7]}</div>
             <Terminal data={termData} height={240} id="term-system" />
           </div>
+
+          {/* 5.9 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[8]}</div>
+            <div data-pub-filters class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5 py-3 border-y border-rule">
+              <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 mr-1">{copy.filterType}</span>
+              {([["all", copy.all], ["journal", copy.journal], ["conference", copy.conference]] as const).map(([k, l], i) => (
+                <span class="flex items-baseline gap-2.5">
+                  {i > 0 && (<span class="font-serif text-ink-2" aria-hidden="true">/</span>)}
+                  <button type="button" data-pub-type={k} data-count={pubCounts[k]} aria-pressed={i === 0 ? "true" : "false"} class="mg-filter bg-transparent border-0 p-0">{l}<sup class="font-mono not-italic text-[10px] ml-0.5">{pubCounts[k]}</sup></button>
+                </span>
+              ))}
+              <span data-pub-total data-one={copy.pubOne} data-many={copy.pubMany} class="ml-auto font-serif italic text-[15px] text-ink-2">{pubCounts.all} {pubCounts.all === 1 ? copy.pubOne : copy.pubMany}</span>
+            </div>
+          </div>
+
+          {/* 5.10 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[9]}</div>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,180px),1fr))] gap-x-5">
+              {skillItems.map((s, i) => (
+                <div class="mg-skill" data-skill-extra={i >= SKILL_PREVIEW ? "" : undefined} hidden={i >= SKILL_PREVIEW}>
+                  <span class={s.daily ? "mg-dot-daily" : "mg-dot"} aria-hidden="true"></span>
+                  <span translate="no">{s.name}</span>
+                  {s.years ? (<span class="ml-auto font-mono text-[10.5px] text-ink-2">{s.years}{copy.yearUnit}</span>) : null}
+                </div>
+              ))}
+            </div>
+            {skillItems.length > SKILL_PREVIEW && (
+              <button type="button" data-skill-more data-more={`+ ${skillItems.length - SKILL_PREVIEW} ${copy.more}`} data-less={copy.less} aria-expanded="false" class="self-start font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer hover:text-ink hover:border-ink">+ {skillItems.length - SKILL_PREVIEW} {copy.more}</button>
+            )}
+          </div>
+
+          {/* 5.11 */}
+          {certGroup && (
+            <div class="flex flex-col gap-[18px] min-w-0">
+              <div class={compLabel}>{copy.compItems[10]}</div>
+              <a href={`${certsBase}/${certGroup.group}`} class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 py-[18px] border-y border-rule no-underline">
+                <span class="flex flex-col gap-1.5 min-w-0">
+                  <span class="flex items-baseline gap-2.5"><span translate="no" class="font-serif text-[22px] uppercase">{certGroup.group}</span><span class="font-mono text-[11px] text-accent">{certGroup.count}</span></span>
+                  {certGroup.latest && (<span class="font-serif italic text-base text-ink-2 truncate">{[certGroup.latest.title, certGroup.latest.level].filter(Boolean).join(" · ")}</span>)}
+                </span>
+                <span class="flex flex-col items-end justify-between font-mono text-xs"><span class="text-ink-2">{certRange}</span><span class="font-serif text-xl" aria-hidden="true">→</span></span>
+              </a>
+            </div>
+          )}
+
+          {/* 5.12 */}
+          {pub && (
+            <div class="col-span-full flex flex-col gap-[18px] min-w-0">
+              <div class={compLabel}>{copy.compItems[11]}</div>
+              <article class="flex flex-wrap gap-x-8 gap-y-4 py-5 border-y border-rule">
+                <span class="font-mono text-[13px] text-accent">[1]</span>
+                <div class="flex-[1_1_300px] min-w-0 flex flex-col gap-2.5">
+                  <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-accent">{pub.type === "conference" ? copy.conference : copy.journal}</span>
+                  <span class="font-serif text-h3">{pub.title}</span>
+                  <span class="font-serif text-[17px] text-ink-2">
+                    {(pub.authors ?? []).map((a, j) => (<>{a === name ? (<strong class="font-semibold text-ink">{a}</strong>) : a}{j < (pub.authors ?? []).length - 1 ? ", " : ""}</>))}
+                    {" — "}<em>{pub.venue}</em>, {pub.year}.
+                  </span>
+                  <p id="pub-abstract" hidden class="font-serif text-[17px] leading-[1.55] text-ink-2 m-0 max-w-[68ch] pl-4 border-l border-accent">{pub.abstract}</p>
+                  <span class="flex flex-wrap gap-x-[22px] gap-y-2.5 font-mono text-xs tracking-[0.08em] uppercase">
+                    <button type="button" data-pub-abstract aria-expanded="false" aria-controls="pub-abstract" data-label={copy.abstract} class="bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer uppercase tracking-[0.08em] text-ink">{copy.abstract} +</button>
+                    {pub.doi && (<a href={pub.doi} target="_blank" rel="noreferrer" class="text-ink-2 border-b border-rule pb-1 no-underline">DOI ↗</a>)}
+                    <button type="button" data-copy={bibtex} data-copied={copy.copied} class="bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer uppercase tracking-[0.08em] text-ink-2">BibTeX</button>
+                  </span>
+                </div>
+              </article>
+            </div>
+          )}
+
+          {/* 5.13 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[12]}</div>
+            <div>
+              {timeline.map((e) => (
+                <div class="grid grid-cols-[28px_minmax(0,1fr)] gap-x-[18px]">
+                  <div class="flex flex-col items-center" aria-hidden="true">
+                    <span class="w-px h-[26px] bg-rule"></span>
+                    <span class={`w-[11px] h-[11px] rounded-full border-[1.5px] border-accent flex-none ${e.current ? "bg-accent" : "bg-paper"}`}></span>
+                    <span class="w-px flex-1 bg-rule"></span>
+                  </div>
+                  <div class="py-5 flex flex-col gap-2">
+                    <span class="font-mono text-xs">{e.period}{e.current && (<span class="text-[10.5px] tracking-[0.1em] uppercase text-accent ml-2.5">{copy.current}</span>)}</span>
+                    <span class="font-serif text-h3">{e.role}</span>
+                    <span class="text-sm text-ink-2">{e.company} · {e.location}</span>
+                    {(e.wins ?? []).slice(0, 1).map((w) => (<span class="grid grid-cols-[18px_minmax(0,1fr)] text-[15px] text-ink-2"><span class="text-accent" aria-hidden="true">→</span>{w}</span>))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 5.14 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[13]}</div>
+            <p class="m-0 font-serif text-[19px] leading-[1.65]"><span class="float-left font-display text-[4.6em] leading-[0.8] mt-[0.06em] mr-[0.1em] -ml-[0.03em] text-accent" aria-hidden="true">{dropText.charAt(0)}</span><span class="sr-only">{dropText.charAt(0)}</span>{dropText.slice(1)}</p>
+            <blockquote class="m-0 py-5 border-y border-ink grid grid-cols-[auto_minmax(0,1fr)] gap-x-4"><span class="font-serif text-[56px] leading-[0.7] text-accent" aria-hidden="true">“</span><span class="font-serif italic font-light text-2xl leading-[1.25]">{pullQuote}</span></blockquote>
+          </div>
+
+          {/* 5.15 */}
+          <div class="flex flex-col gap-[18px] min-w-0">
+            <div class={compLabel}>{copy.compItems[14]}</div>
+            <div class="flex flex-col">
+              <div class={`flex justify-between pb-2.5 border-b border-ink ${kicker}`}><span>{copy.directory}</span><span>{copy.dirMail}</span></div>
+              <span class="pt-4 pb-3 font-serif font-display text-[30px] tracking-[-0.015em] break-all">{email}</span>
+              <span class="flex gap-6 items-baseline pb-4 border-b border-rule">
+                <a href={`mailto:${email}`} class="font-serif italic text-[19px] border-b-[1.5px] border-accent pb-1 no-underline">{copy.writeMail} <span class="font-mono not-italic text-[13px] text-accent">→</span></a>
+                <button type="button" data-copy={email} data-copied={copy.copied} class="font-mono text-xs tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer hover:text-ink">{copy.copy}</button>
+              </span>
+              {social && (
+                <a href={social.url} target="_blank" rel="noreferrer" class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-3.5 border-b border-rule no-underline">
+                  <span class="font-serif text-xl">{social.label}</span>
+                  <span class="font-mono text-xs text-ink-2">{social.handle ?? social.url.replace(/^https?:\/\/(www\.)?/, "")} <span class="text-accent">↗</span></span>
+                  {social.note && (<span class="col-span-full text-[13px] text-ink-2">{social.note}</span>)}
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* 5.16 */}
+          {nowBlock && (
+            <div class="flex flex-col gap-[18px] min-w-0">
+              <div class={compLabel}>{copy.compItems[15]}</div>
+              <div class="mg-surface">
+                <div class="flex justify-between gap-3 pb-3 border-b border-rule">
+                  <span class="flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] uppercase"><span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span>{copy.nowTitle}</span>
+                  <span class={kicker}>{nowDate}</span>
+                </div>
+                <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-5">
+                  {nowBlock.items.map((it) => (
+                    <div class="pt-3.5 flex flex-col gap-1"><span class={kicker}>{it.label}</span><span class="font-serif text-lg">{it.value}</span></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
+      {/* § 07 — Tailwind */}
       <section id="tailwind" class="py-14 border-t border-ink scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.tailwind}</span><span class="text-ink-2">{copy.tailwindSub}</span></div>
-        <p class="font-serif text-body-serif max-w-[60ch] mt-0 mb-9 text-pretty" set:html={copy.tailwindIntro} />
+        <p class="font-serif text-[21px] leading-[1.55] max-w-[60ch] mt-0 mb-9 text-pretty" set:html={copy.tailwindIntro} />
         <div class="flex flex-wrap gap-x-12 gap-y-10 items-start">
           <div class="flex-1 basis-[420px] min-w-0">
-            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.tokensTitle}</div>
+            <div class={compLabel}>{copy.tokensTitle}</div>
             {twTokens.map((x) => (
               <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4 py-2.5 border-b border-rule font-mono text-[12.5px]">
                 <span class="text-ink-2">{x.t}</span><span class="text-accent break-words">{x.c}</span>
@@ -458,19 +826,24 @@ const termData = {
             ))}
           </div>
           <div class="flex-1 basis-[420px] min-w-0 flex flex-col gap-3.5">
-            <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.setupTitle}</div>
-            <pre class="m-0 bg-term text-term-ink font-mono text-[12.5px] leading-[1.7] p-[18px_20px] rounded-term overflow-x-auto">{`/* app.css */
-@import "./marginalia.css";
+            <div class={compLabel}>{copy.setupTitle}</div>
+            <pre class="m-0 bg-term text-term-ink font-mono text-[12.5px] leading-[1.7] px-5 py-[18px] rounded-term overflow-x-auto">{`/* src/styles/global.css */
+@import "tailwindcss";
+@theme { --text-display: …; --color-paper: …; }
 
 <html data-theme="light">
 <h1 class="font-serif font-display text-display">
   ${copy.setupHeadlineA}
   <em class="text-accent font-light">${copy.setupHeadlineEm}</em>
 </h1>`}</pre>
+            <div class="flex flex-col gap-1.5 font-mono text-[12.5px]">
+              <span class="text-ink-2">{copy.themeFile}</span>
+              <span>src/styles/global.css <span class="text-ink-2">{copy.themeFileNote}</span></span>
+            </div>
           </div>
         </div>
         <div class="mt-12">
-          <div class="font-mono text-[11px] text-ink-2 border-b border-rule pb-2">{copy.recipesTitle}</div>
+          <div class={compLabel}>{copy.recipesTitle}</div>
           {twRecipes.map((recipe, i) => (
             <div class="flex flex-wrap gap-x-8 gap-y-2 py-4 border-b border-rule items-baseline">
               <span class="flex-[0_0_200px] font-serif text-xl">{copy.recipeNames[i]}</span>
@@ -480,9 +853,10 @@ const termData = {
         </div>
       </section>
 
-      <section id="movimiento" class="py-14 pb-24 border-t border-ink scroll-mt-20">
+      {/* § 08 — Movimiento */}
+      <section id="movimiento" class="pt-14 pb-24 border-t border-ink scroll-mt-20">
         <div class="font-mono text-label uppercase mb-8">{copy.motion}</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-8">
           {copy.motionItems.map((item) => (
             <div class="border-t border-rule pt-4">
               <div class="font-mono text-xs text-accent">{item.k}</div>
@@ -497,7 +871,67 @@ const termData = {
   <script>
     import { initChrome } from "../scripts/site";
     import { initTerminals } from "../scripts/terminal";
+    import { getProfile, setProfile, type Profile } from "../scripts/store";
     initChrome();
     initTerminals();
+
+    // 5.2 — edición: persiste el perfil igual que el portafolio.
+    const editions = document.querySelectorAll<HTMLButtonElement>("[data-set-edition]");
+    const paintEdition = (p: Profile) => editions.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setEdition === p)));
+    editions.forEach((b) => b.addEventListener("click", () => { setProfile(b.dataset.setEdition as Profile); paintEdition(b.dataset.setEdition as Profile); }));
+    paintEdition(getProfile());
+
+    // 5.5 — filas desplegables (+ / −).
+    document.querySelectorAll<HTMLButtonElement>("[data-row-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const open = btn.getAttribute("aria-expanded") !== "true";
+        btn.setAttribute("aria-expanded", String(open));
+        const sign = btn.querySelector<HTMLElement>("[data-sign]");
+        if (sign) { sign.textContent = open ? "−" : "+"; sign.setAttribute("aria-expanded", String(open)); }
+        const panel = document.getElementById(btn.getAttribute("aria-controls") || "");
+        if (panel) panel.hidden = !open;
+      });
+    });
+
+    // 5.9 — filtros editoriales.
+    const filters = document.querySelector<HTMLElement>("[data-pub-filters]");
+    filters?.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-pub-type]");
+      if (!btn) return;
+      filters.querySelectorAll("[data-pub-type]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      const total = filters.querySelector<HTMLElement>("[data-pub-total]");
+      const n = Number(btn.dataset.count || 0);
+      if (total) total.textContent = `${n} ${n === 1 ? total.dataset.one : total.dataset.many}`;
+    });
+
+    // 5.10 — "+ N más".
+    const more = document.querySelector<HTMLButtonElement>("[data-skill-more]");
+    more?.addEventListener("click", () => {
+      const open = more.getAttribute("aria-expanded") !== "true";
+      more.setAttribute("aria-expanded", String(open));
+      more.textContent = (open ? more.dataset.less : more.dataset.more) || "";
+      document.querySelectorAll<HTMLElement>("[data-skill-extra]").forEach((el) => { el.hidden = !open; });
+    });
+
+    // 5.12 — resumen desplegable.
+    const abs = document.querySelector<HTMLButtonElement>("[data-pub-abstract]");
+    abs?.addEventListener("click", () => {
+      const open = abs.getAttribute("aria-expanded") !== "true";
+      abs.setAttribute("aria-expanded", String(open));
+      abs.textContent = `${abs.dataset.label} ${open ? "−" : "+"}`;
+      const panel = document.getElementById("pub-abstract");
+      if (panel) panel.hidden = !open;
+    });
+
+    // 5.12 / 5.15 — copiar (BibTeX, correo).
+    document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const label = btn.textContent;
+        navigator.clipboard?.writeText(btn.dataset.copy || "").then(() => {
+          btn.textContent = btn.dataset.copied || label;
+          window.setTimeout(() => { btn.textContent = label; }, 1600);
+        }).catch(() => {});
+      });
+    });
   </script>
 </Layout>

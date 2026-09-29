@@ -1,23 +1,26 @@
 ---
 // Home (portfolio) template, shared by the "es" and "en" pages.
-// The `lang` prop selects the locale; Astro resolves all copy at build time
-// and embeds it as JSON for client-side profile switches.
+// DI: recibe `sourceKind` por props (mock|live). Default = composition por env.
+// Astro resuelve copy en build y embebe JSON para switches de perfil en cliente.
 import Layout from "../layouts/Layout.astro";
 import SiteHeader from "./SiteHeader.astro";
 import SectionHead from "./SectionHead.astro";
 import Terminal from "./Terminal.astro";
-import { ui, profiles, pick, type Profile } from "../data/content";
+import { ui, profiles, education, certGroupFallback, pick, type Profile } from "../data/content";
 import type { Lang } from "../scripts/store";
-import { resolvePersonal, buildContactRows } from "../utils/personal";
+import { resolvePersonal } from "../utils/personal";
 import { pageUrl, altPageUrl } from "../utils/urls";
 import { site } from "../data/site";
 import type { TermData } from "../scripts/terminal";
+import { resolveSourceKind, type SourceKind } from "../lib/composition";
+import { workHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml } from "../scripts/home-render";
 
 interface Props {
   lang: Lang;
+  sourceKind?: SourceKind;
 }
 
-const { lang } = Astro.props;
+const { lang, sourceKind = resolveSourceKind() } = Astro.props;
 const t = pick(ui, lang);
 const getProfileData = (profile: Profile) => pick(profiles[profile], lang);
 const withNumbers = (projects: any[]) => projects.map((x: any, i: number) => ({ ...x, no: "0" + (i + 1) }));
@@ -27,24 +30,8 @@ const systemHref = pageUrl(lang, "system");
 const langAltUrl = altPageUrl(lang, "home");
 
 const resolved = {
-  fullstack: { ...getProfileData("fullstack"), projects: withNumbers(getProfileData("fullstack").projects) },
-  data: { ...getProfileData("data"), projects: withNumbers(getProfileData("data").projects) },
-};
-const contactRows = {
-  fullstack: buildContactRows({
-    lang,
-    linkIds: profiles.fullstack.links,
-    mailLabel: t.mail,
-    locationLabel: t.loc,
-    statusLabel: t.avK,
-  }),
-  data: buildContactRows({
-    lang,
-    linkIds: profiles.data.links,
-    mailLabel: t.mail,
-    locationLabel: t.loc,
-    statusLabel: t.avK,
-  }),
+  fullstack: { ...getProfileData("fullstack"), projects: withNumbers(getProfileData("fullstack").projects), certs: [], certGroups: [] },
+  data: { ...getProfileData("data"), projects: withNumbers(getProfileData("data").projects), certs: [], certGroups: [] },
 };
 
 const termFor = (profile: Profile): TermData => {
@@ -66,18 +53,37 @@ const termFor = (profile: Profile): TermData => {
 const termDataMap = { fullstack: termFor("fullstack"), data: termFor("data") };
 
 const p = resolved.fullstack;
+// Formación por edición (Ingeniería / Datos); la global queda de respaldo.
+const edu = p.edu ?? pick(education, lang);
+const certsBase = pageUrl(lang, "certs").replace(/\/+$/, "");
 const index1 = t.index.slice(0, 3);
 const index2 = t.index.slice(3);
 
 // Locale-resolved payload for client-side profile switches (no { es, en } pairs left).
 const pageData = {
   ui: t,
-  fullstack: { ...resolved.fullstack, contactRows: contactRows.fullstack },
-  data: { ...resolved.data, contactRows: contactRows.data },
+  fullstack: resolved.fullstack,
+  data: resolved.data,
+  edu,
   personal,
-  meta: { lang, homeUrl: pageUrl(lang, "home"), caseHref },
+  meta: { lang, homeUrl: pageUrl(lang, "home"), caseHref, certsUrl: pageUrl(lang, "certs"), sourceKind },
 };
 const contentJson = JSON.stringify(pageData);
+
+// Mismo marcado que el re-render en cliente (scripts/home-render.ts).
+const pubState0 = { type: "all", year: "all", open: [], bib: [] };
+const personalFull = { ...personal, hoursNote: t.hoursNote };
+const html = {
+  work: workHtml(p.projects, t, { caseHref, open: 1 }),
+  about: aboutHtml(p.about),
+  facts: factsHtml(t.facts),
+  quote: quoteHtml(p),
+  principles: principlesHtml(p, t),
+  now: nowHtml(p, t, lang),
+  directory: directoryHtml(personalFull, p.links, t),
+  pubFilters: pubFiltersHtml(p.pubs, t, pubState0),
+  pubs: pubsHtml(p.pubs, t, pubState0, personal.name),
+};
 const termJson = JSON.stringify(termDataMap);
 ---
 
@@ -100,7 +106,7 @@ const termJson = JSON.stringify(termDataMap);
             </div>
             <div class="flex flex-wrap items-baseline gap-x-8 gap-y-3.5">
               <a href="#trabajo" class="mg-btn-primary"><span data-t="ui.work">{t.work}</span><span class="font-mono not-italic text-sm text-accent">→</span></a>
-              <a href="#" class="mg-btn-secondary"><span data-t="ui.cv">{t.cv}</span> ↓</a>
+              <a id="hero-cv" href={personal.cvUrl} class="mg-btn-secondary"><span data-t="ui.cv">{t.cv}</span> ↓</a>
             </div>
           </div>
         </div>
@@ -145,96 +151,156 @@ const termJson = JSON.stringify(termDataMap);
       {/* § 01 — Selected work */}
       <section id="trabajo" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
         <SectionHead num="01" metaKey="ui.s1m" metaFallback={t.s1m} titleKey="ui.s1t" titleFallback={t.s1t} />
-        <div id="projects-list" class="border-b border-rule">
-          {p.projects.map((pr: any) => (
-            <a data-reveal="0" href={caseHref} class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-[30px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">
-              <span class="font-mono text-[13px] text-ink-2 w-8">{pr.no}</span>
-              <div class="flex-1 basis-[340px] min-w-0">
-                <h3 class="font-serif font-normal text-h3 m-0">{pr.title}</h3>
-                <p class="text-[15px] leading-[1.55] text-ink-2 mt-2 mb-0 max-w-[52ch]">{pr.sum}</p>
-              </div>
-              <div class="flex-[0_1_250px] flex flex-wrap gap-1.5">
-                {pr.stack.map((s: string) => (<span class="mg-tag">{s}</span>))}
-              </div>
-              <span class="font-mono text-[13px] w-11">{pr.year}</span>
-              <span class="font-mono text-[13px] text-accent flex-[0_0_150px] text-right">{pr.metric}</span>
-              <span class="font-serif text-[26px] leading-none" aria-hidden="true">→</span>
-            </a>
-          ))}
-        </div>
+        <div id="projects-list" set:html={html.work} />
       </section>
 
       {/* § 02 — About */}
       <section id="sobre-mi" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
         <SectionHead num="02" metaKey="ui.abM" metaFallback={t.abM} titleKey="ui.abT" titleFallback={t.abT} />
-        <div class="flex flex-wrap gap-x-10 gap-y-10 items-start">
-          <figure data-reveal="0" class="flex-[0_1_340px] min-w-[240px] m-0">
-            <div class="aspect-[4/5] mg-placeholder">
-              <span data-t="ui.portrait" class="font-mono text-xs px-3 py-1.5 bg-paper border border-rule">{t.portrait}</span>
-            </div>
-            <figcaption class="font-serif text-[15px] text-ink-2 mt-2.5"><strong class="font-semibold text-ink">Fig. 2 —</strong>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
-          </figure>
-          <div id="about-list" data-reveal="100" class="flex-1 basis-[400px] min-w-0 max-w-[640px] flex flex-col gap-[22px]">
-            {p.about.map((a: any) => (
-              <p class="font-serif text-[clamp(20px,1.8vw,23px)] leading-[1.6] m-0 text-pretty">{a.t}<sup class="font-mono text-[11px] text-accent ml-0.5">{a.n}</sup></p>
-            ))}
+        <div class="flex flex-wrap gap-y-12 gap-x-[clamp(32px,5vw,80px)] items-start">
+          <div class="flex-[0_1_340px] min-w-[250px] flex flex-col gap-7 min-[1100px]:sticky min-[1100px]:top-24">
+            <figure data-reveal="0" class="m-0">
+              <div class="aspect-[4/5] mg-placeholder">
+                <span data-t="ui.portrait" class="font-mono text-xs px-3 py-1.5 bg-paper border border-rule">{t.portrait}</span>
+              </div>
+              <figcaption class="mg-figcaption mt-2.5"><strong class="font-semibold text-ink">Fig. 2 —</strong>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
+            </figure>
+            <dl id="about-facts" data-reveal="80" class="m-0 flex flex-col border-t border-ink" set:html={html.facts} />
           </div>
-          <aside data-reveal="200" class="flex-[0_1_230px] min-w-[200px] flex flex-col gap-[18px]">
-            <div data-t="ui.notes" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{t.notes}</div>
-            <div id="notes-list" class="flex flex-col gap-[18px]">
-              {p.notes.map((nt: any) => (
-                <div class="flex gap-2.5 border-t border-rule pt-2.5">
-                  <span class="font-mono text-[11px] text-accent">{nt.n}</span>
-                  <span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">{nt.t}</span>
+
+          <div class="flex-[1_1_480px] min-w-0 flex flex-col gap-[clamp(48px,5vw,72px)]">
+            <div data-reveal="100" class="flex flex-wrap gap-y-8 gap-x-[clamp(28px,3vw,48px)] items-start">
+              <div id="about-list" class="flex-[1_1_380px] min-w-0 max-w-[620px] flex flex-col gap-[22px]" set:html={html.about} />
+              <aside class="flex-[0_1_210px] min-w-[190px] flex flex-col gap-4">
+                <div data-t="ui.notes" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{t.notes}</div>
+                <div id="notes-list" class="flex flex-col gap-4">
+                  {p.notes.map((nt: any) => (
+                    <div class="flex gap-2.5 border-t border-rule pt-2.5">
+                      <span class="font-mono text-[11px] text-accent">{nt.n}</span>
+                      <span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">{nt.t}</span>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </div>
+
+            <blockquote id="about-quote" data-reveal="0" class="m-0 py-[clamp(24px,3vw,36px)] border-y border-ink grid grid-cols-[auto_minmax(0,1fr)] gap-x-5" set:html={html.quote} />
+            <div id="about-principles" data-reveal="0" set:html={html.principles} />
+            <div id="about-now" data-reveal="0" class="bg-paper-2 p-[clamp(20px,2.4vw,32px)]" set:html={html.now} />
+          </div>
+        </div>
+      </section>
+
+      {/* § 03 — Capacidades: habilidades por área + registro de credenciales */}
+      <section id="herramientas" class="pt-[clamp(56px,7vw,104px)] pb-[clamp(56px,7vw,104px)] scroll-mt-20">
+        <div data-reveal="0" class="mg-section-head">
+          <span>§ 03</span><span data-t="ui.s2m" class="text-ink-2">{t.s2m}</span>
+        </div>
+        <h2 data-t="ui.s2t" data-tp="title" class="font-serif font-display text-h1 mt-6 mb-[clamp(32px,4vw,56px)]">{t.s2t}</h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-[clamp(40px,6vw,96px)] gap-y-12">
+          <div class="min-w-0">
+            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-ink font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
+              <span data-t="ui.skillT">{t.skillT}</span>
+              <span id="skill-total" class="tabular-nums"></span>
+            </div>
+            <div id="skill-areas" class="flex flex-wrap items-baseline gap-x-2.5 gap-y-2 py-3.5 border-b border-rule"></div>
+            <div id="stack-grid" class="mt-1"></div>
+          </div>
+          <div id="certs-col" data-reveal="100" class="min-w-0">
+            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-ink font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
+              <span data-t="ui.certsT">{t.certsT}</span><span id="cert-total" class="tabular-nums"></span>
+            </div>
+            <div id="certs-teaser">
+              {certGroupFallback.map((g: string) => (
+                <a href={`${certsBase}?grupo=${g}`} class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 px-3 -mx-3 py-5 border-b border-rule no-underline min-h-11 transition-colors hover:bg-paper-2 hover:text-ink">
+                  <span class="min-w-0 flex flex-col gap-1.5">
+                    <span class="flex items-baseline gap-2.5">
+                      <span translate="no" class="font-serif text-[26px] leading-[1.1]">{g}</span>
+                      <span data-cert-count={g} class="font-mono text-[11px] text-accent tabular-nums"></span>
+                    </span>
+                    <span data-cert-latest={g} class="font-serif italic text-[16px] text-ink-2 truncate"></span>
+                  </span>
+                  <span class="flex flex-col items-end justify-between gap-2">
+                    <span data-cert-range={g} class="font-mono text-[12px] text-ink-2 tabular-nums"></span>
+                    <span class="font-serif text-[24px] leading-none" aria-hidden="true">→</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* § 04 — Investigación: bibliografía con filtros en línea */}
+      <section id="investigacion" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <div data-reveal="0" class="mg-section-head">
+          <span>§ 04</span><span data-t="ui.wrM" class="text-ink-2">{t.wrM}</span>
+        </div>
+        <h2 data-reveal="80" data-t="ui.wrT" class="font-serif font-display text-h1 mt-5 mb-9">{t.wrT}</h2>
+        <div id="pubs-filters" class="flex flex-wrap items-baseline gap-x-7 gap-y-3 py-3.5 border-y border-rule" set:html={html.pubFilters} />
+        <div id="pubs-list" set:html={html.pubs} />
+      </section>
+
+      {/* § 05 — Trayectoria: línea de tiempo + formación */}
+      <section id="trayectoria" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+        <div class="flex flex-wrap justify-between items-baseline gap-x-8 gap-y-3">
+          <h2 data-t="ui.s3t" data-tp="title" class="font-serif font-display text-h1 m-0">{t.s3t}</h2>
+          <span data-t="ui.s3m" class="font-mono text-label uppercase text-ink-2">{t.s3m}</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-x-[clamp(40px,6vw,96px)] gap-y-12 mt-[clamp(32px,4vw,56px)]">
+          <div class="min-w-0">
+            <div data-t="ui.expT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-ink">{t.expT}</div>
+            <div id="exp-list" class="mt-1">
+              {p.exp.map((e: any) => (
+                <div data-reveal="0" class="grid grid-cols-[28px_minmax(0,1fr)] gap-x-[18px]">
+                  <div class="flex flex-col items-center" aria-hidden="true">
+                    <span class="w-px h-[30px] bg-rule"></span>
+                    <span class={`w-[11px] h-[11px] rounded-full border-[1.5px] border-accent flex-none ${e.current ? "bg-accent" : "bg-paper"}`}></span>
+                    <span class="w-px flex-1 bg-rule"></span>
+                  </div>
+                  <div class="py-[22px] pb-[30px] flex flex-col gap-2.5">
+                    <div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[12px]">
+                      <span class="tabular-nums">{e.y}</span>
+                      {e.current && (<span data-t="ui.actT" class="text-[10.5px] tracking-[0.1em] uppercase text-accent">● {t.actT}</span>)}
+                      {e.dur && (<span class="text-ink-2">{e.dur}</span>)}
+                    </div>
+                    <h3 class="font-serif font-normal text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.015em] mt-1.5 mb-0">{e.r}</h3>
+                    <span class="text-[15px] text-ink-2">{e.c}</span>
+                    <p class="font-serif text-[19px] leading-[1.55] mt-1.5 mb-0 max-w-[56ch] text-pretty">{e.d}</p>
+                    {(e.wins || []).map((w: string) => (
+                      <p class="grid grid-cols-[18px_minmax(0,1fr)] text-[15px] leading-[1.5] text-ink-2 mt-1 mb-0 max-w-[56ch]">
+                        <span class="text-accent" aria-hidden="true">→</span><span>{w}</span>
+                      </p>
+                    ))}
+                    {(e.stack || []).length > 0 && (
+                      <div class="flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[11px] text-ink-2 mt-1">
+                        {e.stack.map((s: string) => (<span translate="no">{s}</span>))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
+          </div>
+
+          <aside class="min-w-0 lg:sticky lg:top-24 self-start">
+            <div data-t="ui.eduT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-ink">{t.eduT}</div>
+            <div id="edu-list" class="mt-8">
+              {edu.map((e: any) => (
+                <div data-reveal="0" class="pb-8 border-b border-rule last:border-b-0">
+                  <div class="font-mono text-[13px] text-ink-2 tabular-nums">{e.p}</div>
+                  <div class="font-serif text-[24px] leading-[1.2] mt-2">{e.d}</div>
+                  <div class="font-serif italic text-[17px] text-ink-2 mt-1">{e.s}</div>
+                  <p class="text-[15px] leading-[1.55] text-ink-2 mt-2.5 mb-0 max-w-[46ch]">{e.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div class="mt-10">
+              <a id="exp-cv" href={personal.cvUrl} class="mg-btn-primary"><span data-t="ui.cvFull">{t.cvFull}</span><span class="font-mono not-italic text-sm text-accent">↓</span></a>
+            </div>
           </aside>
-        </div>
-      </section>
-
-      {/* § 03 — Toolkit */}
-      <section id="herramientas" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
-        <SectionHead num="03" metaKey="ui.s2m" metaFallback={t.s2m} titleKey="ui.s2t" titleFallback={t.s2t} />
-        <div id="stack-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
-          {p.stack.map((g: any) => (
-            <div data-reveal="0">
-              <div class="font-mono text-label uppercase text-accent pb-3">{g.g}</div>
-              {g.items.map((it: string) => (<div class="font-serif text-[23px] py-3 border-t border-rule">{it}</div>))}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* § 04 — Writing */}
-      <section id="escritos" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
-        <SectionHead num="04" metaKey="ui.wrM" metaFallback={t.wrM} titleKey="ui.wrT" titleFallback={t.wrT} />
-        <div id="writing-list" class="border-b border-rule">
-          {p.writing.map((w: any) => (
-            <a data-reveal="0" href="#" class="flex flex-wrap gap-x-8 gap-y-2 items-baseline px-4 -mx-4 py-[22px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">
-              <span class="font-mono text-[13px] text-ink-2 flex-[0_0_90px]">{w.d}</span>
-              <span class="flex-1 basis-[360px] min-w-0 font-serif text-[clamp(22px,2.2vw,28px)] leading-[1.2]">{w.t}</span>
-              <span class="font-mono text-[11px] tracking-[0.06em] uppercase text-accent flex-[0_0_170px]">{w.k}</span>
-              <span class="font-serif text-[22px] leading-none" aria-hidden="true">↗</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* § 05 — Experience */}
-      <section id="trayectoria" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
-        <SectionHead num="05" metaKey="ui.s3m" metaFallback={t.s3m} titleKey="ui.s3t" titleFallback={t.s3t} />
-        <div id="exp-list" class="border-b border-rule">
-          {p.exp.map((e: any) => (
-            <div data-reveal="0" class="flex flex-wrap gap-x-10 gap-y-2.5 py-7 border-t border-rule">
-              <span class="font-mono text-[13px] text-ink-2 flex-[0_0_150px]">{e.y}</span>
-              <div class="flex-1 basis-[280px]">
-                <div class="font-serif text-[26px] leading-[1.15]">{e.r}</div>
-                <div class="text-sm text-ink-2 mt-1">{e.c}</div>
-              </div>
-              <p class="flex-1 basis-[320px] text-base leading-[1.6] text-ink-2 m-0 max-w-[48ch]">{e.d}</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -243,34 +309,20 @@ const termJson = JSON.stringify(termDataMap);
         <div data-reveal="0" class="mg-section-head">
           <span>§ 06 — <span data-t="ui.s4t">{t.s4t}</span></span><span data-t="ui.s4m" class="text-ink-2">{t.s4m}</span>
         </div>
-        <div class="flex flex-wrap gap-x-14 gap-y-14 mt-[clamp(40px,5vw,72px)] items-start">
+        <div class="flex flex-wrap gap-y-14 gap-x-[clamp(40px,6vw,112px)] mt-[clamp(40px,5vw,72px)] items-start">
           <div data-reveal="60" class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-7">
             <span data-t="ui.salute" class="font-serif italic text-[21px] text-ink-2">{t.salute}</span>
-            <p id="letter" data-tp="letter" class="font-serif font-display text-[clamp(30px,3.4vw,48px)] leading-[1.2] tracking-[-0.015em] m-0 max-w-[24ch] text-pretty">{p.letter}</p>
+            <p id="letter" data-tp="letter" class="font-serif font-display text-[clamp(24px,2.4vw,34px)] leading-[1.25] tracking-[-0.01em] m-0 max-w-[28ch] text-pretty">{p.letter}</p>
             <div class="flex flex-col gap-1.5 mt-2">
               <span data-t="ui.sign" class="font-serif italic text-[19px] text-ink-2">{t.sign}</span>
-              <span class="font-serif text-[30px] tracking-[-0.01em]">{site.firstName} <em class="font-light">{site.lastName}</em></span>
+              <span class="font-serif text-2xl tracking-[-0.01em]">{site.firstName} <em class="font-light">{site.lastName}</em></span>
               <span data-tp="role" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{p.role}</span>
             </div>
             <p class="font-serif text-[17px] leading-[1.5] text-ink-2 mt-3 mb-0 pt-4 border-t border-rule max-w-[44ch]">
               <strong data-t="ui.psL" class="font-semibold text-ink">{t.psL}</strong>{` `}<span data-t="ui.ps">{t.ps}</span>
             </p>
           </div>
-          <aside data-reveal="160" class="flex-1 basis-[320px] min-w-0 flex flex-col">
-            <div data-t="ui.dir" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 pb-3 border-b border-ink">{t.dir}</div>
-            <div id="contact-rows">
-              {contactRows.fullstack.map((r) => (
-                <a href={r.href} class="grid grid-cols-[110px_minmax(0,1fr)_auto] gap-4 items-baseline py-4 border-b border-rule no-underline hover:text-accent">
-                  <span class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{r.key}</span>
-                  <span class="font-serif text-xl break-words">{r.value}</span>
-                  <span class="font-mono text-xs text-accent">{r.icon}</span>
-                </a>
-              ))}
-            </div>
-            <div class="mt-8">
-              <a href={`mailto:${personal.email}`} class="mg-btn-primary"><span data-t="ui.write">{t.write}</span><span class="font-mono not-italic text-sm text-accent">→</span></a>
-            </div>
-          </aside>
+          <aside id="contact-dir" data-reveal="160" class="flex-[1_1_340px] min-w-0 flex flex-col gap-9" set:html={html.directory} />
         </div>
       </section>
     </main>
@@ -278,6 +330,7 @@ const termJson = JSON.stringify(termDataMap);
     <footer class="border-t border-ink">
       <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] pt-5 pb-[88px] flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
         <span>© 2026 {personal.name}</span>
+        <span id="api-status" data-state="local">datos locales</span>
         <span data-t="ui.foot1">{t.foot1}</span>
         <div class="flex gap-5">
           <a href={systemHref} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
@@ -292,14 +345,150 @@ const termJson = JSON.stringify(termDataMap);
   <script>
     import { initSite, type PageData } from "../scripts/site";
     import { initTerminals } from "../scripts/terminal";
-    import type { Profile } from "../scripts/store";
+    import { refreshHomeFromApi } from "../scripts/api-live";
+    import { createPortfolioSource } from "../lib/composition";
+    import { getProfile, type Profile } from "../scripts/store";
+    import { esc, workHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, type PubState } from "../scripts/home-render";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
     window.__mgTermData = JSON.parse(document.getElementById("mg-terminals")!.textContent || "{}");
-    const esc = (s: string) =>
-      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
     const caseHref = page.meta.caseHref as string;
+
+    // Habilidades: filtro por área + puntos de validación + rango de años.
+    const skillUI = { area: "all", more: new Set<string>() };
+    const SKILL_PREVIEW = 8;
+
+    function normSkill(s: string) {
+      return String(s).toLowerCase().replace(/[^a-z0-9+#]/g, "");
+    }
+
+    function renderStack(pg: PageData, profile: Profile) {
+      const gridEl = document.getElementById("stack-grid");
+      const areasEl = document.getElementById("skill-areas");
+      const totalEl = document.getElementById("skill-total");
+      if (!gridEl || !areasEl) return;
+      const p = (pg as any)[profile] as any;
+      const ui = (pg as any).ui || {};
+      const groups = p.stack || [];
+      // Años de certificación por skill: rango de los certs vivos que la nombran.
+      const years: Record<string, string[]> = {};
+      (p.certs || []).forEach((c: any) => {
+        const y = String(c.date || "").slice(0, 4);
+        if (!y) return;
+        (c.skills || []).forEach((s: string) => {
+          const n = normSkill(s);
+          if (n.length < 2) return;
+          (years[n] ||= []).push(y);
+        });
+      });
+      const match = (item: string) => {
+        const parts = String(item).toLowerCase().split("/");
+        let hit = false;
+        for (const n of Object.keys(years)) {
+          if (parts.some((part) => {
+            const k = normSkill(part);
+            return k.length >= 2 && (k.includes(n) || n.includes(k));
+          })) hit = true;
+        }
+        return hit;
+      };
+      const yearLabel = (item: string) => {
+        const found: string[] = [];
+        for (const [n, ys] of Object.entries(years)) {
+          const parts = String(item).toLowerCase().split("/");
+          if (parts.some((part) => {
+            const k = normSkill(part);
+            return k.length >= 2 && (k.includes(n) || n.includes(k));
+          })) found.push(...ys);
+        }
+        if (found.length === 0) return "";
+        const uniq = [...new Set(found)].sort();
+        return uniq.length === 1 ? uniq[0] : `${uniq[0]}–${String(uniq[uniq.length - 1]).slice(2)}`;
+      };
+
+      const yearUnit = (pg.meta as any)?.lang === "en" ? "y" : "a";
+      const total = groups.reduce((n: number, g: any) => n + (g.items?.length ?? 0), 0);
+      if (totalEl) totalEl.textContent = `${total} ${ui.skillT || ""}`.toLowerCase();
+
+      const areas: { k: string; label: string; n: number }[] = [
+        { k: "all", label: ui.pubAll || "All", n: total },
+        ...groups.map((g: any) => ({ k: String(g.g), label: String(g.g), n: g.items?.length ?? 0 })),
+      ];
+      areasEl.innerHTML = `<span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 mr-1">${esc(ui.skillArea || "Área")}</span>`
+        + areas.map((o, i) => {
+          const active = skillUI.area === o.k;
+          return `<span class="flex items-baseline gap-2.5">`
+            + (i > 0 ? `<span class="font-serif text-ink-2" aria-hidden="true">/</span>` : "")
+            + `<button type="button" data-skill-area="${esc(o.k)}" aria-pressed="${active}" class="font-serif italic text-[18px] leading-none py-0.5 px-0 border-0 bg-transparent cursor-pointer whitespace-nowrap ${active ? "text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]" : "text-ink-2 hover:text-ink"}">${esc(o.label)}<sup class="font-mono text-[10px] not-italic ml-0.5">${o.n}</sup></button></span>`;
+        }).join("");
+
+      const shown = groups.filter((g: any) => skillUI.area === "all" || String(g.g) === skillUI.area);
+      gridEl.innerHTML = shown.map((g: any) => {
+        const expanded = skillUI.more.has(String(g.g));
+        const items = expanded ? g.items : (g.items || []).slice(0, SKILL_PREVIEW);
+        const hidden = (g.items || []).length - items.length;
+        return `<div class="grid grid-cols-[minmax(0,110px)_minmax(0,1fr)] gap-x-6 gap-y-2 py-5 border-b border-rule items-start">`
+          + `<div class="flex flex-col gap-1 pt-1.5">`
+          + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase text-accent">${esc(g.g)}</span>`
+          + `<span class="font-mono text-[10.5px] text-ink-2 tabular-nums">${g.items?.length ?? 0} ${esc(ui.skillUnit || "herr.")}</span></div>`
+          + `<div class="flex flex-col gap-3 min-w-0">`
+          + `<div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,180px),1fr))] gap-x-5">`
+          + items.map((it: string) => {
+            // API: `meta` trae uso diario y años (5.10); sin ella, heurística por certificados.
+            const m = (g.meta || []).find((x: any) => x.name === it);
+            const on = m ? !!m.daily : match(it);
+            const yr = m?.years ? `${m.years}${yearUnit}` : yearLabel(it);
+            return `<div class="flex items-baseline gap-2.5 py-1.5 border-b border-dotted border-rule min-w-0">`
+              + `<span aria-hidden="true" class="w-[7px] h-[7px] rounded-full flex-none self-center ${on ? "bg-accent" : "bg-transparent shadow-[inset_0_0_0_1px_var(--color-ink-2)]"}"></span>`
+              + `<span translate="no" class="font-serif text-[21px] leading-[1.2] break-words min-w-0">${esc(it)}</span>`
+              + (yr ? `<span class="ml-auto font-mono text-[10.5px] text-ink-2 tabular-nums">${yr}</span>` : "")
+              + `</div>`;
+          }).join("")
+          + `</div>`
+          + (hidden > 0 || expanded
+            ? `<button type="button" data-skill-more="${esc(g.g)}" class="self-start font-mono text-[11px] tracking-[0.08em] uppercase pb-1 px-0 border-0 border-b border-rule bg-transparent text-ink-2 cursor-pointer hover:text-ink hover:border-ink">${expanded ? esc(ui.skillLess || "Mostrar menos −") : `+ ${hidden} ${esc(ui.skillMore || "más")}`}</button>`
+            : "")
+          + `</div></div>`;
+      }).join("");
+    }
+
+    function renderCertsTeaser(pg: PageData, profile: Profile) {
+      const el = document.getElementById("certs-teaser");
+      if (!el) return;
+      const p = (pg as any)[profile] as any;
+      const certs = p.certs || [];
+      const groups = p.certGroups || [];
+      const base = ((pg.meta as any)?.certsUrl || "#").replace(/\/+$/, "") || "#";
+      // Sin datos vivos se conserva el respaldo estático (links prerenderizados).
+      if (groups.length === 0 && certs.length === 0) return;
+      const rows = groups.map((g: any) => {
+        const items = (certs || []).filter((c: any) =>
+          (c.tags || []).some((t: string) => String(t).trim().toLowerCase() === g.group),
+        );
+        const ys = items.map((c: any) => String(c.date || "").slice(0, 4)).filter(Boolean).sort();
+        const top = [...items].sort((a: any, b: any) => String(b.date).localeCompare(String(a.date)))[0];
+        const range = ys.length === 0 ? "" : ys[0] === ys[ys.length - 1] ? ys[0] : `${ys[0]}–${ys[ys.length - 1].slice(2)}`;
+        return `<a href="${esc(base)}?grupo=${esc(g.group)}" class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 px-3 -mx-3 py-5 border-b border-rule no-underline min-h-11 transition-colors hover:bg-paper-2 hover:text-ink">`
+          + `<span class="min-w-0 flex flex-col gap-1.5">`
+          + `<span class="flex items-baseline gap-2.5"><span translate="no" class="font-serif text-[26px] leading-[1.1]">${esc(g.group)}</span>`
+          + `<span class="font-mono text-[11px] text-accent tabular-nums">${g.count}</span></span>`
+          + (top ? `<span class="font-serif italic text-[16px] text-ink-2 truncate">${esc(top.title)}</span>` : "")
+          + `</span>`
+          + `<span class="flex flex-col items-end justify-between gap-2">`
+          + `<span class="font-mono text-[12px] text-ink-2 tabular-nums">${range}</span>`
+          + `<span class="font-serif text-[24px] leading-none" aria-hidden="true">→</span></span></a>`;
+      }).join("");
+      // Credenciales únicas: una puede pertenecer a varios grupos.
+      const totalCerts = certs.length;
+      const certTotal = document.getElementById("cert-total");
+      if (certTotal) {
+        certTotal.textContent = certs.length > 0
+          ? `${totalCerts} ${(pg as any).ui?.certsCount || ""} · ${groups.length} ${(pg as any).ui?.certsGroups || ""}`
+          : "";
+      }
+      el.innerHTML = rows;
+    }
 
     function indexCell(x: any) {
       return `<a href="${esc(x.h)}" class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">`
@@ -307,11 +496,39 @@ const termJson = JSON.stringify(termDataMap);
         + `<span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">${esc(x.l)}</span></a>`;
     }
 
-    function contactRow(r: any) {
-      return `<a href="${esc(r.href)}" class="grid grid-cols-[110px_minmax(0,1fr)_auto] gap-4 items-baseline py-4 border-b border-rule no-underline hover:text-accent">`
-        + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">${esc(r.key)}</span>`
-        + `<span class="font-serif text-xl break-words">${esc(r.value)}</span>`
-        + `<span class="font-mono text-xs text-accent">${esc(r.icon)}</span></a>`;
+
+    // § 04 — estado de filtros y desplegables (mismo render que el SSR).
+    const pubUI: PubState = { type: "all", year: "all", open: [], bib: [] };
+    function renderPubs(pg: PageData, profile: Profile) {
+      const pubs = (pg as any)[profile]?.pubs || [];
+      const me = (pg as any).personal?.name || "";
+      const f = document.getElementById("pubs-filters");
+      const l = document.getElementById("pubs-list");
+      if (f) f.innerHTML = pubFiltersHtml(pubs, pg.ui, pubUI);
+      if (l) l.innerHTML = pubsHtml(pubs, pg.ui, pubUI, me);
+    }
+    const toggleIn = (list: string[], key: string) => {
+      const i = list.indexOf(key);
+      if (i >= 0) list.splice(i, 1);
+      else list.push(key);
+    };
+
+    // § 01 — fila abierta (la primera por defecto, como la referencia).
+    const workUI = { open: 1 };
+    function renderWork(pg: PageData, profile: Profile) {
+      const el = document.getElementById("projects-list");
+      if (el) el.innerHTML = workHtml((pg as any)[profile].projects || [], pg.ui, { caseHref, open: workUI.open });
+    }
+
+    // § 06 — reloj local de la ubicación (zona IANA de site.ts o de la API).
+    function tickClock() {
+      document.querySelectorAll<HTMLElement>("[data-clock]").forEach((el) => {
+        try {
+          el.textContent = new Intl.DateTimeFormat(page.meta.lang, { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: el.dataset.clock || undefined }).format(new Date());
+        } catch {
+          el.textContent = "--:--";
+        }
+      });
     }
 
     window.__mgRender = (pg: PageData, profile: Profile) => {
@@ -320,51 +537,135 @@ const termJson = JSON.stringify(termDataMap);
       document.getElementById("index1")!.innerHTML = idx.slice(0, 3).map(indexCell).join("");
       document.getElementById("index2")!.innerHTML = idx.slice(3).map(indexCell).join("");
 
-      document.getElementById("projects-list")!.innerHTML = p.projects.map((pr: any) => (
-        `<a href="${caseHref}" class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline px-4 -mx-4 py-[30px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">`
-        + `<span class="font-mono text-[13px] text-ink-2 w-8">${esc(pr.no)}</span>`
-        + `<div class="flex-1 basis-[340px] min-w-0"><h3 class="font-serif font-normal text-h3 m-0">${esc(pr.title)}</h3>`
-        + `<p class="text-[15px] leading-[1.55] text-ink-2 mt-2 mb-0 max-w-[52ch]">${esc(pr.sum)}</p></div>`
-        + `<div class="flex-[0_1_250px] flex flex-wrap gap-1.5">${pr.stack.map((s: string) => `<span class="mg-tag">${esc(s)}</span>`).join("")}</div>`
-        + `<span class="font-mono text-[13px] w-11">${esc(pr.year)}</span>`
-        + `<span class="font-mono text-[13px] text-accent flex-[0_0_150px] text-right">${esc(pr.metric)}</span>`
-        + `<span class="font-serif text-[26px] leading-none" aria-hidden="true">→</span></a>`
-      )).join("");
+      renderWork(pg, profile);
 
-      document.getElementById("about-list")!.innerHTML = p.about.map((a: any) =>
-        `<p class="font-serif text-[clamp(20px,1.8vw,23px)] leading-[1.6] m-0 text-pretty">${esc(a.t)}<sup class="font-mono text-[11px] text-accent ml-0.5">${esc(a.n)}</sup></p>`
-      ).join("");
+      document.getElementById("about-list")!.innerHTML = aboutHtml(p.about || []);
+      const personal = (pg as any).personal || {};
+      document.getElementById("about-facts")!.innerHTML = factsHtml(personal.facts || pg.ui.facts || []);
+      document.getElementById("about-quote")!.innerHTML = quoteHtml(p);
+      document.getElementById("about-principles")!.innerHTML = principlesHtml(p, pg.ui);
+      document.getElementById("about-now")!.innerHTML = nowHtml(p, pg.ui, (pg.meta as any).lang);
+      document.getElementById("contact-dir")!.innerHTML = directoryHtml({ ...personal, hoursNote: personal.hoursNote || pg.ui.hoursNote }, p.links || [], pg.ui);
+      tickClock();
 
       document.getElementById("notes-list")!.innerHTML = p.notes.map((nt: any) =>
         `<div class="flex gap-2.5 border-t border-rule pt-2.5"><span class="font-mono text-[11px] text-accent">${esc(nt.n)}</span>`
         + `<span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">${esc(nt.t)}</span></div>`
       ).join("");
 
-      document.getElementById("stack-grid")!.innerHTML = p.stack.map((g: any) =>
-        `<div><div class="font-mono text-label uppercase text-accent pb-3">${esc(g.g)}</div>`
-        + g.items.map((it: string) => `<div class="font-serif text-[23px] py-3 border-t border-rule">${esc(it)}</div>`).join("") + `</div>`
+      renderStack(pg, profile);
+
+      renderPubs(pg, profile);
+
+      const letterEl = document.getElementById("letter");
+      if (letterEl && p.letter) letterEl.textContent = p.letter;
+
+      const edu = p.edu || (pg as any).edu || [];
+      document.getElementById("edu-list")!.innerHTML = edu.map((e: any) =>
+        `<div class="pb-8 border-b border-rule last:border-b-0">`
+        + `<div class="font-mono text-[13px] text-ink-2 tabular-nums">${esc(e.p)}</div>`
+        + `<div class="font-serif text-[24px] leading-[1.2] mt-2">${esc(e.d)}</div>`
+        + `<div class="font-serif italic text-[17px] text-ink-2 mt-1">${esc(e.s)}</div>`
+        + `<p class="text-[15px] leading-[1.55] text-ink-2 mt-2.5 mb-0 max-w-[46ch]">${esc(e.desc)}</p></div>`
       ).join("");
 
-      document.getElementById("writing-list")!.innerHTML = p.writing.map((w: any) =>
-        `<a href="#" class="flex flex-wrap gap-x-8 gap-y-2 items-baseline px-4 -mx-4 py-[22px] border-t border-rule no-underline transition-colors hover:bg-paper-2 hover:text-ink">`
-        + `<span class="font-mono text-[13px] text-ink-2 flex-[0_0_90px]">${esc(w.d)}</span>`
-        + `<span class="flex-1 basis-[360px] min-w-0 font-serif text-[clamp(22px,2.2vw,28px)] leading-[1.2]">${esc(w.t)}</span>`
-        + `<span class="font-mono text-[11px] tracking-[0.06em] uppercase text-accent flex-[0_0_170px]">${esc(w.k)}</span>`
-        + `<span class="font-serif text-[22px] leading-none" aria-hidden="true">↗</span></a>`
-      ).join("");
+      renderCertsTeaser(pg, profile);
 
+      const ui = (pg as any).ui || {};
       document.getElementById("exp-list")!.innerHTML = p.exp.map((e: any) =>
-        `<div class="flex flex-wrap gap-x-10 gap-y-2.5 py-7 border-t border-rule">`
-        + `<span class="font-mono text-[13px] text-ink-2 flex-[0_0_150px]">${esc(e.y)}</span>`
-        + `<div class="flex-1 basis-[280px]"><div class="font-serif text-[26px] leading-[1.15]">${esc(e.r)}</div>`
-        + `<div class="text-sm text-ink-2 mt-1">${esc(e.c)}</div></div>`
-        + `<p class="flex-1 basis-[320px] text-base leading-[1.6] text-ink-2 m-0 max-w-[48ch]">${esc(e.d)}</p></div>`
+        `<div class="grid grid-cols-[28px_minmax(0,1fr)] gap-x-[18px]">`
+        + `<div class="flex flex-col items-center" aria-hidden="true">`
+        + `<span class="w-px h-[30px] bg-rule"></span>`
+        + `<span class="w-[11px] h-[11px] rounded-full border-[1.5px] border-accent flex-none ${e.current ? "bg-accent" : "bg-paper"}"></span>`
+        + `<span class="w-px flex-1 bg-rule"></span></div>`
+        + `<div class="py-[22px] pb-[30px] flex flex-col gap-2.5">`
+        + `<div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[12px]">`
+        + `<span class="tabular-nums">${esc(e.y)}</span>`
+        + (e.current ? `<span class="text-[10.5px] tracking-[0.1em] uppercase text-accent">● ${esc(ui.actT || "Now")}</span>` : "")
+        + (e.dur ? `<span class="text-ink-2">${esc(e.dur)}</span>` : "")
+        + `</div>`
+        + `<h3 class="font-serif font-normal text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.015em] mt-1.5 mb-0">${esc(e.r)}</h3>`
+        + `<span class="text-[15px] text-ink-2">${esc(e.c)}</span>`
+        + `<p class="font-serif text-[19px] leading-[1.55] mt-1.5 mb-0 max-w-[56ch] text-pretty">${esc(e.d)}</p>`
+        + (e.wins || []).map((w: string) =>
+          `<p class="grid grid-cols-[18px_minmax(0,1fr)] text-[15px] leading-[1.5] text-ink-2 mt-1 mb-0 max-w-[56ch]"><span class="text-accent" aria-hidden="true">→</span><span>${esc(w)}</span></p>`).join("")
+        + ((e.stack || []).length > 0
+          ? `<div class="flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[11px] text-ink-2 mt-1">${e.stack.map((s: string) => `<span translate="no">${esc(s)}</span>`).join("")}</div>`
+          : "")
+        + `</div></div>`
       ).join("");
 
-      document.getElementById("contact-rows")!.innerHTML = (p.contactRows || []).map(contactRow).join("");
+      const cvHref = (pg as any).personal?.cvUrl || "#";
+      const heroCv = document.getElementById("hero-cv") as HTMLAnchorElement | null;
+      if (heroCv) heroCv.href = cvHref;
+      const rowCv = document.getElementById("cv-link") as HTMLAnchorElement | null;
+      if (rowCv) rowCv.href = cvHref;
+      const expCv = document.getElementById("exp-cv") as HTMLAnchorElement | null;
+      if (expCv) expCv.href = cvHref;
     };
 
-    initSite(page, { spy: ["trabajo", "sobre-mi", "herramientas", "escritos", "trayectoria", "contacto"], roleFallback: page.fullstack.role });
+    document.getElementById("pubs-filters")?.addEventListener("click", (e) => {
+      const el = e.target as HTMLElement;
+      const type = el.closest<HTMLElement>("[data-pub-type]")?.dataset.pubType;
+      const year = el.closest<HTMLElement>("[data-pub-year]")?.dataset.pubYear;
+      if (type) pubUI.type = type;
+      else if (year) pubUI.year = year;
+      else return;
+      renderPubs(window.__mgPage ?? page, getProfile());
+    });
+    document.getElementById("pubs-list")?.addEventListener("click", (e) => {
+      const el = e.target as HTMLElement;
+      const abs = el.closest<HTMLElement>("[data-pub-toggle]")?.dataset.pubToggle;
+      const bib = el.closest<HTMLElement>("[data-pub-bib]")?.dataset.pubBib;
+      if (abs) toggleIn(pubUI.open, abs);
+      else if (bib) toggleIn(pubUI.bib, bib);
+      else return;
+      renderPubs(window.__mgPage ?? page, getProfile());
+    });
+
+    document.getElementById("projects-list")?.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-work-row]");
+      if (!btn) return;
+      const i = Number(btn.dataset.workRow);
+      workUI.open = workUI.open === i ? -1 : i;
+      renderWork(window.__mgPage ?? page, getProfile());
+      document.querySelector<HTMLElement>(`[data-work-row="${i}"]`)?.focus();
+    });
+    document.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-copy]");
+      if (!btn || !navigator.clipboard?.writeText) return;
+      const label = btn.textContent;
+      navigator.clipboard.writeText(btn.dataset.copy || "").then(() => {
+        btn.textContent = btn.dataset.copied || label;
+        window.setTimeout(() => { btn.textContent = label; }, 1600);
+      }).catch(() => {});
+    });
+    tickClock();
+    window.setInterval(tickClock, 30_000);
+
+    initSite(page, { spy: ["trabajo", "sobre-mi", "herramientas", "investigacion", "trayectoria", "contacto"], roleFallback: page.fullstack.role });
     initTerminals();
+    renderStack(page, getProfile());
+    renderCertsTeaser(page, getProfile());
+    renderPubs(page, getProfile());
+
+    document.getElementById("skill-areas")?.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest("[data-skill-area]") as HTMLElement | null;
+      if (!btn?.dataset.skillArea) return;
+      skillUI.area = btn.dataset.skillArea;
+      renderStack(page, getProfile());
+    });
+    document.getElementById("stack-grid")?.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest("[data-skill-more]") as HTMLElement | null;
+      if (!btn?.dataset.skillMore) return;
+      const g = btn.dataset.skillMore;
+      if (skillUI.more.has(g)) skillUI.more.delete(g);
+      else skillUI.more.add(g);
+      renderStack(page, getProfile());
+    });
+    // DI: la fuente (mock|live) viaja en page.meta.sourceKind, inyectada por props.
+    // Mock-first: con PUBLIC_USE_MOCK=true ves la plantilla sin levantar la API.
+    const source = createPortfolioSource((page.meta as any)?.sourceKind ?? "mock");
+    refreshHomeFromApi(page, source).catch(() => {});
   </script>
 </Layout>

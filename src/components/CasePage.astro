@@ -132,11 +132,38 @@ const contentJson = JSON.stringify(pageData);
   <script type="application/json" id="mg-content" set:html={contentJson} />
   <script>
     import { initSite, type PageData } from "../scripts/site";
-    import type { Profile } from "../scripts/store";
+    import { createPortfolioSource } from "../lib/composition";
+    import type { Lang, Profile } from "../scripts/store";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
     const esc = (s: string) =>
       String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+    const CASE_SLUG: Record<Profile, string> = { fullstack: "payments-platform", data: "churn-prediction" };
+
+    // Overlay vivo vía puerto inyectado (mock|live): fallback al contenido local.
+    async function overlayCase(profile: Profile) {
+      try {
+        const lang = ((page.meta as any)?.lang === "en" ? "en" : "es") as Lang;
+        const source = createPortfolioSource();
+        const live = await source.fetchCaseStudy(lang, CASE_SLUG[profile]);
+        if (live.title) {
+          const titleEl = document.getElementById("case-title");
+          if (titleEl) titleEl.textContent = String(live.title);
+          document.title = `${live.title} — ${(page as any).ui?.kicker ?? ""}`;
+        }
+        if (live.deck) {
+          const deckEl = document.getElementById("case-deck");
+          if (deckEl) deckEl.textContent = String(live.deck);
+        }
+        if (live.quote) {
+          const quoteEl = document.getElementById("case-quote");
+          if (quoteEl) quoteEl.textContent = `“${live.quote}”`;
+        }
+      } catch {
+        // Sin API: se conserva el HTML pre-renderizado local.
+      }
+    }
 
     // Rebuild the meta grid, table of contents and article for the active profile.
     window.__mgRender = (pg: PageData, profile: Profile) => {
@@ -176,5 +203,13 @@ const contentJson = JSON.stringify(pageData);
     };
 
     initSite(page);
+    const baseRender = window.__mgRender;
+    window.__mgRender = (pg: PageData, profile: Profile) => {
+      (Array.isArray(baseRender) ? baseRender : [baseRender]).forEach((fn) => {
+        if (typeof fn === "function") (fn as (p: PageData, pr: Profile) => void)(pg, profile);
+      });
+      void overlayCase(profile);
+    };
+    void overlayCase("fullstack");
   </script>
 </Layout>

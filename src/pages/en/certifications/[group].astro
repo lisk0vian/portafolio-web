@@ -1,0 +1,22 @@
+---
+import CertsGroupPage from "../../../components/CertsGroupPage.astro";
+import { certGroupFallback } from "../../../data/content";
+import { createPortfolioSource } from "../../../lib/composition";
+
+export async function getStaticPaths() {
+  // Misma fuente inyectada que el resto del sitio (mock|live) + respaldo fijo,
+  // para que exista la página de cada grupo aunque la API no responda en build.
+  let groups: string[] = [...certGroupFallback];
+  try {
+    groups = [...groups, ...(await createPortfolioSource().fetchCertificationGroups("en")).map((g) => g.group)];
+  } catch {
+    // Sin API: solo los grupos de respaldo.
+  }
+  const slugs = [...new Set(groups.map((g) => String(g).trim().toLowerCase()).filter(Boolean))];
+  return slugs.map((group) => ({ params: { group } }));
+}
+
+const { group } = Astro.params;
+---
+
+<CertsGroupPage lang="en" group={group!} />

@@ -63,11 +63,13 @@ const linkStyle = (active: boolean): string =>
       <span class="w-px h-4 bg-rule" aria-hidden="true"></span>
       <nav class="flex items-baseline gap-1.5 font-mono text-[11px] tracking-[0.08em]" aria-label="Language">
         <span class="flex items-baseline gap-1.5">
-          <a href={esUrl} aria-current={lang === "es" ? "page" : undefined} style={linkStyle(lang === "es")}>ES</a>
+          <a href={esUrl} data-lang-link hreflang="es" aria-current={lang === "es" ? "page" : undefined} style={linkStyle(lang === "es")}>ES</a>
         </span>
         <span class="flex items-baseline gap-1.5">
           <span class="text-ink-2">/</span><a
             href={enUrl}
+            data-lang-link
+            hreflang="en"
             aria-current={lang === "en" ? "page" : undefined}
             style={linkStyle(lang === "en")}>EN</a
           >
