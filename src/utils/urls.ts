@@ -3,11 +3,12 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import type { Lang } from "../scripts/store";
 
-export type SitePage = "home" | "case" | "system";
+export type SitePage = "home" | "case" | "system" | "certs";
 
 const slugs: Record<Exclude<SitePage, "home">, Record<Lang, string>> = {
   case: { es: "caso-de-estudio", en: "case-study" },
   system: { es: "sistema-diseno", en: "design-system" },
+  certs: { es: "certificaciones", en: "certifications" },
 };
 
 /** Relative URL of a page in the given locale (e.g. "/en/case-study"). */
