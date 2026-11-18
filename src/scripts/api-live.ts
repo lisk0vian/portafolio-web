@@ -7,6 +7,7 @@ import type { PortfolioSource } from "../lib/ports";
 import { mergeHomeLive } from "../lib/adapters";
 import { getProfile, type Lang } from "./store";
 import type { PageData } from "./site";
+import { apiStatusText } from "../utils/api-status";
 
 const CACHE_PREFIX = "mg-api-home:";
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -42,16 +43,7 @@ function setStatus(mode: "local" | "live" | "mock" | "cached" | "error", detail 
     const el = document.getElementById("api-status");
     if (el) {
       el.dataset.state = mode;
-      el.textContent =
-        mode === "live"
-          ? `API en vivo${detail ? ` · ${detail}` : ""}`
-          : mode === "mock"
-            ? `Mock API · datos plantilla${detail ? ` · ${detail}` : ""}`
-            : mode === "cached"
-              ? "API (caché)"
-              : mode === "error"
-                ? `API no disponible · datos locales${detail ? ` · ${detail}` : ""}`
-                : "datos locales";
+      el.textContent = apiStatusText(mode, document.documentElement.lang, detail);
     }
   } catch {
     // DOM no listo: no bloquea el render.

@@ -12,7 +12,7 @@ export const site = {
   email: "chancanjeremiaron@gmail.com",
   location: {
     es: "Lima, Perú · UTC-5",
-    en: "Lima, Perú · UTC-5",
+    en: "Lima, Peru · UTC-5",
   } as LocaleText,
   // Zona IANA para el reloj del directorio (C — Ubicación).
   timezone: "America/Lima",

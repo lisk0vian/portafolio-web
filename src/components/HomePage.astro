@@ -12,6 +12,7 @@ import { ui, profiles, education, certGroupFallback, pick, type Profile } from "
 import type { Lang } from "../scripts/store";
 import { resolvePersonal } from "../utils/personal";
 import { pageUrl, altPageUrl } from "../utils/urls";
+import { apiStatusText } from "../utils/api-status";
 import { site } from "../data/site";
 import type { TermData } from "../scripts/terminal";
 import { resolveSourceKind, type SourceKind } from "../lib/composition";
@@ -335,7 +336,7 @@ const termJson = JSON.stringify(termDataMap);
       </div>
       <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] pt-5 pb-24 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.1em] uppercase text-ink-2">
         <span>© 2026 {personal.name}</span>
-        <span id="api-status" data-state="local">datos locales</span>
+        <span id="api-status" data-state="local">{apiStatusText("local", lang)}</span>
         <span><span data-t="ui.trophies">{t.trophies}</span> <span data-trophies class="text-accent tabular-nums">0/10</span></span>
         <span data-t="ui.foot1">{t.foot1}</span>
         <div class="flex gap-5">

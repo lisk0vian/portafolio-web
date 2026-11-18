@@ -7,6 +7,7 @@ import { ui, pick } from "../data/content";
 import type { Lang } from "../scripts/store";
 import { resolvePersonal } from "../utils/personal";
 import { pageUrl } from "../utils/urls";
+import { apiStatusText } from "../utils/api-status";
 import { CERTS_FIELDS } from "../lib/api";
 import { createPortfolioSource } from "../lib/composition";
 import { mapCertifications } from "../lib/adapters";
@@ -62,7 +63,7 @@ const BATCH = 10;
     <footer class="border-t border-rule">
       <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] py-5 pb-10 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
         <span>© 2026 {personal.name}</span>
-        <span id="api-status" data-state="local">datos locales</span>
+        <span id="api-status" data-state="local">{apiStatusText("local", lang)}</span>
         <a href={pageUrl(lang, "system")} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
       </div>
     </footer>
@@ -70,6 +71,7 @@ const BATCH = 10;
 
   <script type="application/json" id="mg-content" set:html={contentJson} />
   <script>
+    import { apiStatusText } from "../utils/api-status";
     import { initSite, type PageData } from "../scripts/site";
     import { CERTS_FIELDS } from "../lib/api";
     import { createPortfolioSource } from "../lib/composition";
@@ -87,7 +89,7 @@ const BATCH = 10;
       const el = document.getElementById("api-status");
       if (el) {
         el.dataset.state = mode;
-        el.textContent = mode === "live" ? "API en vivo" : mode === "mock" ? "Mock API · datos plantilla" : mode === "error" ? "API no disponible · datos locales" : "datos locales";
+        el.textContent = apiStatusText(mode, document.documentElement.lang);
       }
     }
 
