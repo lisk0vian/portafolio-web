@@ -27,20 +27,20 @@ const now = new Date().getFullYear();
   <div class="min-h-screen bg-paper text-ink font-sans antialiased">
     <SiteHeader lang={lang} page="certs" themeLabels={`${t.light}|${t.dark}`} spyFallback={t.certsT} />
 
-    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] pb-[clamp(64px,8vw,120px)]">
-      <div data-reveal="0" class="flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 pt-3.5 border-t border-ink font-mono text-label uppercase">
+    <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] pb-[clamp(64px,8vw,120px)]">
+      <div data-reveal="0" class="flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 pt-3.5 border-t border-rule font-mono text-label uppercase">
         <span>§ 03.2 — <span data-t="ui.certsT">{t.certsT}</span></span>
         <span id="certs-total" class="text-ink-2"></span>
       </div>
-      <h1 data-reveal="0" class="font-serif font-display text-[clamp(44px,7vw,112px)] leading-[0.98] tracking-[-0.03em] mt-6 mb-0 text-balance" data-t="ui.certsT">{t.certsT}</h1>
-      <p id="certs-deck" data-reveal="60" class="font-serif italic font-light text-[clamp(20px,2vw,28px)] leading-[1.35] text-ink-2 mt-4 mb-0 max-w-[40ch]"></p>
+      <h1 data-reveal="0" class="font-display font-medium uppercase text-[clamp(28px,7vw,104px)] leading-[0.98] tracking-[-0.03em] mt-6 mb-0 text-balance" data-t="ui.certsT">{t.certsT}</h1>
+      <p id="certs-deck" data-reveal="60" class="text-[clamp(20px,2vw,28px)] leading-[1.35] text-ink-2 mt-4 mb-0 max-w-[40ch]"></p>
 
       <nav id="certs-nav" class="flex flex-wrap items-baseline gap-x-2.5 gap-y-2 py-3.5 border-y border-rule" aria-label="Grupos"></nav>
       <div id="certs-sections"></div>
     </main>
 
-    <footer class="border-t border-ink">
-      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-5 pb-10 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
+    <footer class="border-t border-rule">
+      <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] py-5 pb-10 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
         <span>© 2026 {personal.name}</span>
         <span id="api-status" data-state="local">datos locales</span>
         <a href={systemHref} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
@@ -89,15 +89,15 @@ const now = new Date().getFullYear();
         + `<div class="flex justify-between items-baseline gap-3 font-mono text-[11px] tracking-[0.08em] uppercase">`
         + `<span class="text-accent">${no}${c.category ? ` · ${esc(c.category)}` : ""}</span>`
         + `<span class="${color}">${esc(status)}</span></div>`
-        + `<h2 class="font-serif font-normal text-[clamp(24px,2.4vw,34px)] leading-[1.1] tracking-[-0.015em] m-0">${esc(c.title)}</h2>`
+        + `<h2 class="font-display font-medium uppercase text-[clamp(20px,2vw,28px)] leading-[1.15] tracking-[-0.025em] m-0">${esc(c.title)}</h2>`
         + `<div class="grid grid-cols-3 border-t border-rule">`
         + `<div class="py-2.5 pr-3 flex flex-col gap-1"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">${esc(ui.certIssued || "Emitida")}</span><span class="font-mono text-[13px] tabular-nums">${yearOf(c.date)}</span></div>`
         + `<div class="py-2.5 px-3 border-l border-rule flex flex-col gap-1"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">${esc(ui.certExpiresLbl || "Vence")}</span><span class="font-mono text-[13px] tabular-nums">${c.expiry ? yearOf(c.expiry) : "—"}</span></div>`
         + `<div class="py-2.5 pl-3 border-l border-rule flex flex-col gap-1 min-w-0"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">ID</span><span class="font-mono text-[12px] truncate">${esc(c.ref || "")}</span></div></div>`
-        + `<div class="flex flex-wrap gap-x-3.5 gap-y-1 font-serif italic text-[16px] text-ink-2">${(c.skills || []).map((s: string) => `<span translate="no">${esc(s)}</span>`).join("")}</div>`
+        + `<div class="flex flex-wrap gap-x-3.5 gap-y-1 text-[16px] text-ink-2">${(c.skills || []).map((s: string) => `<span translate="no">${esc(s)}</span>`).join("")}</div>`
         + `<div class="flex flex-wrap items-baseline gap-x-6 gap-y-2 mt-auto pt-1">`
         + (c.url
-          ? `<a href="${esc(c.url)}" target="_blank" rel="noreferrer" class="mg-btn-primary text-[19px]"><span>${esc(ui.certVerifyCred || "Verificar credencial")}</span><span class="font-mono not-italic text-[13px] text-accent">↗</span></a>`
+          ? `<a href="${esc(c.url)}" target="_blank" rel="noreferrer" class="mg-btn-primary text-[19px]"><span>${esc(ui.certVerifyCred || "Verificar credencial")}</span><span class="font-mono text-[13px] text-accent">↗</span></a>`
           : "")
         + (c.pdf && c.pdf !== "#" ? `<a href="${esc(c.pdf)}" target="_blank" rel="noreferrer" class="mg-btn-secondary">${esc(ui.certPdf || "PDF")} ↓</a>` : "")
         + `</div></article>`;
@@ -129,18 +129,18 @@ const now = new Date().getFullYear();
           const active = state.grupo === o.group;
           return `<span class="flex items-baseline gap-2.5">`
             + (i > 0 ? `<span class="font-serif text-ink-2" aria-hidden="true">/</span>` : "")
-            + `<button type="button" data-grupo="${esc(o.group)}" aria-current="${active ? "true" : "false"}" class="font-serif italic text-[19px] leading-none py-0.5 px-0 border-0 bg-transparent cursor-pointer whitespace-nowrap ${active ? "text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]" : "text-ink-2 hover:text-ink"}">${esc(o.group)}<sup class="font-mono text-[10px] not-italic ml-0.5">${o.count}</sup></button></span>`;
+            + `<button type="button" data-grupo="${esc(o.group)}" aria-current="${active ? "true" : "false"}" class="text-[19px] leading-none py-0.5 px-0 border-0 bg-transparent cursor-pointer whitespace-nowrap ${active ? "text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]" : "text-ink-2 hover:text-ink"}">${esc(o.group)}<sup class="font-mono text-[10px] ml-0.5">${o.count}</sup></button></span>`;
         }).join("");
 
       const sections = all
         ? groups.map((g: any) => ({ group: g.group, certs: groupCerts(g.group) })).filter((s: any) => s.certs.length > 0)
         : [{ group: state.grupo, certs: groupCerts(state.grupo) }];
       document.getElementById("certs-sections")!.innerHTML = sections.length === 0
-        ? `<p class="font-serif italic text-[19px] text-ink-2 py-8">${esc(ui.certEmpty || "")}</p>`
+        ? `<p class="text-[19px] text-ink-2 py-8">${esc(ui.certEmpty || "")}</p>`
         : sections.map((s: any) => {
           const head = all
-            ? `<div class="flex items-baseline gap-3 mt-[clamp(40px,5vw,64px)] pb-2.5 border-b border-ink">`
-              + `<span class="font-serif text-[clamp(26px,2.8vw,36px)] tracking-[-0.015em]">${esc(s.group)}</span>`
+            ? `<div class="flex items-baseline gap-3 mt-[clamp(40px,5vw,64px)] pb-2.5 border-b border-rule">`
+              + `<span class="font-display font-medium uppercase text-[clamp(22px,2.4vw,32px)] tracking-[-0.025em]">${esc(s.group)}</span>`
               + `<span class="font-mono text-[11px] text-accent">${s.certs.length}</span></div>`
             : "";
           return `<section>${head}<div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-x-[clamp(24px,3vw,48px)] mt-2">`

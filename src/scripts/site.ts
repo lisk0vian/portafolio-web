@@ -1,4 +1,4 @@
-// Global Marginalia behavior: switchers, reveal-on-scroll, scrollspy.
+// Global site behavior: switchers, reveal-on-scroll, scrollspy.
 // Vanilla JS, no framework. Each page embeds its own locale-resolved data
 // (PageData) as JSON; profile switches re-render from it without reload.
 
@@ -64,6 +64,7 @@ function rerender(page: PageData) {
   if (Array.isArray(fns)) fns.forEach((fn) => fn(page, profile));
   else if (typeof fns === "function") fns(page, profile);
   paintSwitchers();
+  riseAll();
 }
 
 /** Reveal-on-scroll matching the reference: [data-reveal] delay in ms, 900ms editorial curve. */
@@ -94,10 +95,97 @@ function initReveal() {
   window.setTimeout(check, 1200);
 }
 
-/** Scrollspy: show the current section in the header running head. */
+/**
+ * Texto [data-rise]: cada palabra sube desde una máscara, en escalera, al entrar
+ * en vista (una vez). Parte los nodos de texto en su sitio, así que respeta
+ * spans y saltos de línea. Se vuelve a llamar tras cada re-render o cambio de
+ * idioma: un bloque ya partido se salta, uno re-escrito se parte de nuevo.
+ */
+let riseIO: IntersectionObserver | null = null;
+export function riseAll() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  riseIO ??= new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      riseIO!.unobserve(entry.target);
+      const el = entry.target as HTMLElement;
+      // El hero no arranca mientras el cargador inicial lo tapa.
+      const wait = document.querySelector("[data-boot]:not([hidden])") ? 1000 : 0;
+      window.setTimeout(() => (el.dataset.in = ""), wait);
+    });
+  }, { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => {
+    if (el.querySelector(".rw")) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+    let i = 0;
+    for (const node of nodes) {
+      const frag = document.createDocumentFragment();
+      for (const part of (node.textContent ?? "").split(/(\s+)/)) {
+        if (!part) continue;
+        if (/^\s+$/.test(part)) { frag.append(part); continue; }
+        const outer = document.createElement("span");
+        outer.className = "rw";
+        const inner = document.createElement("span");
+        inner.textContent = part;
+        inner.style.setProperty("--i", String(i++));
+        outer.append(inner);
+        frag.append(outer);
+      }
+      node.replaceWith(frag);
+    }
+    riseIO!.observe(el);
+  });
+}
+
+/** Repite la entrada en cascada de los hijos de una lista recién filtrada. */
+export function stagger(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.remove("mg-stagger");
+  void el.offsetWidth; // reinicia la animación aunque la clase ya estuviera
+  el.classList.add("mg-stagger");
+}
+
+/** Reloj de hora local en cada [data-clock] (zona IANA en el atributo). */
+function initClock() {
+  const tick = () =>
+    document.querySelectorAll<HTMLElement>("[data-clock]").forEach((el) => {
+      try {
+        el.textContent = new Intl.DateTimeFormat(document.documentElement.lang || "es", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: el.dataset.clock || undefined }).format(new Date());
+      } catch {
+        el.textContent = "--:--";
+      }
+    });
+  tick();
+  window.setInterval(tick, 30_000);
+}
+
+/** Atajo ":" o "/" (fuera de campos de texto) y botón del dock: llevan a la terminal. */
+function initTermShortcut() {
+  const open = () => {
+    const term = document.getElementById("consola");
+    if (!term) return;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    term.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+    term.querySelector<HTMLInputElement>("[data-term-input]")?.focus({ preventScroll: true });
+  };
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== ":" && e.key !== "/") return;
+    const t = e.target as HTMLElement;
+    if (t.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey) return;
+    e.preventDefault();
+    open();
+  });
+  document.querySelectorAll("[data-open-term]").forEach((b) => b.addEventListener("click", open));
+}
+
+/** Scrollspy: show the current section in the header running head and the dock. */
 function initScrollSpy(ids: string[], fallback: string) {
   const numberEl = document.querySelector("[data-run-n]");
   const labelEl = document.querySelector("[data-run-l]");
+  const dock = document.querySelector<HTMLElement>("[data-dock]");
+  const hero = document.querySelector<HTMLElement>("[data-hero]");
   if (!numberEl || !labelEl) return;
   const sections = ids
     .map((id) => ({ id, el: document.getElementById(id) }))
@@ -108,6 +196,8 @@ function initScrollSpy(ids: string[], fallback: string) {
     for (const section of sections) {
       if (section.el.getBoundingClientRect().top < 140) current = section.id;
     }
+    document.querySelectorAll<HTMLElement>("[data-dock-link]").forEach((a) => a.setAttribute("aria-current", String(a.dataset.dockLink === current)));
+    if (dock && hero) dock.dataset.hidden = String(hero.getBoundingClientRect().bottom > window.innerHeight * 0.55);
     const index: any[] = window.__mgPage?.ui?.index ?? [];
     const match = index.find((x: any) => x.h.replace("#", "") === current);
     if (match) {
@@ -131,6 +221,9 @@ export function initChrome() {
   onEvent("mg:theme", () => paintSwitchers());
   paintSwitchers();
   initReveal();
+  initClock();
+  initTermShortcut();
+  riseAll();
   initLangLinks();
   restoreLangScroll();
 }
@@ -148,5 +241,6 @@ export function initSite(page: PageData, opts?: { spy?: string[]; roleFallback?:
 
   initChrome();
   applyI18n(page);
+  riseAll();
   if (opts?.spy) initScrollSpy(opts.spy, opts.roleFallback ?? "");
 }

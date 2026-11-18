@@ -1,4 +1,6 @@
 ---
+import "@fontsource-variable/sora";
+import "@fontsource-variable/jetbrains-mono";
 import "../styles/global.css";
 
 interface Props {
@@ -17,19 +19,17 @@ const { title, description, lang = Astro.currentLocale ?? "es" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-    />
     <title>{title}</title>
     <script is:inline>
       try {
-        document.documentElement.dataset.theme = localStorage.getItem("mg-theme") || "light";
+        const d = document.documentElement;
+        const savedTheme = localStorage.getItem("mg-theme");
+        d.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+        d.dataset.profile = localStorage.getItem("mg-profile") === "data" ? "data" : "fullstack";
         const l = localStorage.getItem("mg-lang");
-        if (l) document.documentElement.lang = l;
+        if (l) d.lang = l;
       } catch (e) {
         document.documentElement.dataset.theme = "light";
       }

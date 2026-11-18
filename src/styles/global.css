@@ -1,33 +1,49 @@
-/* Marginalia — tema para Tailwind CSS v4
-   Los colores apuntan a variables que cambian con [data-theme="dark"],
-   así que bg-paper / text-ink funcionan en ambos temas sin prefijo dark:. */
+/* Sistema personal — tema para Tailwind CSS v4
+   Paleta y tipos de la marca personal (github.com/lisk0vian/me, branding/):
+   Pizarra #12151A, Superficie #1D222A, Hueso #E8E4DC, Niebla #9AA0A8 y un
+   solo acento, Pervinca (#949FD8 sobre oscuro, #55609C sobre claro). Sora para
+   títulos y texto, JetBrains Mono para datos. Los colores apuntan a variables
+   que cambian con [data-theme], así que bg-paper / text-ink funcionan en ambos
+   temas sin prefijo dark:. Regla: todo texto ≥ 4.5:1 (tests/release-contrast). */
 
 @import "tailwindcss";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-:root {
-  --mg-paper: oklch(0.975 0.008 85);
-  --mg-paper-2: oklch(0.94 0.012 85);
-  --mg-ink: oklch(0.21 0.012 60);
-  --mg-ink-2: oklch(0.43 0.012 60);
-  --mg-rule: oklch(0.21 0.012 60 / 0.16);
-  --mg-accent: oklch(0.55 0.17 35);
-  --mg-accent-2: oklch(0.52 0.12 250);
-  --mg-term: oklch(0.21 0.012 60);
-  --mg-term-ink: oklch(0.93 0.01 85);
-  --mg-term-dim: oklch(0.7 0.012 85);
-  --mg-term-accent: oklch(0.76 0.13 55);
-}
+:root,
 [data-theme="dark"] {
-  --mg-paper: oklch(0.17 0.008 60);
-  --mg-paper-2: oklch(0.22 0.01 60);
-  --mg-ink: oklch(0.93 0.01 85);
-  --mg-ink-2: oklch(0.72 0.012 85);
-  --mg-rule: oklch(0.93 0.01 85 / 0.14);
-  --mg-accent: oklch(0.72 0.14 40);
-  --mg-accent-2: oklch(0.72 0.1 250);
-  --mg-term: oklch(0.12 0.006 60);
+  --mg-paper: #12151A;
+  --mg-paper-2: #1D222A;
+  --mg-ink: #E8E4DC;
+  --mg-ink-2: #9AA0A8;
+  --mg-rule: rgba(232, 228, 220, 0.16);
+  --mg-dot: rgba(232, 228, 220, 0.06);
+  --mg-accent: #949FD8;
+  --mg-accent-2: #9AA0A8;
+  --mg-signal: #949FD8;
+  --mg-term: #0B0D11;
+  --mg-term-ink: #E8E4DC;
+  --mg-term-dim: #9AA0A8;
+  --mg-term-accent: #949FD8;
+  --mg-term-rule: rgba(232, 228, 220, 0.12);
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --mg-paper: #F4F2EE;
+  --mg-paper-2: #E8E4DC;
+  --mg-ink: #12151A;
+  --mg-ink-2: #565C66;
+  --mg-rule: rgba(18, 21, 26, 0.16);
+  --mg-dot: rgba(18, 21, 26, 0.08);
+  --mg-accent: #55609C;
+  --mg-accent-2: #565C66;
+  --mg-signal: #55609C;
+  --mg-term: #12151A;
+  --mg-term-ink: #E8E4DC;
+  --mg-term-dim: #9AA0A8;
+  --mg-term-accent: #949FD8;
+  --mg-term-rule: rgba(232, 228, 220, 0.12);
+  color-scheme: light;
 }
 
 @theme inline {
@@ -38,51 +54,58 @@
   --color-rule: var(--mg-rule);
   --color-accent: var(--mg-accent);
   --color-accent-2: var(--mg-accent-2);
+  --color-signal: var(--mg-signal);
   --color-term: var(--mg-term);
   --color-term-ink: var(--mg-term-ink);
   --color-term-dim: var(--mg-term-dim);
   --color-term-accent: var(--mg-term-accent);
+  --color-term-rule: var(--mg-term-rule);
 }
 
 @theme {
-  --font-serif: "Newsreader", ui-serif, Georgia, serif;
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Sora Variable", ui-sans-serif, sans-serif;
+  /* serif queda como alias del cuerpo: el sistema ya no usa serif. */
+  --font-serif: "Sora Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Sora Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
-  --text-display: clamp(46px, 7.4vw, 118px);
-  --text-display--line-height: 0.96;
-  --text-display--letter-spacing: -0.028em;
-  --text-h1: clamp(36px, 4.4vw, 64px);
+  --text-name: clamp(52px, 10.4vw, 168px);
+  --text-name--line-height: 0.86;
+  --text-name--letter-spacing: -0.035em;
+  --text-display: clamp(36px, 5.2vw, 80px);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.03em;
+  --text-h1: clamp(24px, 4vw, 60px);
   --text-h1--line-height: 1;
-  --text-h1--letter-spacing: -0.022em;
-  --text-h2: clamp(30px, 3.2vw, 46px);
-  --text-h2--line-height: 1.05;
-  --text-h2--letter-spacing: -0.018em;
-  --text-h3: clamp(22px, 2vw, 28px);
+  --text-h1--letter-spacing: -0.03em;
+  --text-h2: clamp(24px, 2.6vw, 38px);
+  --text-h2--line-height: 1.08;
+  --text-h2--letter-spacing: -0.025em;
+  --text-h3: clamp(20px, 1.8vw, 26px);
   --text-h3--line-height: 1.15;
-  --text-h3--letter-spacing: -0.01em;
-  --text-quote: clamp(22px, 2.2vw, 30px);
-  --text-quote--line-height: 1.25;
-  --text-lead: clamp(19px, 1.6vw, 22px);
-  --text-lead--line-height: 1.4;
-  --text-body-serif: clamp(18px, 1.5vw, 20px);
+  --text-h3--letter-spacing: -0.015em;
+  --text-quote: clamp(22px, 2.4vw, 34px);
+  --text-quote--line-height: 1.22;
+  --text-lead: clamp(18px, 1.5vw, 21px);
+  --text-lead--line-height: 1.45;
+  --text-body-serif: clamp(16px, 1.25vw, 18px);
   --text-body-serif--line-height: 1.65;
   --text-body: 15px;
   --text-body--line-height: 1.6;
-  --text-label: 12px;
-  --text-label--letter-spacing: 0.08em;
+  --text-label: 11px;
+  --text-label--letter-spacing: 0.14em;
 
-  --font-weight-display: 350;
+  --font-weight-display: 600;
 
-  --container-page: 1320px;
+  --container-page: 1440px;
   --container-prose: 720px;
 
   --radius-pill: 999px;
-  --radius-term: 6px;
+  --radius-term: 2px;
 
-  --ease-editorial: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --shadow-term: 0 40px 80px -40px oklch(0.2 0.02 60 / 0.55);
+  --shadow-term: 0 30px 60px -30px oklch(0.05 0.02 255 / 0.7);
 
   --animate-reveal: reveal 0.9s var(--ease-editorial) both;
   @keyframes reveal {
@@ -94,13 +117,25 @@
 @layer base {
   html {
     @apply bg-paper text-ink font-sans antialiased;
-    transition: background 0.4s, color 0.4s;
+    transition: background-color 0.4s, color 0.4s;
     scroll-behavior: smooth;
+    scrollbar-color: var(--mg-ink-2) var(--mg-paper);
+    caret-color: var(--mg-accent);
   }
-  a { color: inherit; }
-  a:hover { color: var(--color-accent); }
-  ::selection { background: var(--color-accent); color: var(--color-paper); }
-  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  body {
+    background-color: var(--mg-paper);
+    background-image: radial-gradient(var(--mg-dot) 1px, transparent 1.2px);
+    background-size: 14px 14px;
+  }
+  a { color: inherit; text-underline-offset: 4px; }
+  a:hover { color: var(--mg-accent); }
+  ::selection { background: var(--mg-accent); color: var(--mg-paper); }
+  :focus-visible { outline: 2px solid var(--mg-accent); outline-offset: 3px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--mg-paper); }
+  ::-webkit-scrollbar-thumb { background: var(--mg-rule); border: 3px solid var(--mg-paper); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--mg-ink-2); }
+  .tabular-nums, time { font-variant-numeric: tabular-nums; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -109,17 +144,293 @@
 
 /* Utilidades de componente */
 @utility mg-label { @apply font-mono text-label uppercase text-ink-2; }
-@utility mg-btn { @apply inline-flex items-baseline whitespace-nowrap no-underline transition-colors; }
-@utility mg-btn-primary { @apply mg-btn gap-2.5 pb-1.25 border-b-[1.5px] border-accent font-serif italic text-[22px] leading-[1.1] text-ink hover:text-accent; }
+/* Etiqueta de material demostrativo (proyectos y métricas de ejemplo). */
+@utility mg-demo { @apply font-mono text-[10.5px] tracking-[0.12em] uppercase px-2 py-1 border border-rule text-ink-2 whitespace-nowrap; }
+@utility mg-demo-chip { @apply font-mono text-[10.5px] tracking-[0.12em] uppercase px-2 py-1 bg-ink text-paper whitespace-nowrap; }
+@utility mg-btn { @apply inline-flex items-center whitespace-nowrap no-underline transition-colors; }
+@utility mg-btn-primary { @apply mg-btn gap-3 pb-1.5 border-b-2 border-accent font-mono text-[12px] uppercase tracking-[0.14em] leading-none text-ink hover:text-accent; }
+@utility mg-btn-solid { @apply mg-btn gap-3 h-12 px-5 bg-accent text-paper font-mono text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-paper; }
 @utility mg-btn-secondary { @apply mg-btn gap-2 pb-1.5 border-b border-rule font-mono text-label uppercase text-ink-2 hover:text-ink hover:border-ink; }
-@utility mg-filter { @apply font-serif italic text-[18px] text-ink-2 cursor-pointer aria-pressed:text-ink aria-pressed:underline decoration-accent decoration-[1.5px] underline-offset-[5px]; }
-@utility mg-skill { @apply flex items-baseline gap-2.25 py-1.75 border-b border-dotted border-rule font-serif text-[19px]; }
-@utility mg-dot { @apply size-1.75 rounded-full self-center shadow-[inset_0_0_0_1px_var(--color-ink-2)]; }
+@utility mg-btn-ghost { @apply mg-btn gap-3 h-12 px-5 border border-rule text-ink font-mono text-[12px] uppercase tracking-[0.14em] hover:border-ink hover:text-ink; }
+@utility mg-filter { @apply font-mono text-[12px] text-ink-2 cursor-pointer aria-pressed:text-ink aria-pressed:underline decoration-accent decoration-2 underline-offset-[6px]; }
+@utility mg-skill { @apply flex items-baseline gap-2.25 py-1.75 border-b border-dotted border-rule font-sans text-[16px]; }
+@utility mg-dot { @apply size-1.75 self-center shadow-[inset_0_0_0_1px_var(--color-ink-2)]; }
 @utility mg-dot-daily { @apply mg-dot bg-accent shadow-none; }
 @utility mg-row { @apply flex flex-wrap items-baseline gap-x-7 gap-y-2.5 py-5 border-b border-rule transition-colors hover:text-accent; }
-@utility mg-toggle-sign { @apply inline-flex size-5 items-center justify-center rounded-full border border-rule text-[13px] aria-expanded:border-accent; }
+@utility mg-toggle-sign { @apply inline-flex size-6 items-center justify-center border border-rule font-mono text-[13px] aria-expanded:border-accent; }
+@utility mg-release-tab { @apply inline-flex items-center gap-2 h-10 px-3.5 border border-ink bg-transparent font-mono text-[11px] tracking-[0.08em] uppercase text-ink cursor-pointer transition-colors hover:bg-ink hover:text-paper aria-pressed:bg-ink aria-pressed:text-paper; }
+/* Acción pequeña (escenario de la mascota). */
+@utility mg-chip { @apply inline-flex items-center h-8 px-3 border border-rule bg-transparent font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 cursor-pointer transition-colors hover:border-accent hover:text-accent; }
 @utility mg-surface { @apply bg-paper-2 p-5; }
-@utility mg-tag { @apply font-mono text-[11px] px-2.25 py-1 border border-rule rounded-pill; }
-@utility mg-section-head { @apply flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 border-t border-ink pt-3.5 font-mono text-label uppercase; }
-@utility mg-figcaption { @apply font-serif text-[15px] text-ink-2 mt-3; }
-@utility mg-placeholder { @apply border border-rule flex items-center justify-center bg-[repeating-linear-gradient(135deg,var(--color-paper-2)_0_10px,transparent_10px_20px)]; }
+@utility mg-tag { @apply font-mono text-[11px] px-2 py-0.5 border border-rule; }
+@utility mg-section-head { @apply flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 border-t border-rule pt-3.5 font-mono text-label uppercase; }
+@utility mg-figcaption { @apply font-mono text-[11px] tracking-[0.06em] text-ink-2 mt-3; }
+@utility mg-placeholder { @apply border border-rule flex items-center justify-center bg-paper-2; }
+
+/* Marco HUD: cruces en las esquinas de un bloque. */
+@utility mg-cross {
+  position: relative;
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--color-ink-2), var(--color-ink-2)) center / 1px 100% no-repeat,
+      linear-gradient(var(--color-ink-2), var(--color-ink-2)) center / 100% 1px no-repeat;
+  }
+  &::before { top: -5px; left: -5px; }
+  &::after { bottom: -5px; right: -5px; }
+}
+
+/* Texto que sube palabra a palabra desde una máscara (site.ts riseAll).
+   El padding vertical deja sitio a tildes y descendentes; el desfase por
+   palabra (--i) se corta en 24 para que un párrafo largo no tarde de más. */
+[data-rise] .rw {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-block: 0.14em;
+  margin-block: -0.14em;
+}
+[data-rise] .rw > span {
+  display: inline-block;
+  transform: translateY(130%);
+  transition: transform 0.95s var(--ease-editorial) calc(min(var(--i), 24) * 38ms);
+}
+[data-rise][data-in] .rw > span { transform: none; }
+
+/* Scroll como recorrido — en longhands: el minificador fundiría
+   animation-timeline dentro del shorthand y el navegador lo descartaría.
+   Solo donde el navegador tiene scroll-driven
+   animations; sin soporte o con movimiento reducido todo queda estático. */
+[data-progress] { transform: scaleX(0); transform-origin: left; }
+@keyframes mg-grow { to { transform: scaleX(1); } }
+@keyframes mg-draw { from { background-size: 0% 1px; } }
+@keyframes mg-step-up { from { transform: translateY(70%); opacity: 0; } }
+@keyframes mg-recede { to { transform: translateY(-5%) scale(0.97); opacity: 0.2; } }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Barra de avance bajo el encabezado. */
+    [data-progress] { animation-name: mg-grow; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: scroll(root); }
+    /* La línea guía del capítulo se dibuja de izquierda a derecha. */
+    [data-chapter] {
+      border-top-color: transparent;
+      background: linear-gradient(var(--color-ink-2), var(--color-ink-2)) 0 0 / 100% 1px no-repeat;
+      animation-name: mg-draw;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+    /* El número sube en cuatro peldaños, como el símbolo de la marca. */
+    [data-chapter-n] {
+      animation-name: mg-step-up;
+      animation-timing-function: steps(4, jump-end);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    /* El hero se aleja mientras sale de la pantalla. */
+    [data-hero] > div {
+      transform-origin: 50% 0;
+      animation-name: mg-recede;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+   Interacción por sección. Los cambios de color de estado van siempre;
+   el movimiento solo sin prefers-reduced-motion. */
+@keyframes mg-in { from { opacity: 0; transform: translateY(12px); } }
+@keyframes mg-unfold {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); transform: none; }
+}
+@keyframes mg-pop { 40% { scale: 1.08; } }
+@keyframes mg-fade { from { opacity: 0; } }
+@keyframes mg-bar { from { transform: scaleX(0); } }
+@keyframes mg-fill-y { from { background-size: 100% 0%; } to { background-size: 100% 100%; } }
+@keyframes mg-mark-in { from { transform: scale(0.3); opacity: 0.3; } }
+
+/* § 02 · § 05 · § 06 — estados de color */
+#about-facts > div:hover dt,
+#notes-list > div:hover > span:first-child { color: var(--color-accent); }
+#notes-list > div:hover { border-color: var(--color-accent); }
+[data-work-row]:hover .mg-toggle-sign { border-color: var(--color-accent); color: var(--color-accent); }
+#stack-grid .border-dotted:hover > span:first-child { background: var(--color-accent); box-shadow: none; }
+[data-tl]:hover [data-tl-mark] { background: var(--color-accent); }
+[data-copy][data-done] { color: var(--color-accent); border-color: var(--color-accent); }
+[data-sheet]:hover { border-color: var(--color-accent); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Global — las flechas apuntan hacia donde llevan; los botones ceden al pulsar. */
+  svg[data-icon^="arrow"] { transition: translate 0.35s var(--ease-editorial); }
+  :is(a, button):hover svg[data-icon="arrow-right"] { translate: 4px 0; }
+  :is(a, button):hover svg[data-icon="arrow-down"] { translate: 0 3px; }
+  :is(a, button):hover svg[data-icon="arrow-up-right"] { translate: 2px -2px; }
+  :is(.mg-btn-solid, .mg-btn-ghost, .mg-release-tab) {
+    transition-property: color, background-color, border-color, scale;
+    transition-duration: 0.2s;
+  }
+  :is(.mg-btn-solid, .mg-btn-ghost, .mg-release-tab):active { scale: 0.97; }
+
+  /* Marcos HUD: las cruces se abren al pasar el cursor. */
+  .mg-cross::before, .mg-cross::after { transition: translate 0.4s var(--ease-editorial); }
+  .mg-cross:hover::before { translate: -3px -3px; }
+  .mg-cross:hover::after { translate: 3px 3px; }
+
+
+  /* § 01 — fila: el título avanza y el + gira; el detalle cae en cascada. */
+  [data-row-title] { transition: translate 0.4s var(--ease-editorial); }
+  [data-work-row]:hover [data-row-title] { translate: 6px 0; }
+  [data-work-row] .mg-toggle-sign { transition: rotate 0.4s var(--ease-editorial), border-color 0.2s, color 0.2s; }
+  [data-work-row]:hover .mg-toggle-sign { rotate: 90deg; }
+  [data-panel]:not([hidden]) > *,
+  [data-panel]:not([hidden]) > div:first-child > div { animation: mg-in 0.6s var(--ease-editorial) both; }
+  [data-panel]:not([hidden]) > div:first-child > div:nth-child(2) { animation-delay: 70ms; }
+  [data-panel]:not([hidden]) > div:first-child > div:nth-child(3) { animation-delay: 140ms; }
+  [data-panel]:not([hidden]) > :nth-child(2) { animation-delay: 200ms; }
+
+  /* § 02 — datos, notas y principios responden al cursor. */
+  #about-facts > div dd { transition: translate 0.35s var(--ease-editorial); }
+  #about-facts > div:hover dd { translate: 4px 0; }
+  #about-facts dt, #notes-list > div, #notes-list > div > span { transition: color 0.2s, border-color 0.2s; }
+  #about-principles .grid > div {
+    background: linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 0% 1px no-repeat;
+    transition: background-size 0.6s var(--ease-editorial);
+  }
+  #about-principles .grid > div:hover { background-size: 100% 1px; }
+  #about-principles .grid > div > span:first-child { transition: translate 0.4s var(--ease-editorial); }
+  #about-principles .grid > div:hover > span:first-child { translate: 6px 0; }
+
+  /* § 03 · § 04 — listas filtradas entran en cascada (stagger() en site.ts). */
+  .mg-stagger > * { animation: mg-in 0.55s var(--ease-editorial) both; }
+.mg-stagger > :nth-child(2) { animation-delay: 60ms; }
+.mg-stagger > :nth-child(3) { animation-delay: 120ms; }
+.mg-stagger > :nth-child(4) { animation-delay: 180ms; }
+.mg-stagger > :nth-child(5) { animation-delay: 240ms; }
+.mg-stagger > :nth-child(6) { animation-delay: 300ms; }
+.mg-stagger > :nth-child(7) { animation-delay: 360ms; }
+.mg-stagger > :nth-child(8) { animation-delay: 420ms; }
+  /* Mapa del stack: las barras crecen desde la izquierda al pintarse. */
+  #skill-map [data-bar] { transform-origin: left; animation: mg-bar 0.8s var(--ease-editorial) both; }
+  #skill-map > :nth-child(2) [data-bar] { animation-delay: 70ms; }
+  #skill-map > :nth-child(3) [data-bar] { animation-delay: 140ms; }
+  #skill-map > :nth-child(4) [data-bar] { animation-delay: 210ms; }
+  #skill-map > :nth-child(n+5) [data-bar] { animation-delay: 280ms; }
+  #stack-grid .border-dotted > span:first-child { transition: background-color 0.2s, scale 0.3s var(--ease-editorial); }
+  #stack-grid .border-dotted:hover > span:first-child { scale: 1.4; }
+
+  /* § 04 — la miniatura del PDF se levanta como una hoja; el resumen se despliega. */
+  [data-sheet] { transition: translate 0.45s var(--ease-editorial), rotate 0.45s var(--ease-editorial), border-color 0.2s, box-shadow 0.45s; }
+  [data-sheet]:hover { translate: 0 -6px; rotate: -1.5deg; box-shadow: 0 16px 26px -18px rgba(0, 0, 0, 0.5); }
+  .mg-unfold { animation: mg-unfold 0.55s var(--ease-editorial) both; }
+
+  /* § 05 — al pasar el cursor el marcador gira a rombo. */
+  [data-tl-mark] { transition: rotate 0.4s var(--ease-editorial), background-color 0.2s; }
+  [data-tl]:hover [data-tl-mark] { rotate: 45deg; }
+
+  /* § 06 — el correo se subraya, Copiar confirma, los perfiles avanzan. */
+  [data-mail] {
+    background: linear-gradient(currentColor, currentColor) 0 calc(100% - 10px) / 0% 2px no-repeat;
+    transition: background-size 0.5s var(--ease-editorial), color 0.2s;
+  }
+  [data-mail]:hover { background-size: 100% 2px; }
+  [data-copy][data-done] { animation: mg-pop 0.4s var(--ease-editorial); }
+  [data-dir-row] { transition: padding-left 0.35s var(--ease-editorial); }
+  [data-dir-row]:hover { padding-left: 8px; }
+}
+
+/* § 05 — la línea de tiempo se llena de acento y los marcadores se encienden al bajar. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-tl-line] {
+      background: linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / 100% 100% no-repeat, var(--color-rule);
+      animation-name: mg-fill-y;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: cover 15% cover 55%;
+    }
+    [data-tl-mark] {
+      animation-name: mg-mark-in;
+      animation-timing-function: var(--ease-editorial);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+
+/* Cursor "+" de marca (el mismo signo que las cruces HUD). Normal: tinta con
+   halo del fondo, para verse sobre cualquier superficie. Sobre algo pulsable:
+   "+" mayor en Pervinca. Los campos de texto conservan su cursor. */
+@media (pointer: fine) {
+  [data-theme="dark"] {
+    --cursor-plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2312151A' stroke-width='4.0'/%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23E8E4DC' stroke-width='1.5'/%3E%3C/svg%3E") 12 12, crosshair;
+    --cursor-plus-hot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 3v18M3 12h18' stroke='%2312151A' stroke-width='4.5'/%3E%3Cpath d='M12 3v18M3 12h18' stroke='%23949FD8' stroke-width='2'/%3E%3C/svg%3E") 12 12, pointer;
+  }
+  [data-theme="light"] {
+    --cursor-plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23F4F2EE' stroke-width='4.0'/%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2312151A' stroke-width='1.5'/%3E%3C/svg%3E") 12 12, crosshair;
+    --cursor-plus-hot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 3v18M3 12h18' stroke='%23F4F2EE' stroke-width='4.5'/%3E%3Cpath d='M12 3v18M3 12h18' stroke='%2355609C' stroke-width='2'/%3E%3C/svg%3E") 12 12, pointer;
+  }
+  html, html * { cursor: var(--cursor-plus); }
+  :is(a[href], button, [role="button"], label, select, summary, .cursor-pointer, .mg-mascot-menu button),
+  :is(a[href], button, [role="button"], label, summary) * { cursor: var(--cursor-plus-hot); }
+  :is(input:not([type="button"], [type="submit"], [type="checkbox"], [type="radio"]), textarea, [contenteditable]) { cursor: text; }
+  :is(button, input):disabled { cursor: not-allowed; }
+}
+
+/* Mascota (mascot.ts): el escenario del paquete se vuelve transparente para que
+   tome el fondo del tema; posada en la esquina gana un disco propio para
+   separarse del contenido que pasa por debajo. */
+[data-mascot-art] svg { display: block; width: 100%; height: 100%; }
+[data-mascot-art] svg > rect { fill: transparent; }
+[data-mascot] { border-radius: 9999px; transition: background-color 0.3s, box-shadow 0.3s; }
+[data-mascot][data-docked="true"] {
+  background: var(--color-paper-2);
+  box-shadow: 0 0 0 1px var(--color-rule), 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+[data-mascot]:focus-visible { outline-offset: 6px; }
+[data-mascot][data-min="true"] { opacity: 0.85; }
+/* Globo de diálogo y menú: fijos; mascot.ts los coloca junto a la mascota. */
+.mg-say {
+  position: fixed; left: 0; top: 0; z-index: 41; margin: 0;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 10px 14px;
+  background: var(--color-ink); color: var(--color-paper);
+  font: 500 14px/1.4 var(--font-sans);
+  pointer-events: none;
+}
+.mg-say::after {
+  content: ""; position: absolute; width: 10px; height: 10px; background: inherit;
+}
+.mg-say[data-tail="down"]::after { left: calc(50% - 5px); bottom: -5px; rotate: 45deg; }
+.mg-say[data-tail="right"]::after { right: -5px; top: calc(50% - 5px); rotate: 45deg; }
+.mg-mascot-menu {
+  position: fixed; left: 0; top: 0; z-index: 41;
+  display: flex; flex-direction: column; min-width: 200px; padding: 4px;
+  background: var(--color-paper-2); border: 1px solid var(--color-rule);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+.mg-mascot-menu[hidden] { display: none; }
+.mg-mascot-menu button {
+  height: 36px; padding: 0 12px; border: 0; background: transparent; text-align: left;
+  font: 400 11px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink-2);
+}
+.mg-mascot-menu button:hover, .mg-mascot-menu button:focus-visible { background: var(--color-accent); color: var(--color-paper); outline: none; }
+@media (prefers-reduced-motion: no-preference) {
+  /* Solo opacidad: transform ya lo usa mascot.ts para colocarlos. */
+  .mg-say:not([hidden]) { animation: mg-fade 0.3s ease-out; }
+  .mg-mascot-menu:not([hidden]) { animation: mg-fade 0.25s ease-out; }
+}
+
+/* Notas de versión — la portada ([data-release]) usa la misma paleta de
+   marca, sin la retícula de puntos. */
+[data-release] { --mg-dot: transparent; }

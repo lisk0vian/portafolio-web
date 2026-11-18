@@ -1,4 +1,4 @@
-// Global Marginalia state: profile and theme. Vanilla JS, no framework.
+// Global site state: profile and theme. Vanilla JS, no framework.
 // The language lives in the URL (Astro i18n: "/" and "/en/"), so it is not
 // stored here. Profile and theme persist across pages via localStorage.
 
@@ -27,7 +27,15 @@ export function getProfile(): Profile {
 }
 
 export function getTheme(): Theme {
-  return read("mg-theme") === "dark" ? "dark" : "light";
+  const saved = read("mg-theme");
+  if (saved === "light" || saved === "dark") return saved;
+  try {
+    const docTheme = document?.documentElement?.dataset?.theme;
+    if (docTheme === "light" || docTheme === "dark") return docTheme;
+  } catch {
+    // document unavailable (e.g. SSR): fall through to light.
+  }
+  return "light";
 }
 
 export function applyTheme(theme: Theme) {

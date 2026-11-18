@@ -1,5 +1,5 @@
 ---
-// "Marginalia" design system template, shared by the "es" and "en" pages.
+// Design system template ("Sistema personal"), shared by the "es" and "en" pages.
 // Reference: "Sistema de Diseno.dc.html" (v1.0). Components 5.3–5.16 render
 // real data from the injected PortfolioSource (mock|live) at build time and
 // fall back to the reference copy when a field is missing.
@@ -28,47 +28,47 @@ const { lang } = Astro.props;
 
 const copy = {
   es: {
-    version: "v1.0 · sistema de diseño",
+    version: "v2.0 · sistema de diseño",
     nav: ["Principios", "Color", "Tipografía", "Espacio", "Componentes", "Tailwind", "Movimiento"],
     portfolio: "Portafolio",
     themeLabels: "Claro|Oscuro",
     heroKicker: "Sistema de diseño · Portafolio de ingeniería y datos",
     heroLead:
-      "Un sistema editorial-técnico: la claridad de una revista científica aplicada a un portafolio de ingeniería. Papel, tinta, un solo acento y datos tratados como figuras.",
+      "Un sistema de pantalla: retícula de puntos, display ancha, datos en mono y un solo acento que cambia con la edición (lima en Ingeniería, cian en Datos). El tema del sitio es el trabajo, no la decoración.",
     principles: "§ 01 — Principios",
     principleItems: [
       { n: "I.", t: "Rigor antes que decoración", d: "Cada elemento se justifica como en un paper: numerado, citado, medible. Sin ornamento que no informe." },
-      { n: "II.", t: "La tipografía es la interfaz", d: "Serif para ideas, sans para interfaz, mono para datos y código. La jerarquía se construye con escala y reglas, no con cajas." },
+      { n: "II.", t: "La tipografía es la interfaz", d: "Display ancha para nombres y títulos, sans para leer, mono para datos y código. La jerarquía se construye con escala y líneas guía, no con cajas." },
       { n: "III.", t: "Datos como figuras", d: "Métricas, gráficas y código siempre llevan leyenda (Fig., Listado, Tabla). Así sirve igual a ingeniería que a datos." },
     ],
     color: "§ 02 — Color",
     colorSub: "OKLCH · claro / oscuro",
     colHead: ["Token", "Claro", "Oscuro", "Uso"],
     swatchUses: [
-      "Fondo principal, papel.",
+      "Fondo principal con retícula de puntos.",
       "Hover de filas, pistas de gráficas, placeholders.",
       "Texto, reglas de sección, botón primario.",
       "Texto secundario y metadatos (≥ 4.5:1).",
       "Reglas finas y bordes de etiquetas.",
-      "Bermellón: énfasis, métricas, estado. Uso escaso.",
-      "Serie secundaria en gráficas de datos.",
+      "Acento de la edición: lima (Ingeniería) o cian (Datos). Botón principal, métricas, estado.",
+      "El acento de la otra edición; serie secundaria en gráficas.",
       "Fondo de terminal y bloques de código.",
       "Prompt y resaltados dentro de la terminal.",
     ],
     type: "§ 03 — Tipografía",
-    typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    typeSub: "Sora · JetBrains Mono",
     typeIntro:
       "Una sola pieza grande por pantalla. Cada nivel es claramente menor que el anterior: display solo en el hero, un título por sección y los elementos internos nunca compiten con él.",
     typeSpecs: [
-      "display · solo hero<br>Newsreader 350 · 46–118 · lh .96 · −2.8%",
-      "h1 · título de sección<br>Newsreader 350 · 36–64 · lh 1 · −2.2%",
-      "h2 · destacado<br>Newsreader 400 · 30–46 · lh 1.05",
-      "h3 · elemento<br>Newsreader 400 · 22–28 · lh 1.15",
-      "cita · carta<br>Newsreader 300 itálica · 22–34",
-      "lead<br>Newsreader 300 itálica · 19–22 · lh 1.4",
-      "cuerpo editorial<br>Newsreader 400 · 18–20 · lh 1.65",
-      "cuerpo UI · descripciones<br>IBM Plex Sans 400 · 14–16 · lh 1.6",
-      "label · datos · código<br>IBM Plex Mono 400/500 · 11–12 · +8% mayúsculas",
+      "nombre · solo hero<br>Sora 600 · 52–168 · lh .86 · −3.5% · mayúsculas",
+      "h1 · título de capítulo<br>Sora 600 · 32–60 · lh 1 · −3% · mayúsculas",
+      "h2 · destacado<br>Sora 600 · 24–38 · lh 1.08 · mayúsculas",
+      "h3 · elemento<br>Sora 600 · 18–26 · lh 1.15 · mayúsculas",
+      "cita · carta<br>Sora 500 · 22–34 · se enciende al hacer scroll",
+      "lead<br>Sora 400–500 · 18–21 · lh 1.45",
+      "cuerpo<br>Sora 400 · 16–18 · lh 1.65",
+      "cuerpo UI · descripciones<br>Sora 400 · 14–16 · lh 1.6",
+      "label · datos · código<br>JetBrains Mono 400/500 · 11–12 · +14% mayúsculas",
     ],
     displayEx: "De punta",
     displayEm: "a punta",
@@ -158,7 +158,7 @@ const copy = {
       { k: "tema", d: "Transición de fondo y tinta en 400 ms al cambiar claro/oscuro." },
     ],
     termRole: "Ingeniería · Datos",
-    termBio: "Terminal de muestra del sistema Marginalia.",
+    termBio: "Terminal de muestra del sistema.",
   },
   en: {
     version: "v1.0 · design system",
@@ -167,41 +167,41 @@ const copy = {
     themeLabels: "Light|Dark",
     heroKicker: "Design system · Engineering and data portfolio",
     heroLead:
-      "An editorial-technical system: the clarity of a scientific journal applied to an engineering portfolio. Paper, ink, a single accent, and data treated as figures.",
+      "A screen-native system: dot grid, wide display type, data in mono and a single accent that follows the edition (lime for Engineering, cyan for Data). The subject is the work, not decoration.",
     principles: "§ 01 — Principles",
     principleItems: [
       { n: "I.", t: "Rigor before decoration", d: "Every element is justified like in a paper: numbered, cited, measurable. No ornament that does not inform." },
-      { n: "II.", t: "Typography is the interface", d: "Serif for ideas, sans for interface, mono for data and code. Hierarchy is built with scale and rules, not boxes." },
+      { n: "II.", t: "Typography is the interface", d: "Wide display for names and titles, sans for reading, mono for data and code. Hierarchy is built with scale and guide lines, not boxes." },
       { n: "III.", t: "Data as figures", d: "Metrics, charts and code always carry a caption (Fig., Listing, Table). It serves engineering and data alike." },
     ],
     color: "§ 02 — Color",
     colorSub: "OKLCH · light / dark",
     colHead: ["Token", "Light", "Dark", "Usage"],
     swatchUses: [
-      "Main background, paper.",
+      "Main background with dot grid.",
       "Row hover, chart tracks, placeholders.",
       "Text, section rules, primary button.",
       "Secondary text and metadata (≥ 4.5:1).",
       "Hairline rules and tag borders.",
-      "Vermilion: emphasis, metrics, status. Use sparingly.",
-      "Secondary series in data charts.",
+      "Edition accent: lime (Engineering) or cyan (Data). Primary button, metrics, status.",
+      "The other edition's accent; secondary chart series.",
       "Terminal and code block background.",
       "Prompt and highlights inside the terminal.",
     ],
     type: "§ 03 — Typography",
-    typeSub: "Newsreader · IBM Plex Sans · IBM Plex Mono",
+    typeSub: "Sora · JetBrains Mono",
     typeIntro:
       "One large piece per screen. Each level is clearly smaller than the one above: display only in the hero, one title per section, and inner elements never compete with it.",
     typeSpecs: [
-      "display · hero only<br>Newsreader 350 · 46–118 · lh .96 · −2.8%",
-      "h1 · section title<br>Newsreader 350 · 36–64 · lh 1 · −2.2%",
-      "h2 · featured<br>Newsreader 400 · 30–46 · lh 1.05",
-      "h3 · item<br>Newsreader 400 · 22–28 · lh 1.15",
-      "quote · letter<br>Newsreader 300 italic · 22–34",
-      "lead<br>Newsreader 300 italic · 19–22 · lh 1.4",
-      "editorial body<br>Newsreader 400 · 18–20 · lh 1.65",
-      "UI body · descriptions<br>IBM Plex Sans 400 · 14–16 · lh 1.6",
-      "label · data · code<br>IBM Plex Mono 400/500 · 11–12 · +8% uppercase",
+      "name · hero only<br>Sora 600 · 52–168 · lh .86 · −3.5% · uppercase",
+      "h1 · chapter title<br>Sora 600 · 32–60 · lh 1 · −3% · uppercase",
+      "h2 · featured<br>Sora 600 · 24–38 · lh 1.08 · uppercase",
+      "h3 · item<br>Sora 600 · 18–26 · lh 1.15 · uppercase",
+      "quote · letter<br>Sora 500 · 22–34 · ignites on scroll",
+      "lead<br>Sora 400–500 · 18–21 · lh 1.45",
+      "body<br>Sora 400 · 16–18 · lh 1.65",
+      "UI body · descriptions<br>Sora 400 · 14–16 · lh 1.6",
+      "label · data · code<br>JetBrains Mono 400/500 · 11–12 · +14% uppercase",
     ],
     displayEx: "Start",
     displayEm: "to finish",
@@ -291,7 +291,7 @@ const copy = {
       { k: "theme", d: "Background and ink transition in 400 ms when switching light/dark." },
     ],
     termRole: "Engineering · Data",
-    termBio: "Sample terminal from the Marginalia system.",
+    termBio: "Sample terminal from the system.",
   },
 }[lang];
 
@@ -383,15 +383,15 @@ const nowDate = nowBlock?.updatedAt
 
 /* ---------- Tablas del sistema ---------- */
 const swatches = [
-  { token: "--paper", light: "oklch(0.975 0.008 85)", dark: "oklch(0.17 0.008 60)" },
-  { token: "--paper-2", light: "oklch(0.94 0.012 85)", dark: "oklch(0.22 0.01 60)" },
-  { token: "--ink", light: "oklch(0.21 0.012 60)", dark: "oklch(0.93 0.01 85)" },
-  { token: "--ink-2", light: "oklch(0.43 0.012 60)", dark: "oklch(0.72 0.012 85)" },
-  { token: "--rule", light: "oklch(0.21 0.012 60 / 0.16)", dark: "oklch(0.93 0.01 85 / 0.14)" },
-  { token: "--accent", light: "oklch(0.55 0.17 35)", dark: "oklch(0.72 0.14 40)" },
-  { token: "--accent-2", light: "oklch(0.52 0.12 250)", dark: "oklch(0.72 0.1 250)" },
-  { token: "--term-bg", light: "oklch(0.21 0.012 60)", dark: "oklch(0.12 0.006 60)" },
-  { token: "--term-accent", light: "oklch(0.76 0.13 55)", dark: "oklch(0.76 0.13 55)" },
+  { token: "--paper", light: "oklch(0.972 0.003 250)", dark: "oklch(0.16 0.012 255)" },
+  { token: "--paper-2", light: "oklch(0.935 0.005 250)", dark: "oklch(0.205 0.014 255)" },
+  { token: "--ink", light: "oklch(0.18 0.012 255)", dark: "oklch(0.94 0.008 90)" },
+  { token: "--ink-2", light: "oklch(0.44 0.012 255)", dark: "oklch(0.72 0.012 250)" },
+  { token: "--rule", light: "oklch(0.18 0.012 255 / 0.15)", dark: "oklch(0.94 0.008 90 / 0.13)" },
+  { token: "--accent", light: "oklch(0.5 0.15 135)", dark: "oklch(0.9 0.2 125)" },
+  { token: "--accent-2", light: "oklch(0.5 0.11 225)", dark: "oklch(0.85 0.13 210)" },
+  { token: "--term-bg", light: "oklch(0.16 0.012 255)", dark: "oklch(0.12 0.01 255)" },
+  { token: "--term-accent", light: "oklch(0.9 0.2 125)", dark: "oklch(0.9 0.2 125)" },
 ];
 
 const twTokens = [
@@ -400,31 +400,31 @@ const twTokens = [
   { t: "--rule", c: "border-rule · divide-rule" },
   { t: "--accent / --accent-2", c: "text-accent · bg-accent · fill-accent-2" },
   { t: "--term-*", c: "bg-term · text-term-ink · text-term-dim · text-term-accent" },
-  { t: "serif · sans · mono", c: "font-serif · font-sans · font-mono" },
-  { t: copy.typeScale, c: "text-display · text-h1 · text-h2 · text-h3 · text-quote · text-lead · text-body-serif · text-body · text-label" },
-  { t: "font-weight 350", c: "font-display" },
-  { t: "max-width", c: "max-w-page (1320) · max-w-prose (720)" },
-  { t: "radius · shadow", c: "rounded-pill · rounded-term · shadow-term" },
+  { t: "display · sans · mono", c: "font-display · font-sans · font-mono" },
+  { t: copy.typeScale, c: "text-name · text-display · text-h1 · text-h2 · text-h3 · text-quote · text-lead · text-body-serif · text-body · text-label" },
+  { t: "edición", c: "[data-profile=fullstack|data] cambia --accent" },
+  { t: "max-width", c: "max-w-page (1440) · max-w-prose (720)" },
+  { t: "marco HUD · shadow", c: "mg-cross · rounded-term (2px) · shadow-term" },
   { t: "motion", c: "ease-editorial · animate-reveal" },
 ];
 
 const twRecipes = [
-  "mg-btn-primary  ≡  inline-flex items-baseline gap-2.5 pb-1.25 border-b-[1.5px] border-accent font-serif italic text-[22px] text-ink hover:text-accent",
-  "mg-btn-secondary  ≡  inline-flex items-baseline gap-2 pb-1.5 border-b border-rule font-mono text-label uppercase text-ink-2 hover:text-ink hover:border-ink",
-  "mg-section-head  ≡  flex justify-between border-t border-ink pt-3.5 font-mono text-label uppercase",
-  "font-serif font-display text-h1 mt-5 mb-10",
-  "font-serif text-h3",
-  "mg-filter  ≡  font-serif italic text-[18px] text-ink-2 aria-pressed:text-ink aria-pressed:underline decoration-accent decoration-[1.5px] underline-offset-[5px]",
-  "mg-skill  ≡  flex items-baseline gap-2.25 py-1.75 border-b border-dotted border-rule font-serif text-[19px]",
-  "mg-dot-daily  ≡  size-1.75 rounded-full bg-accent  |  mg-dot: shadow-[inset_0_0_0_1px_var(--color-ink-2)]",
-  "grid grid-cols-[1.4fr_1fr_1fr] gap-3 py-4 border-b border-rule  ·  before: font-mono line-through text-ink-2  ·  after: font-serif text-[26px] text-accent",
-  "mg-row  ≡  flex flex-wrap items-baseline gap-x-7 py-5 border-b border-rule hover:text-accent  ·  mg-toggle-sign: size-5 rounded-full border border-rule aria-expanded:border-accent",
-  "grid grid-cols-[28px_1fr] gap-x-4.5  ·  dot: size-2.75 rounded-full border-[1.5px] border-accent",
+  "mg-btn-solid  ≡  inline-flex items-center gap-3 h-12 px-5 bg-accent text-paper font-mono text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ink",
+  "mg-btn-primary  ≡  inline-flex items-center gap-3 pb-1.5 border-b-2 border-accent font-mono text-[12px] uppercase tracking-[0.14em] hover:text-accent",
+  "mg-cross border-t border-rule pt-6  ·  número font-display text-h1 text-accent + título font-display text-h1 uppercase",
+  "font-display font-medium text-h1 uppercase",
+  "font-display font-medium text-h3 uppercase",
+  "filtro  ≡  h-8 px-2.5 border border-rule font-mono text-[11px] uppercase  ·  aria-pressed: bg-accent text-paper",
+  "mg-skill  ≡  flex items-baseline gap-2.25 py-1.75 border-b border-dotted border-rule text-[16px]",
+  "mg-dot-daily  ≡  size-1.75 bg-accent  |  mg-dot: shadow-[inset_0_0_0_1px_var(--color-ink-2)]",
+  "grid grid-cols-[1.4fr_1fr_1fr] gap-3 py-4 border-b border-rule  ·  antes: font-mono line-through text-ink-2  ·  después: font-display text-accent",
+  "fila  ≡  group py-5 border-b border-rule hover:bg-accent hover:text-paper  ·  mg-toggle-sign: size-6 border border-rule",
+  "grid grid-cols-[24px_1fr] gap-x-5  ·  marca: size-2.75 border-[1.5px] border-accent",
   "mg-surface  ≡  bg-paper-2 p-5",
-  "mg-figcaption  ≡  font-serif text-[15px] text-ink-2 mt-3",
-  "mg-filter  (aria-pressed)",
-  "bg-term text-term-ink font-mono text-[13px] rounded-term shadow-term",
-  "animate-reveal [animation-delay:80ms]",
+  "mg-figcaption  ≡  font-mono text-[11px] text-ink-2 mt-3",
+  "filtro (aria-pressed)",
+  "mg-cross bg-term text-term-ink font-mono text-[13px] rounded-term shadow-term border border-white/10",
+  "data-reveal · data-rise · scroll-timeline",
 ];
 
 const space = [4, 8, 12, 16, 24, 32, 48, 64, 96].map((v, i) => ({ t: "s-" + (i + 1), px: v + "px", w: v * 3 + "px" }));
@@ -450,33 +450,33 @@ const compLabel = "font-mono text-[11px] text-ink-2 border-b border-rule pb-2";
 const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
 ---
 
-<Layout title={`Marginalia — ${copy.version}`} description={copy.heroLead} lang={lang}>
+<Layout title={`${lang === "es" ? "Sistema de diseño" : "Design system"} — ${copy.version}`} description={copy.heroLead} lang={lang}>
   <div class="min-h-screen bg-paper text-ink font-sans antialiased">
-    <header class="sticky top-0 z-30 bg-paper border-b border-ink">
-      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] py-3 flex flex-wrap items-center justify-between gap-x-7 gap-y-3">
+    <header class="sticky top-0 z-30 bg-paper border-b border-rule">
+      <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] py-3 flex flex-wrap items-center justify-between gap-x-7 gap-y-3">
         <div class="flex items-baseline gap-3.5">
-          <span class="font-serif text-2xl">Marginalia</span>
+          <span class="font-display font-semibold text-[15px] uppercase tracking-[-0.02em]">{lang === "es" ? "Sistema" : "System"}<span class="text-accent">.</span></span>
           <span class="font-mono text-[11px] text-ink-2">{copy.version}</span>
         </div>
         <nav class="flex flex-wrap gap-x-5 gap-y-1 text-sm" aria-label={copy.version}>
           {copy.nav.map((label, i) => (<a href={`#${anchors[i]}`} class="no-underline">{label}</a>))}
         </nav>
         <div class="flex gap-2.5">
-          <a href={pageUrl(lang, "home")} class="font-mono text-xs px-3 py-2 border border-rule rounded-pill no-underline">{copy.portfolio} ↗</a>
-          <button type="button" data-toggle-theme class="font-mono text-xs px-3 py-2 border border-ink rounded-pill bg-transparent text-ink cursor-pointer">◐ <span data-theme-label={copy.themeLabels}>{copy.dark}</span></button>
+          <a href={pageUrl(lang, "home")} class="font-mono text-xs px-3 py-2 border border-rule no-underline">{copy.portfolio} ↗</a>
+          <button type="button" data-toggle-theme class="font-mono text-xs px-3 py-2 border border-rule bg-transparent text-ink cursor-pointer">◐ <span data-theme-label={copy.themeLabels}>{copy.dark}</span></button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
+    <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)]">
       <section class="pt-[clamp(56px,8vw,120px)] pb-[clamp(40px,5vw,72px)]">
         <div data-reveal="0" class="font-mono text-label uppercase text-accent">{copy.heroKicker}</div>
-        <h1 data-reveal="90" class="font-serif font-display text-[clamp(56px,10vw,160px)] leading-[0.92] tracking-[-0.035em] mt-6 mb-0">Marginalia</h1>
+        <h1 data-reveal="90" class="font-display font-medium uppercase text-[clamp(56px,10vw,160px)] leading-[0.92] tracking-[-0.035em] mt-6 mb-0">{lang === "es" ? "Sistema" : "System"}<span class="text-accent">.</span></h1>
         <p data-reveal="180" class="font-serif text-[clamp(20px,2vw,26px)] leading-[1.45] text-ink-2 max-w-[44ch] mt-7 mb-0 text-pretty">{copy.heroLead}</p>
       </section>
 
       {/* § 01 — Principios */}
-      <section id="principios" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="principios" class="py-14 border-t border-rule scroll-mt-20">
         <div class="font-mono text-label uppercase mb-8">{copy.principles}</div>
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-8">
           {copy.principleItems.map((item) => (
@@ -490,7 +490,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 02 — Color */}
-      <section id="color" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="color" class="py-14 border-t border-rule scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.color}</span><span class="text-ink-2">{copy.colorSub}</span></div>
         <div class="border-t border-rule">
           <div class="hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] gap-4 py-2.5 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 border-b border-rule">
@@ -508,16 +508,16 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 03 — Tipografía */}
-      <section id="tipo" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="tipo" class="py-14 border-t border-rule scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-5 font-mono text-label uppercase"><span>{copy.type}</span><span class="text-ink-2">{copy.typeSub}</span></div>
         <p class="font-serif text-[19px] leading-[1.55] text-ink-2 max-w-[62ch] mt-0 mb-7">{copy.typeIntro}</p>
         <div class="flex flex-col">
-          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[0]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif font-display text-[clamp(46px,7vw,112px)] leading-[.96] tracking-[-0.028em]">{copy.displayEx} <em class="text-accent font-light">{copy.displayEm}</em></span></div></div>
-          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[1]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif font-display text-h1">{copy.h1Ex}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[0]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-display font-medium uppercase text-[clamp(46px,7vw,112px)] leading-[.96] tracking-[-0.028em]">{copy.displayEx} <em class="text-accent font-light">{copy.displayEm}</em></span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[1]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-display font-medium uppercase text-h1">{copy.h1Ex}</span></div></div>
           <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[2]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif text-h2">{featured?.title}</span></div></div>
           <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[3]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif text-h3">{timeline[0]?.role}</span></div></div>
-          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[4]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif italic font-light text-quote">{pullQuote}</span></div></div>
-          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[5]} /><div class="flex-1 basis-[400px] min-w-0"><span class="font-serif italic font-light text-lead text-ink-2">{featured?.problem}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[4]} /><div class="flex-1 basis-[400px] min-w-0"><span class="text-quote">{pullQuote}</span></div></div>
+          <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[5]} /><div class="flex-1 basis-[400px] min-w-0"><span class="text-lead text-ink-2">{featured?.problem}</span></div></div>
           <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[6]} /><div class="flex-1 basis-[400px] min-w-0"><p class="m-0 font-serif text-body-serif max-w-[60ch]">{dropText}</p></div></div>
           <div class={specRow}><div class={specLabel} set:html={copy.typeSpecs[7]} /><div class="flex-1 basis-[400px] min-w-0"><p class="m-0 text-body max-w-[60ch]">{featured?.approach ?? featured?.description}</p></div></div>
           <div class={`${specRow} border-b`}><div class={specLabel} set:html={copy.typeSpecs[8]} /><div class="flex-1 basis-[400px] min-w-0"><div class="flex flex-wrap gap-6 font-mono text-xs"><span class="tracking-[0.08em] uppercase">{copy.workLabel}</span>{projectList.filter((p) => p.metric).slice(0, 2).map((p, i) => (<span class={i === 0 ? "text-accent" : ""}>{p.metric}</span>))}</div></div></div>
@@ -525,7 +525,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 04 — Espacio */}
-      <section id="espacio" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="espacio" class="py-14 border-t border-rule scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.space}</span><span class="text-ink-2">{copy.spaceSub}</span></div>
         <div class="flex flex-col gap-2.5">
           {space.map((s) => (
@@ -538,7 +538,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 05 — Componentes */}
-      <section id="componentes" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="componentes" class="py-14 border-t border-rule scroll-mt-20">
         <div class="font-mono text-label uppercase mb-10">{copy.comp}</div>
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-x-10 gap-y-12">
 
@@ -546,7 +546,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
           <div class="flex flex-col gap-[18px] min-w-0">
             <div class={compLabel}>{copy.compItems[0]}</div>
             <div class="flex flex-wrap gap-x-8 gap-y-3.5 items-baseline">
-              <a href={`${pageUrl(lang, "home")}#trabajo`} class="mg-btn-primary">{copy.seeWork}<span class="font-mono not-italic text-sm text-accent">→</span></a>
+              <a href={`${pageUrl(lang, "home")}#trabajo`} class="mg-btn-primary">{copy.seeWork}<span class="font-mono text-sm text-accent">→</span></a>
               <a href={cvUrl} class="mg-btn-secondary">{copy.downloadCv} ↓</a>
               <a href={pageUrl(lang, "case")} class="text-sm underline underline-offset-4">{copy.textLink}</a>
             </div>
@@ -588,7 +588,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
             <div class={compLabel}>{copy.compItems[3]}</div>
             <div>
               <div class="mg-section-head"><span>§ 02</span><span class="text-ink-2">{copy.headMeta}</span></div>
-              <div class="font-serif font-display text-[clamp(36px,4.4vw,56px)] tracking-[-0.022em] mt-4 leading-none">{copy.headTitle}</div>
+              <div class="font-display font-medium uppercase text-[clamp(36px,4.4vw,56px)] tracking-[-0.022em] mt-4 leading-none">{copy.headTitle}</div>
             </div>
           </div>
 
@@ -596,18 +596,18 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
           {featured && (
             <div class="col-span-full flex flex-col gap-[18px] min-w-0">
               <div class={compLabel}>{copy.compItems[4]}</div>
-              <div class="flex flex-wrap gap-y-7 gap-x-[clamp(32px,5vw,72px)] py-6 border-t border-ink">
+              <div class="flex flex-wrap gap-y-7 gap-x-[clamp(32px,5vw,72px)] py-6 border-t border-rule">
                 <div class="flex-[1.4_1_380px] min-w-0 flex flex-col gap-3.5">
                   <div class="flex flex-wrap gap-3.5 items-baseline">
                     <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-paper bg-accent px-[7px] py-0.5">{copy.featured}</span>
                     <span class={kicker}>{[featuredNo, featured.year, featured.role].filter(Boolean).join(" · ")}</span>
                   </div>
                   <a href={pageUrl(lang, "case")} class="font-serif text-h2 no-underline">{featured.title}</a>
-                  {featured.problem && (<span class="font-serif italic font-light text-[20px] leading-[1.4] text-ink-2">{featured.problem}</span>)}
+                  {featured.problem && (<span class="text-[20px] leading-[1.4] text-ink-2">{featured.problem}</span>)}
                   <span class="text-body max-w-[56ch]">{featured.description}</span>
                 </div>
                 {featured.results?.length ? (
-                  <div class="flex-[1_1_280px] min-w-0 border-t border-ink" role="table">
+                  <div class="flex-[1_1_280px] min-w-0 border-t border-rule" role="table">
                     <div role="row" class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 py-2.5 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2"><span role="columnheader">{copy.metric}</span><span role="columnheader" class="text-right">{copy.before}</span><span role="columnheader" class="text-right">{copy.after}</span></div>
                     {featured.results.map((r) => (
                       <div role="row" class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 py-4 border-b border-rule items-baseline">
@@ -619,7 +619,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
                   </div>
                 ) : null}
               </div>
-              <div class="border-t border-ink" data-rows>
+              <div class="border-t border-rule" data-rows>
                 {rows.map((p, i) => (
                   <div>
                     <button type="button" data-row-toggle aria-expanded={i === 0 ? "true" : "false"} aria-controls={`row-${p.slug}`} class="mg-row w-full text-left bg-transparent border-x-0 border-t-0 px-0 cursor-pointer text-ink">
@@ -657,7 +657,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
           {/* 5.7 */}
           <div class="flex flex-col gap-[18px] min-w-0">
             <div class={compLabel}>{copy.compItems[6]}</div>
-            <table class="w-full border-collapse border-y border-ink">
+            <table class="w-full border-collapse border-y border-rule">
               <thead><tr class="border-b border-rule font-mono text-[11px] uppercase tracking-[0.08em] text-ink-2"><th scope="col" class="py-2.5 pr-3 font-normal text-left w-1/2">{copy.metric}</th><th scope="col" class="py-2.5 px-3 font-normal text-right">{copy.before}</th><th scope="col" class="py-2.5 pl-3 font-normal text-right">{copy.after}</th></tr></thead>
               <tbody>
                 {resultRows.map((r, i) => (
@@ -681,10 +681,10 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
               {([["all", copy.all], ["journal", copy.journal], ["conference", copy.conference]] as const).map(([k, l], i) => (
                 <span class="flex items-baseline gap-2.5">
                   {i > 0 && (<span class="font-serif text-ink-2" aria-hidden="true">/</span>)}
-                  <button type="button" data-pub-type={k} data-count={pubCounts[k]} aria-pressed={i === 0 ? "true" : "false"} class="mg-filter bg-transparent border-0 p-0">{l}<sup class="font-mono not-italic text-[10px] ml-0.5">{pubCounts[k]}</sup></button>
+                  <button type="button" data-pub-type={k} data-count={pubCounts[k]} aria-pressed={i === 0 ? "true" : "false"} class="mg-filter bg-transparent border-0 p-0">{l}<sup class="font-mono text-[10px] ml-0.5">{pubCounts[k]}</sup></button>
                 </span>
               ))}
-              <span data-pub-total data-one={copy.pubOne} data-many={copy.pubMany} class="ml-auto font-serif italic text-[15px] text-ink-2">{pubCounts.all} {pubCounts.all === 1 ? copy.pubOne : copy.pubMany}</span>
+              <span data-pub-total data-one={copy.pubOne} data-many={copy.pubMany} class="ml-auto text-[15px] text-ink-2">{pubCounts.all} {pubCounts.all === 1 ? copy.pubOne : copy.pubMany}</span>
             </div>
           </div>
 
@@ -701,7 +701,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
               ))}
             </div>
             {skillItems.length > SKILL_PREVIEW && (
-              <button type="button" data-skill-more data-more={`+ ${skillItems.length - SKILL_PREVIEW} ${copy.more}`} data-less={copy.less} aria-expanded="false" class="self-start font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer hover:text-ink hover:border-ink">+ {skillItems.length - SKILL_PREVIEW} {copy.more}</button>
+              <button type="button" data-skill-more data-more={`+ ${skillItems.length - SKILL_PREVIEW} ${copy.more}`} data-less={copy.less} aria-expanded="false" class="self-start font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer hover:text-ink hover:border-rule">+ {skillItems.length - SKILL_PREVIEW} {copy.more}</button>
             )}
           </div>
 
@@ -712,7 +712,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
               <a href={`${certsBase}/${certGroup.group}`} class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 py-[18px] border-y border-rule no-underline">
                 <span class="flex flex-col gap-1.5 min-w-0">
                   <span class="flex items-baseline gap-2.5"><span translate="no" class="font-serif text-[22px] uppercase">{certGroup.group}</span><span class="font-mono text-[11px] text-accent">{certGroup.count}</span></span>
-                  {certGroup.latest && (<span class="font-serif italic text-base text-ink-2 truncate">{[certGroup.latest.title, certGroup.latest.level].filter(Boolean).join(" · ")}</span>)}
+                  {certGroup.latest && (<span class="text-base text-ink-2 truncate">{[certGroup.latest.title, certGroup.latest.level].filter(Boolean).join(" · ")}</span>)}
                 </span>
                 <span class="flex flex-col items-end justify-between font-mono text-xs"><span class="text-ink-2">{certRange}</span><span class="font-serif text-xl" aria-hidden="true">→</span></span>
               </a>
@@ -769,17 +769,17 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
           <div class="flex flex-col gap-[18px] min-w-0">
             <div class={compLabel}>{copy.compItems[13]}</div>
             <p class="m-0 font-serif text-[19px] leading-[1.65]"><span class="float-left font-display text-[4.6em] leading-[0.8] mt-[0.06em] mr-[0.1em] -ml-[0.03em] text-accent" aria-hidden="true">{dropText.charAt(0)}</span><span class="sr-only">{dropText.charAt(0)}</span>{dropText.slice(1)}</p>
-            <blockquote class="m-0 py-5 border-y border-ink grid grid-cols-[auto_minmax(0,1fr)] gap-x-4"><span class="font-serif text-[56px] leading-[0.7] text-accent" aria-hidden="true">“</span><span class="font-serif italic font-light text-2xl leading-[1.25]">{pullQuote}</span></blockquote>
+            <blockquote class="m-0 py-5 border-y border-rule grid grid-cols-[auto_minmax(0,1fr)] gap-x-4"><span class="font-serif text-[56px] leading-[0.7] text-accent" aria-hidden="true">“</span><span class="text-2xl leading-[1.25]">{pullQuote}</span></blockquote>
           </div>
 
           {/* 5.15 */}
           <div class="flex flex-col gap-[18px] min-w-0">
             <div class={compLabel}>{copy.compItems[14]}</div>
             <div class="flex flex-col">
-              <div class={`flex justify-between pb-2.5 border-b border-ink ${kicker}`}><span>{copy.directory}</span><span>{copy.dirMail}</span></div>
-              <span class="pt-4 pb-3 font-serif font-display text-[30px] tracking-[-0.015em] break-all">{email}</span>
+              <div class={`flex justify-between pb-2.5 border-b border-rule ${kicker}`}><span>{copy.directory}</span><span>{copy.dirMail}</span></div>
+              <span class="pt-4 pb-3 font-display font-medium uppercase text-[30px] tracking-[-0.015em] break-all">{email}</span>
               <span class="flex gap-6 items-baseline pb-4 border-b border-rule">
-                <a href={`mailto:${email}`} class="font-serif italic text-[19px] border-b-[1.5px] border-accent pb-1 no-underline">{copy.writeMail} <span class="font-mono not-italic text-[13px] text-accent">→</span></a>
+                <a href={`mailto:${email}`} class="text-[19px] border-b-[1.5px] border-accent pb-1 no-underline">{copy.writeMail} <span class="font-mono text-[13px] text-accent">→</span></a>
                 <button type="button" data-copy={email} data-copied={copy.copied} class="font-mono text-xs tracking-[0.08em] uppercase text-ink-2 bg-transparent border-0 border-b border-rule px-0 pb-1 cursor-pointer hover:text-ink">{copy.copy}</button>
               </span>
               {social && (
@@ -813,7 +813,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 07 — Tailwind */}
-      <section id="tailwind" class="py-14 border-t border-ink scroll-mt-20">
+      <section id="tailwind" class="py-14 border-t border-rule scroll-mt-20">
         <div class="flex flex-wrap justify-between gap-2 mb-8 font-mono text-label uppercase"><span>{copy.tailwind}</span><span class="text-ink-2">{copy.tailwindSub}</span></div>
         <p class="font-serif text-[21px] leading-[1.55] max-w-[60ch] mt-0 mb-9 text-pretty" set:html={copy.tailwindIntro} />
         <div class="flex flex-wrap gap-x-12 gap-y-10 items-start">
@@ -832,7 +832,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
 @theme { --text-display: …; --color-paper: …; }
 
 <html data-theme="light">
-<h1 class="font-serif font-display text-display">
+<h1 class="font-display font-medium uppercase text-display">
   ${copy.setupHeadlineA}
   <em class="text-accent font-light">${copy.setupHeadlineEm}</em>
 </h1>`}</pre>
@@ -854,7 +854,7 @@ const kicker = "font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2";
       </section>
 
       {/* § 08 — Movimiento */}
-      <section id="movimiento" class="pt-14 pb-24 border-t border-ink scroll-mt-20">
+      <section id="movimiento" class="pt-14 pb-24 border-t border-rule scroll-mt-20">
         <div class="font-mono text-label uppercase mb-8">{copy.motion}</div>
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-8">
           {copy.motionItems.map((item) => (
