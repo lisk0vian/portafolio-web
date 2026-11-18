@@ -6,6 +6,8 @@ import Layout from "../layouts/Layout.astro";
 import SiteHeader from "./SiteHeader.astro";
 import SectionHead from "./SectionHead.astro";
 import Terminal from "./Terminal.astro";
+import SectionDock from "./SectionDock.astro";
+import { icon } from "../utils/icons";
 import { ui, profiles, education, certGroupFallback, pick, type Profile } from "../data/content";
 import type { Lang } from "../scripts/store";
 import { resolvePersonal } from "../utils/personal";
@@ -13,7 +15,7 @@ import { pageUrl, altPageUrl } from "../utils/urls";
 import { site } from "../data/site";
 import type { TermData } from "../scripts/terminal";
 import { resolveSourceKind, type SourceKind } from "../lib/composition";
-import { workHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml } from "../scripts/home-render";
+import { workHtml, releaseHeroHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, expHtml, eduHtml, certRowClass } from "../scripts/home-render";
 
 interface Props {
   lang: Lang;
@@ -56,8 +58,6 @@ const p = resolved.fullstack;
 // Formación por edición (Ingeniería / Datos); la global queda de respaldo.
 const edu = p.edu ?? pick(education, lang);
 const certsBase = pageUrl(lang, "certs").replace(/\/+$/, "");
-const index1 = t.index.slice(0, 3);
-const index2 = t.index.slice(3);
 
 // Locale-resolved payload for client-side profile switches (no { es, en } pairs left).
 const pageData = {
@@ -73,8 +73,10 @@ const contentJson = JSON.stringify(pageData);
 // Mismo marcado que el re-render en cliente (scripts/home-render.ts).
 const pubState0 = { type: "all", year: "all", open: [], bib: [] };
 const personalFull = { ...personal, hoursNote: t.hoursNote };
+const counts = { fullstack: resolved.fullstack.projects.length, data: resolved.data.projects.length };
 const html = {
-  work: workHtml(p.projects, t, { caseHref, open: 1 }),
+  hero: releaseHeroHtml(p.projects, t, { caseHref, cvUrl: personal.cvUrl, name: personal.name, role: p.role, availability: personal.availabilityLong, location: personal.location, intro: p.intro, profile: "fullstack", counts }),
+  work: workHtml(p.projects, t, { caseHref, open: 0, profile: "fullstack", counts, cvUrl: personal.cvUrl }),
   about: aboutHtml(p.about),
   facts: factsHtml(t.facts),
   quote: quoteHtml(p),
@@ -88,267 +90,277 @@ const termJson = JSON.stringify(termDataMap);
 ---
 
 <Layout title={`${personal.name} — ${p.role}`} description={p.intro} lang={lang}>
-  <div class="min-h-screen bg-paper text-ink font-sans antialiased">
+  <div data-boot hidden class="fixed inset-0 z-50 bg-paper flex items-center justify-center font-mono text-[13px] tracking-[0.14em] text-ink transition-transform duration-700 ease-[cubic-bezier(.76,0,.24,1)]" aria-hidden="true">
+    <span><span data-boot-n class="tabular-nums">0</span>%</span>
+  </div>
+  <script is:inline>
+    (function () {
+      var el = document.querySelector("[data-boot]");
+      try {
+        if (!el || sessionStorage.getItem("mg-boot") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        sessionStorage.setItem("mg-boot", "1");
+      } catch (e) { return; }
+      el.hidden = false;
+      var n = el.querySelector("[data-boot-n]"), t0 = performance.now();
+      function tick(now) {
+        var k = Math.min(1, (now - t0) / 900);
+        n.textContent = String(Math.round(100 * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) return requestAnimationFrame(tick);
+        el.style.transform = "translateY(-100%)";
+        setTimeout(function () { el.remove(); }, 750);
+      }
+      requestAnimationFrame(tick);
+      el.addEventListener("click", function () { el.remove(); });
+    })();
+  </script>
+
+  <div data-release class="min-h-screen bg-paper text-ink font-sans antialiased">
     <SiteHeader lang={lang} page="home" themeLabels={`${t.light}|${t.dark}`} spyFallback={p.role} />
 
-    <main class="max-w-page mx-auto px-[clamp(20px,4vw,56px)]">
-      {/* § 00 — Summary */}
-      <section class="pt-[clamp(56px,9vw,128px)] pb-[clamp(48px,6vw,88px)] border-b border-rule">
-        <div data-reveal="0" data-t="ui.sum" class="font-mono text-label uppercase text-ink-2">{t.sum}</div>
-        <h1 data-reveal="90" class="font-serif font-display text-display mt-7 max-w-[17ch] text-balance">
-          <span data-tp="h1a">{p.h1a}</span>{` `}<em data-tp="h1em" class="text-accent font-light">{p.h1em}</em>{` `}<span data-tp="h1b">{p.h1b}</span>
-        </h1>
-        <div class="flex flex-wrap gap-x-16 gap-y-8 mt-[clamp(40px,5vw,72px)] items-end justify-between">
-          <p data-reveal="200" data-tp="intro" class="font-serif text-lead text-ink-2 max-w-[40ch] m-0 text-pretty">{p.intro}</p>
-          <div data-reveal="280" class="flex flex-col gap-[18px] items-start">
-            <div class="flex items-center gap-2.5 font-mono text-xs">
-              <span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span><span>{personal.availabilityLong}</span>
-            </div>
-            <div class="flex flex-wrap items-baseline gap-x-8 gap-y-3.5">
-              <a href="#trabajo" class="mg-btn-primary"><span data-t="ui.work">{t.work}</span><span class="font-mono not-italic text-sm text-accent">→</span></a>
-              <a id="hero-cv" href={personal.cvUrl} class="mg-btn-secondary"><span data-t="ui.cv">{t.cv}</span> ↓</a>
-            </div>
-          </div>
+    {/* § 00 — Hero: identidad + escenario de la mascota; en lg ocupa justo la primera pantalla. */}
+    <section data-hero class="relative flex min-h-[calc(100svh-3.5rem)] lg:h-[calc(100svh-3.5rem)] lg:min-h-[560px] flex-col border-b border-rule">
+      <div class="w-full max-w-page mx-auto px-[clamp(16px,3vw,40px)] pt-[clamp(10px,1.6vh,18px)] flex min-h-0 flex-1 flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-3 border-b border-rule">
+          <p class="flex items-center gap-3 font-mono text-label uppercase text-ink-2 m-0">
+            <span class="size-2 bg-signal motion-safe:animate-pulse" aria-hidden="true"></span><span>{personal.availabilityLong}</span>
+          </p>
+          <a href="#trabajo" class="flex items-center gap-2 no-underline font-mono text-label uppercase text-ink-2 hover:text-accent">
+            <span data-t="ui.relAll">{t.relAll}</span><Fragment set:html={icon("arrow-down", "size-3.5")} />
+          </a>
         </div>
-        <div data-reveal="360" class="mt-[clamp(48px,6vw,88px)]">
-          <div class="flex justify-between gap-3 border-t border-ink pt-3 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
-            <span data-t="ui.inIssue">{t.inIssue}</span><span data-t="ui.pages">{t.pages}</span>
+        <div id="hero-work" class="flex min-h-0 flex-1 flex-col" set:html={html.hero} />
+      </div>
+    </section>
+
+    {/* Mascota: fija; mascot.ts la posa sobre el hueco del hero y la lleva a la esquina al bajar. */}
+    <button type="button" data-mascot hidden aria-label={t.mascotLabel} data-label={t.mascotLabel} data-label-menu={t.mascotMenuLabel} data-label-restore={t.mascotRestore} aria-controls="mascot-menu" class="fixed left-0 top-0 z-40 origin-top-left p-0 border-0 bg-transparent cursor-pointer will-change-transform">
+      <span data-mascot-art class="block size-full"></span>
+    </button>
+    <p data-mascot-say aria-hidden="true" hidden class="mg-say"></p>
+    <div id="mascot-menu" data-mascot-menu hidden class="mg-mascot-menu">
+      <button type="button" data-mascot-cmd="wave">{t.actWave}</button>
+      <button type="button" data-mascot-cmd="top">{t.mTop}</button>
+      <button type="button" data-mascot-cmd="next">{t.mNext}</button>
+      <button type="button" data-mascot-cmd="console">{t.mConsole}</button>
+      <button type="button" data-mascot-cmd="theme">{t.mTheme}</button>
+      <button type="button" data-mascot-cmd="min">{t.mMin}</button>
+    </div>
+
+    <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)]">
+      {/* § 00 — Consola: capítulo como los demás, sobre el fondo de la página; la
+          terminal es una ventana oscura y la chuleta de la izquierda la maneja. */}
+      <section id="consola" class="pt-[clamp(64px,8vw,128px)] scroll-mt-14">
+        <SectionHead num="00" metaKey="ui.consM" metaFallback={t.consM} titleKey="ui.consT" titleFallback={t.consT} />
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.5fr)] gap-x-[clamp(32px,5vw,80px)] gap-y-10 items-start">
+          <div data-reveal="0" class="flex flex-col gap-5">
+            <p data-t="ui.consTitle" class="text-lead font-medium m-0 text-balance">{t.consTitle}</p>
+            <p data-t="ui.consNote" class="text-[15px] leading-[1.6] text-ink-2 m-0 max-w-[46ch]">{t.consNote}</p>
+            <ul id="cons-cmds" class="m-0 p-0 list-none border-t border-rule">
+              {t.consCmds.map((x: { c: string; d: string }) => (
+                <li class="border-b border-rule">
+                  <button type="button" data-term-run={x.c} class="group w-full grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_auto] items-baseline gap-4 py-3 px-0 border-0 bg-transparent text-left">
+                    <code class="font-mono text-[13px] text-accent whitespace-nowrap"><span aria-hidden="true">❯ </span>{x.c}</code>
+                    <span class="text-[14px] text-ink-2 transition-colors group-hover:text-ink">{x.d}</span>
+                    <Fragment set:html={icon("arrow-right", "size-3.5 text-ink-2")} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-          <nav class="grid grid-cols-1 md:grid-cols-2 mt-1" aria-label="Index">
-            <div id="index1" class="grid grid-cols-3">
-              {index1.map((x: any) => (
-                <a href={x.h} class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">
-                  <span class="font-mono text-[11px] text-accent">{x.n}</span>
-                  <span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">{x.l}</span>
-                </a>
-              ))}
-            </div>
-            <div id="index2" class="grid grid-cols-3">
-              {index2.map((x: any) => (
-                <a href={x.h} class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">
-                  <span class="font-mono text-[11px] text-accent">{x.n}</span>
-                  <span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">{x.l}</span>
-                </a>
-              ))}
-            </div>
-          </nav>
+          <figure data-reveal="120" class="min-w-0 m-0">
+            <Terminal data={termDataMap.fullstack} height={300} id="term-main" />
+            <figcaption data-t="ui.fig0" class="mg-figcaption">{t.fig0}</figcaption>
+          </figure>
         </div>
       </section>
 
-      {/* § 00.1 — Console */}
-      <section id="consola" class="py-[clamp(48px,6vw,80px)] border-b border-rule flex flex-wrap gap-x-14 gap-y-8">
-        <div data-reveal="0" class="flex-1 basis-[240px] flex flex-col gap-4">
-          <div data-t="ui.cons" class="font-mono text-label uppercase text-ink-2">{t.cons}</div>
-          <h2 data-t="ui.consTitle" class="font-serif font-normal text-h2 m-0 text-balance">{t.consTitle}</h2>
-          <p data-t="ui.consNote" class="text-[15px] leading-[1.6] text-ink-2 m-0 max-w-[34ch]">{t.consNote}</p>
-        </div>
-        <figure data-reveal="120" class="flex-[3_1_520px] min-w-0 m-0">
-          <Terminal data={termDataMap.fullstack} height={300} id="term-main" />
-          <figcaption data-t="ui.fig0" class="mg-figcaption italic">{t.fig0}</figcaption>
-        </figure>
-      </section>
-
-      {/* § 01 — Selected work */}
-      <section id="trabajo" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+      {/* § 01 — Release notes */}
+      <section id="trabajo" class="min-h-[calc(100svh-3.5rem)] pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-14">
         <SectionHead num="01" metaKey="ui.s1m" metaFallback={t.s1m} titleKey="ui.s1t" titleFallback={t.s1t} />
         <div id="projects-list" set:html={html.work} />
       </section>
 
       {/* § 02 — About */}
-      <section id="sobre-mi" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
+      <section id="sobre-mi" class="min-h-[calc(100svh-3.5rem)] pt-[clamp(64px,8vw,128px)] pb-10 scroll-mt-14">
         <SectionHead num="02" metaKey="ui.abM" metaFallback={t.abM} titleKey="ui.abT" titleFallback={t.abT} />
         <div class="flex flex-wrap gap-y-12 gap-x-[clamp(32px,5vw,80px)] items-start">
-          <div class="flex-[0_1_340px] min-w-[250px] flex flex-col gap-7 min-[1100px]:sticky min-[1100px]:top-24">
+          <div class="flex-[0_1_340px] min-w-[250px] flex flex-col gap-8 min-[1100px]:sticky min-[1100px]:top-24">
             <figure data-reveal="0" class="m-0">
-              <div class="aspect-[4/5] mg-placeholder">
-                <span data-t="ui.portrait" class="font-mono text-xs px-3 py-1.5 bg-paper border border-rule">{t.portrait}</span>
+              <div data-dither-frame data-state="loading" class="group mg-cross relative aspect-[4/5] border border-rule bg-paper-2">
+                <canvas data-dither-src="/retrato.jpg" role="img" aria-label={t.portraitCap} class="absolute inset-0 w-full h-full"></canvas>
+                <span class="absolute inset-0 hidden group-data-[state=empty]:flex items-center justify-center font-mono text-label uppercase text-ink-2"><span data-t="ui.portrait">{t.portrait}</span></span>
               </div>
-              <figcaption class="mg-figcaption mt-2.5"><strong class="font-semibold text-ink">Fig. 2 —</strong>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
+              <figcaption class="mg-figcaption mt-3"><span class="text-ink">Fig. 2 —</span>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
             </figure>
-            <dl id="about-facts" data-reveal="80" class="m-0 flex flex-col border-t border-ink" set:html={html.facts} />
+            <dl id="about-facts" data-reveal="80" class="m-0 flex flex-col border-t border-rule" set:html={html.facts} />
           </div>
 
           <div class="flex-[1_1_480px] min-w-0 flex flex-col gap-[clamp(48px,5vw,72px)]">
+            <div data-reveal="60" class="flex flex-col gap-4">
+              <p class="text-lead font-medium m-0 text-balance">
+                <span data-tp="h1a">{p.h1a}</span>{` `}<em data-tp="h1em" class="not-italic text-accent">{p.h1em}</em>{` `}<span data-tp="h1b">{p.h1b}</span>
+              </p>
+              <p data-tp="intro" class="text-[16px] leading-[1.6] text-ink-2 m-0 max-w-[58ch] text-pretty">{p.intro}</p>
+            </div>
             <div data-reveal="100" class="flex flex-wrap gap-y-8 gap-x-[clamp(28px,3vw,48px)] items-start">
-              <div id="about-list" class="flex-[1_1_380px] min-w-0 max-w-[620px] flex flex-col gap-[22px]" set:html={html.about} />
+              <div id="about-list" class="flex-[1_1_380px] min-w-0 max-w-[620px] flex flex-col gap-5" set:html={html.about} />
               <aside class="flex-[0_1_210px] min-w-[190px] flex flex-col gap-4">
-                <div data-t="ui.notes" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{t.notes}</div>
+                <div data-t="ui.notes" class="font-mono text-label uppercase text-ink-2">{t.notes}</div>
                 <div id="notes-list" class="flex flex-col gap-4">
                   {p.notes.map((nt: any) => (
                     <div class="flex gap-2.5 border-t border-rule pt-2.5">
                       <span class="font-mono text-[11px] text-accent">{nt.n}</span>
-                      <span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">{nt.t}</span>
+                      <span class="text-[14px] leading-[1.5] text-ink-2">{nt.t}</span>
                     </div>
                   ))}
                 </div>
               </aside>
             </div>
 
-            <blockquote id="about-quote" data-reveal="0" class="m-0 py-[clamp(24px,3vw,36px)] border-y border-ink grid grid-cols-[auto_minmax(0,1fr)] gap-x-5" set:html={html.quote} />
+            <blockquote id="about-quote" data-reveal="0" class="m-0 py-[clamp(28px,3.5vw,44px)] border-y border-rule grid grid-cols-[auto_minmax(0,1fr)] gap-x-5" set:html={html.quote} />
             <div id="about-principles" data-reveal="0" set:html={html.principles} />
-            <div id="about-now" data-reveal="0" class="bg-paper-2 p-[clamp(20px,2.4vw,32px)]" set:html={html.now} />
+            <div id="about-now" data-reveal="0" class="mg-cross border border-rule bg-paper-2 p-[clamp(20px,2.4vw,32px)]" set:html={html.now} />
           </div>
         </div>
       </section>
 
       {/* § 03 — Capacidades: habilidades por área + registro de credenciales */}
-      <section id="herramientas" class="pt-[clamp(56px,7vw,104px)] pb-[clamp(56px,7vw,104px)] scroll-mt-20">
-        <div data-reveal="0" class="mg-section-head">
-          <span>§ 03</span><span data-t="ui.s2m" class="text-ink-2">{t.s2m}</span>
-        </div>
-        <h2 data-t="ui.s2t" data-tp="title" class="font-serif font-display text-h1 mt-6 mb-[clamp(32px,4vw,56px)]">{t.s2t}</h2>
+      <section id="herramientas" class="min-h-[calc(100svh-3.5rem)] pt-[clamp(64px,8vw,128px)] pb-[clamp(56px,7vw,104px)] scroll-mt-14">
+        <SectionHead num="03" metaKey="ui.s2m" metaFallback={t.s2m} titleKey="ui.s2t" titleFallback={t.s2t} />
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-[clamp(40px,6vw,96px)] gap-y-12">
           <div class="min-w-0">
-            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-ink font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
+            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-rule font-mono text-label uppercase text-ink-2">
               <span data-t="ui.skillT">{t.skillT}</span>
               <span id="skill-total" class="tabular-nums"></span>
             </div>
-            <div id="skill-areas" class="flex flex-wrap items-baseline gap-x-2.5 gap-y-2 py-3.5 border-b border-rule"></div>
+            <div id="skill-areas" class="flex flex-wrap items-center gap-x-1 gap-y-2 py-3.5 border-b border-rule"></div>
             <div id="stack-grid" class="mt-1"></div>
           </div>
-          <div id="certs-col" data-reveal="100" class="min-w-0">
-            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-ink font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">
+          <div id="certs-col" data-reveal="100" class="min-w-0 flex flex-col gap-[clamp(36px,4vw,56px)] lg:sticky lg:top-24 lg:self-start">
+            <div>
+            <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-rule font-mono text-label uppercase text-ink-2">
               <span data-t="ui.certsT">{t.certsT}</span><span id="cert-total" class="tabular-nums"></span>
             </div>
             <div id="certs-teaser">
               {certGroupFallback.map((g: string) => (
-                <a href={`${certsBase}?grupo=${g}`} class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 px-3 -mx-3 py-5 border-b border-rule no-underline min-h-11 transition-colors hover:bg-paper-2 hover:text-ink">
+                <a href={`${certsBase}?grupo=${g}`} class={certRowClass}>
                   <span class="min-w-0 flex flex-col gap-1.5">
                     <span class="flex items-baseline gap-2.5">
-                      <span translate="no" class="font-serif text-[26px] leading-[1.1]">{g}</span>
+                      <span translate="no" class="font-display font-medium text-[22px] leading-[1.1] uppercase">{g}</span>
                       <span data-cert-count={g} class="font-mono text-[11px] text-accent tabular-nums"></span>
                     </span>
-                    <span data-cert-latest={g} class="font-serif italic text-[16px] text-ink-2 truncate"></span>
+                    <span data-cert-latest={g} class="text-[14px] text-ink-2 truncate"></span>
                   </span>
                   <span class="flex flex-col items-end justify-between gap-2">
                     <span data-cert-range={g} class="font-mono text-[12px] text-ink-2 tabular-nums"></span>
-                    <span class="font-serif text-[24px] leading-none" aria-hidden="true">→</span>
+                    <Fragment set:html={icon("arrow-right", "size-5")} />
                   </span>
                 </a>
               ))}
+            </div>
+            <a href={certsBase} class="mg-btn-primary mt-5"><span data-t="ui.certsSeeAll">{t.certsSeeAll}</span><Fragment set:html={icon("arrow-right", "size-4 text-accent")} /></a>
+            </div>
+
+            {/* Mapa del stack: una barra por área (relleno = uso diario); filtra la lista. */}
+            <div>
+              <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-rule font-mono text-label uppercase text-ink-2">
+                <span data-t="ui.mapT">{t.mapT}</span>
+                <span class="flex items-center gap-4">
+                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] bg-accent"></span><span data-t="ui.mapDaily">{t.mapDaily}</span></span>
+                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] shadow-[inset_0_0_0_1px_var(--color-ink-2)]"></span><span data-t="ui.mapOcc">{t.mapOcc}</span></span>
+                </span>
+              </div>
+              <div id="skill-map" class="flex flex-col py-2 border-b border-rule"></div>
+              <dl id="skill-stats" class="m-0 grid grid-cols-3 border-b border-rule"></dl>
+              <p data-t="ui.mapHint" class="mg-figcaption">{t.mapHint}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* § 04 — Investigación: bibliografía con filtros en línea */}
-      <section id="investigacion" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
-        <div data-reveal="0" class="mg-section-head">
-          <span>§ 04</span><span data-t="ui.wrM" class="text-ink-2">{t.wrM}</span>
-        </div>
-        <h2 data-reveal="80" data-t="ui.wrT" class="font-serif font-display text-h1 mt-5 mb-9">{t.wrT}</h2>
-        <div id="pubs-filters" class="flex flex-wrap items-baseline gap-x-7 gap-y-3 py-3.5 border-y border-rule" set:html={html.pubFilters} />
+      <section id="investigacion" class="min-h-[calc(100svh-3.5rem)] pt-[clamp(64px,8vw,128px)] pb-10 scroll-mt-14">
+        <SectionHead num="04" metaKey="ui.wrM" metaFallback={t.wrM} titleKey="ui.wrT" titleFallback={t.wrT} />
+        <div id="pubs-filters" class="flex flex-wrap items-center gap-x-7 gap-y-3 py-3.5 border-y border-rule" set:html={html.pubFilters} />
         <div id="pubs-list" set:html={html.pubs} />
       </section>
 
       {/* § 05 — Trayectoria: línea de tiempo + formación */}
-      <section id="trayectoria" class="pt-[clamp(56px,7vw,104px)] pb-10 scroll-mt-20">
-        <div class="flex flex-wrap justify-between items-baseline gap-x-8 gap-y-3">
-          <h2 data-t="ui.s3t" data-tp="title" class="font-serif font-display text-h1 m-0">{t.s3t}</h2>
-          <span data-t="ui.s3m" class="font-mono text-label uppercase text-ink-2">{t.s3m}</span>
-        </div>
+      <section id="trayectoria" class="min-h-[calc(100svh-3.5rem)] pt-[clamp(64px,8vw,128px)] pb-10 scroll-mt-14">
+        <SectionHead num="05" metaKey="ui.s3m" metaFallback={t.s3m} titleKey="ui.s3t" titleFallback={t.s3t} />
 
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-x-[clamp(40px,6vw,96px)] gap-y-12 mt-[clamp(32px,4vw,56px)]">
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-x-[clamp(40px,6vw,96px)] gap-y-12">
           <div class="min-w-0">
-            <div data-t="ui.expT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-ink">{t.expT}</div>
-            <div id="exp-list" class="mt-1">
-              {p.exp.map((e: any) => (
-                <div data-reveal="0" class="grid grid-cols-[28px_minmax(0,1fr)] gap-x-[18px]">
-                  <div class="flex flex-col items-center" aria-hidden="true">
-                    <span class="w-px h-[30px] bg-rule"></span>
-                    <span class={`w-[11px] h-[11px] rounded-full border-[1.5px] border-accent flex-none ${e.current ? "bg-accent" : "bg-paper"}`}></span>
-                    <span class="w-px flex-1 bg-rule"></span>
-                  </div>
-                  <div class="py-[22px] pb-[30px] flex flex-col gap-2.5">
-                    <div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[12px]">
-                      <span class="tabular-nums">{e.y}</span>
-                      {e.current && (<span data-t="ui.actT" class="text-[10.5px] tracking-[0.1em] uppercase text-accent">● {t.actT}</span>)}
-                      {e.dur && (<span class="text-ink-2">{e.dur}</span>)}
-                    </div>
-                    <h3 class="font-serif font-normal text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.015em] mt-1.5 mb-0">{e.r}</h3>
-                    <span class="text-[15px] text-ink-2">{e.c}</span>
-                    <p class="font-serif text-[19px] leading-[1.55] mt-1.5 mb-0 max-w-[56ch] text-pretty">{e.d}</p>
-                    {(e.wins || []).map((w: string) => (
-                      <p class="grid grid-cols-[18px_minmax(0,1fr)] text-[15px] leading-[1.5] text-ink-2 mt-1 mb-0 max-w-[56ch]">
-                        <span class="text-accent" aria-hidden="true">→</span><span>{w}</span>
-                      </p>
-                    ))}
-                    {(e.stack || []).length > 0 && (
-                      <div class="flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[11px] text-ink-2 mt-1">
-                        {e.stack.map((s: string) => (<span translate="no">{s}</span>))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div data-t="ui.expT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-rule">{t.expT}</div>
+            <div id="exp-list" class="mt-1" set:html={expHtml(p.exp, t)} />
           </div>
 
           <aside class="min-w-0 lg:sticky lg:top-24 self-start">
-            <div data-t="ui.eduT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-ink">{t.eduT}</div>
-            <div id="edu-list" class="mt-8">
-              {edu.map((e: any) => (
-                <div data-reveal="0" class="pb-8 border-b border-rule last:border-b-0">
-                  <div class="font-mono text-[13px] text-ink-2 tabular-nums">{e.p}</div>
-                  <div class="font-serif text-[24px] leading-[1.2] mt-2">{e.d}</div>
-                  <div class="font-serif italic text-[17px] text-ink-2 mt-1">{e.s}</div>
-                  <p class="text-[15px] leading-[1.55] text-ink-2 mt-2.5 mb-0 max-w-[46ch]">{e.desc}</p>
-                </div>
-              ))}
-            </div>
+            <div data-t="ui.eduT" class="font-mono text-label uppercase text-ink-2 pb-3 border-b border-rule">{t.eduT}</div>
+            <div id="edu-list" class="mt-8" set:html={eduHtml(edu)} />
             <div class="mt-10">
-              <a id="exp-cv" href={personal.cvUrl} class="mg-btn-primary"><span data-t="ui.cvFull">{t.cvFull}</span><span class="font-mono not-italic text-sm text-accent">↓</span></a>
+              <a id="exp-cv" href={personal.cvUrl} class="mg-btn-solid"><span data-t="ui.cvFull">{t.cvFull}</span><Fragment set:html={icon("arrow-down", "size-4")} /></a>
             </div>
           </aside>
         </div>
       </section>
+    </main>
 
-      {/* § 06 — Correspondence */}
-      <section id="contacto" class="pt-[clamp(56px,7vw,104px)] pb-[clamp(56px,7vw,96px)] scroll-mt-20">
-        <div data-reveal="0" class="mg-section-head">
-          <span>§ 06 — <span data-t="ui.s4t">{t.s4t}</span></span><span data-t="ui.s4m" class="text-ink-2">{t.s4m}</span>
-        </div>
-        <div class="flex flex-wrap gap-y-14 gap-x-[clamp(40px,6vw,112px)] mt-[clamp(40px,5vw,72px)] items-start">
+    {/* § 06 — Correspondence: mismo tema que la página */}
+    <section id="contacto" class="min-h-[calc(100svh-3.5rem)] flex items-center bg-paper text-ink border-t border-rule scroll-mt-14">
+      <div class="w-full max-w-page mx-auto px-[clamp(16px,3vw,40px)] pt-[clamp(64px,8vw,128px)] pb-[clamp(64px,8vw,112px)]">
+        <SectionHead num="06" metaKey="ui.s4m" metaFallback={t.s4m} titleKey="ui.s4t" titleFallback={t.s4t} />
+        <div class="flex flex-wrap gap-y-14 gap-x-[clamp(40px,6vw,112px)] items-start">
           <div data-reveal="60" class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-7">
-            <span data-t="ui.salute" class="font-serif italic text-[21px] text-ink-2">{t.salute}</span>
-            <p id="letter" data-tp="letter" class="font-serif font-display text-[clamp(24px,2.4vw,34px)] leading-[1.25] tracking-[-0.01em] m-0 max-w-[28ch] text-pretty">{p.letter}</p>
+            <span data-t="ui.salute" class="font-mono text-label uppercase text-ink-2">{t.salute}</span>
+            <p id="letter" data-tp="letter" data-rise class="font-sans font-medium text-quote tracking-[-0.02em] m-0 max-w-[30ch] text-pretty">{p.letter}</p>
             <div class="flex flex-col gap-1.5 mt-2">
-              <span data-t="ui.sign" class="font-serif italic text-[19px] text-ink-2">{t.sign}</span>
-              <span class="font-serif text-2xl tracking-[-0.01em]">{site.firstName} <em class="font-light">{site.lastName}</em></span>
-              <span data-tp="role" class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">{p.role}</span>
+              <span data-t="ui.sign" class="text-[15px] text-ink-2">{t.sign}</span>
+              <span class="font-display font-semibold text-[22px] uppercase tracking-[-0.02em]">{personal.name}</span>
+              <span data-tp="role" class="font-mono text-label uppercase text-ink-2">{p.role}</span>
             </div>
-            <p class="font-serif text-[17px] leading-[1.5] text-ink-2 mt-3 mb-0 pt-4 border-t border-rule max-w-[44ch]">
+            <p class="text-[15px] leading-[1.55] text-ink-2 mt-3 mb-0 pt-4 border-t border-rule max-w-[52ch]">
               <strong data-t="ui.psL" class="font-semibold text-ink">{t.psL}</strong>{` `}<span data-t="ui.ps">{t.ps}</span>
             </p>
           </div>
           <aside id="contact-dir" data-reveal="160" class="flex-[1_1_340px] min-w-0 flex flex-col gap-9" set:html={html.directory} />
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
 
-    <footer class="border-t border-ink">
-      <div class="max-w-page mx-auto px-[clamp(20px,4vw,56px)] pt-5 pb-[88px] flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">
+    <footer class="border-t border-rule">
+      <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] pt-4 pb-5">
+        <p data-t="ui.sampleNotice" class="text-[13px] leading-[1.5] text-ink-2 m-0 max-w-[96ch]">{t.sampleNotice}</p>
+      </div>
+      <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] pt-5 pb-24 flex flex-wrap justify-between gap-x-6 gap-y-2.5 font-mono text-[11px] tracking-[0.1em] uppercase text-ink-2">
         <span>© 2026 {personal.name}</span>
         <span id="api-status" data-state="local">datos locales</span>
+        <span><span data-t="ui.trophies">{t.trophies}</span> <span data-trophies class="text-accent tabular-nums">0/10</span></span>
         <span data-t="ui.foot1">{t.foot1}</span>
         <div class="flex gap-5">
-          <a href={systemHref} class="no-underline"><span data-t="ui.ds">{t.ds}</span> ↗</a>
-          <a href={caseHref} class="no-underline"><span data-t="ui.cs">{t.cs}</span> ↗</a>
+          <a href={systemHref} class="flex items-center gap-1.5 no-underline"><span data-t="ui.ds">{t.ds}</span><Fragment set:html={icon("arrow-up-right", "size-3.5")} /></a>
+          <a href={caseHref} class="flex items-center gap-1.5 no-underline"><span data-t="ui.cs">{t.cs}</span><Fragment set:html={icon("arrow-up-right", "size-3.5")} /></a>
         </div>
       </div>
     </footer>
+
+    <SectionDock items={t.index} label={t.sections} cmdLabel={t.cmdHint} />
   </div>
 
   <script type="application/json" id="mg-content" set:html={contentJson} />
   <script type="application/json" id="mg-terminals" set:html={termJson} />
   <script>
-    import { initSite, type PageData } from "../scripts/site";
+    import { initSite, stagger, type PageData } from "../scripts/site";
+    import { initMascot } from "../scripts/mascot";
     import { initTerminals } from "../scripts/terminal";
     import { refreshHomeFromApi } from "../scripts/api-live";
     import { createPortfolioSource } from "../lib/composition";
-    import { getProfile, type Profile } from "../scripts/store";
-    import { esc, workHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, type PubState } from "../scripts/home-render";
+    import { getProfile, setProfile, type Profile } from "../scripts/store";
+    import { esc, workHtml, releaseHeroHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, expHtml, eduHtml, certRowClass, type PubState } from "../scripts/home-render";
+    import { initDither } from "../scripts/dither";
+    import { initTrophies } from "../scripts/terminal";
+    import { icon } from "../utils/icons";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
     window.__mgTermData = JSON.parse(document.getElementById("mg-terminals")!.textContent || "{}");
@@ -407,6 +419,11 @@ const termJson = JSON.stringify(termDataMap);
         return uniq.length === 1 ? uniq[0] : `${uniq[0]}–${String(uniq[uniq.length - 1]).slice(2)}`;
       };
 
+      // API: `meta` trae uso diario y años (5.10); sin ella, heurística por certificados.
+      const isDaily = (g: any, it: string) => {
+        const m = (g.meta || []).find((x: any) => x.name === it);
+        return m ? !!m.daily : match(it);
+      };
       const yearUnit = (pg.meta as any)?.lang === "en" ? "y" : "a";
       const total = groups.reduce((n: number, g: any) => n + (g.items?.length ?? 0), 0);
       if (totalEl) totalEl.textContent = `${total} ${ui.skillT || ""}`.toLowerCase();
@@ -415,12 +432,10 @@ const termJson = JSON.stringify(termDataMap);
         { k: "all", label: ui.pubAll || "All", n: total },
         ...groups.map((g: any) => ({ k: String(g.g), label: String(g.g), n: g.items?.length ?? 0 })),
       ];
-      areasEl.innerHTML = `<span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 mr-1">${esc(ui.skillArea || "Área")}</span>`
-        + areas.map((o, i) => {
+      areasEl.innerHTML = `<span class="font-mono text-label uppercase text-ink-2 mr-2">${esc(ui.skillArea || "Área")}</span>`
+        + areas.map((o) => {
           const active = skillUI.area === o.k;
-          return `<span class="flex items-baseline gap-2.5">`
-            + (i > 0 ? `<span class="font-serif text-ink-2" aria-hidden="true">/</span>` : "")
-            + `<button type="button" data-skill-area="${esc(o.k)}" aria-pressed="${active}" class="font-serif italic text-[18px] leading-none py-0.5 px-0 border-0 bg-transparent cursor-pointer whitespace-nowrap ${active ? "text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]" : "text-ink-2 hover:text-ink"}">${esc(o.label)}<sup class="font-mono text-[10px] not-italic ml-0.5">${o.n}</sup></button></span>`;
+          return `<button type="button" data-skill-area="${esc(o.k)}" aria-pressed="${active}" class="flex items-center gap-1.5 h-8 px-2.5 border font-mono text-[11px] tracking-[0.08em] uppercase cursor-pointer whitespace-nowrap transition-colors ${active ? "bg-accent border-accent text-paper" : "bg-transparent border-rule text-ink-2 hover:text-ink hover:border-ink"}">${esc(o.label)}<span class="tabular-nums opacity-70">${o.n}</span></button>`;
         }).join("");
 
       const shown = groups.filter((g: any) => skillUI.area === "all" || String(g.g) === skillUI.area);
@@ -428,20 +443,19 @@ const termJson = JSON.stringify(termDataMap);
         const expanded = skillUI.more.has(String(g.g));
         const items = expanded ? g.items : (g.items || []).slice(0, SKILL_PREVIEW);
         const hidden = (g.items || []).length - items.length;
-        return `<div class="grid grid-cols-[minmax(0,110px)_minmax(0,1fr)] gap-x-6 gap-y-2 py-5 border-b border-rule items-start">`
-          + `<div class="flex flex-col gap-1 pt-1.5">`
-          + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase text-accent">${esc(g.g)}</span>`
+        return `<div class="grid grid-cols-[minmax(0,120px)_minmax(0,1fr)] gap-x-6 gap-y-2 py-5 border-b border-rule items-start">`
+          + `<div class="flex flex-col gap-1 pt-1">`
+          + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase text-accent">/${esc(g.g.toLowerCase())}</span>`
           + `<span class="font-mono text-[10.5px] text-ink-2 tabular-nums">${g.items?.length ?? 0} ${esc(ui.skillUnit || "herr.")}</span></div>`
           + `<div class="flex flex-col gap-3 min-w-0">`
           + `<div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,180px),1fr))] gap-x-5">`
           + items.map((it: string) => {
-            // API: `meta` trae uso diario y años (5.10); sin ella, heurística por certificados.
             const m = (g.meta || []).find((x: any) => x.name === it);
-            const on = m ? !!m.daily : match(it);
+            const on = isDaily(g, it);
             const yr = m?.years ? `${m.years}${yearUnit}` : yearLabel(it);
             return `<div class="flex items-baseline gap-2.5 py-1.5 border-b border-dotted border-rule min-w-0">`
-              + `<span aria-hidden="true" class="w-[7px] h-[7px] rounded-full flex-none self-center ${on ? "bg-accent" : "bg-transparent shadow-[inset_0_0_0_1px_var(--color-ink-2)]"}"></span>`
-              + `<span translate="no" class="font-serif text-[21px] leading-[1.2] break-words min-w-0">${esc(it)}</span>`
+              + `<span aria-hidden="true" class="w-[7px] h-[7px] flex-none self-center ${on ? "bg-accent" : "bg-transparent shadow-[inset_0_0_0_1px_var(--color-ink-2)]"}"></span>`
+              + `<span translate="no" class="text-[16px] leading-[1.3] break-words min-w-0">${esc(it)}${on ? `<span class="sr-only"> (${esc(ui.mapDaily || "")})</span>` : ""}</span>`
               + (yr ? `<span class="ml-auto font-mono text-[10.5px] text-ink-2 tabular-nums">${yr}</span>` : "")
               + `</div>`;
           }).join("")
@@ -451,6 +465,29 @@ const termJson = JSON.stringify(termDataMap);
             : "")
           + `</div></div>`;
       }).join("");
+
+      // Mapa del stack (columna derecha): ancho = herramientas del área respecto a la
+      // mayor; relleno = parte de uso diario. Cada fila filtra la lista de la izquierda.
+      const mapEl = document.getElementById("skill-map");
+      const statsEl = document.getElementById("skill-stats");
+      if (mapEl && statsEl) {
+        const rows = groups.map((g: any) => {
+          const items: string[] = g.items || [];
+          return { k: String(g.g), n: items.length, d: items.filter((it) => isDaily(g, it)).length };
+        });
+        const most = Math.max(1, ...rows.map((r: any) => r.n));
+        mapEl.innerHTML = rows.map((r: any) => {
+          const active = skillUI.area === r.k;
+          return `<button type="button" data-skill-area="${esc(r.k)}" aria-pressed="${active}" aria-label="${esc(r.k)}: ${r.n} · ${esc(ui.mapDaily || "")} ${r.d}" class="group grid grid-cols-[minmax(0,104px)_minmax(0,1fr)_56px] items-center gap-4 w-full py-2.5 px-0 border-0 bg-transparent text-left">`
+            + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase transition-colors ${active ? "text-accent" : "text-ink-2 group-hover:text-ink"}">/${esc(r.k.toLowerCase())}</span>`
+            + `<span data-bar class="relative h-3 border transition-colors ${active ? "border-accent" : "border-rule group-hover:border-ink-2"}" style="width:${((r.n / most) * 100).toFixed(1)}%"><span class="absolute inset-y-0 left-0 bg-accent" style="width:${r.n ? ((r.d / r.n) * 100).toFixed(1) : 0}%"></span></span>`
+            + `<span class="font-mono text-[11px] text-ink-2 tabular-nums text-right"><span class="text-accent">${r.d}</span>/${r.n}</span></button>`;
+        }).join("");
+        const daily = rows.reduce((n: number, r: any) => n + r.d, 0);
+        const maxYears = Math.max(0, ...groups.flatMap((g: any) => (g.meta || []).map((m: any) => Number(m.years) || 0)));
+        const cell = (k: string, v: string, accent = false) => `<div class="flex flex-col gap-1 py-4 pr-3"><dt class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2">${esc(k)}</dt><dd class="m-0 font-display font-medium text-[clamp(24px,2.4vw,34px)] leading-none tabular-nums ${accent ? "text-accent" : ""}">${esc(v)}</dd></div>`;
+        statsEl.innerHTML = cell(ui.mapTools || "", String(total)) + cell(ui.mapDaily || "", String(daily), true) + (maxYears ? cell(ui.mapYears || "", `${maxYears}${yearUnit}`) : "");
+      }
     }
 
     function renderCertsTeaser(pg: PageData, profile: Profile) {
@@ -469,15 +506,15 @@ const termJson = JSON.stringify(termDataMap);
         const ys = items.map((c: any) => String(c.date || "").slice(0, 4)).filter(Boolean).sort();
         const top = [...items].sort((a: any, b: any) => String(b.date).localeCompare(String(a.date)))[0];
         const range = ys.length === 0 ? "" : ys[0] === ys[ys.length - 1] ? ys[0] : `${ys[0]}–${ys[ys.length - 1].slice(2)}`;
-        return `<a href="${esc(base)}?grupo=${esc(g.group)}" class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 px-3 -mx-3 py-5 border-b border-rule no-underline min-h-11 transition-colors hover:bg-paper-2 hover:text-ink">`
+        return `<a href="${esc(base)}?grupo=${esc(g.group)}" class="${certRowClass}">`
           + `<span class="min-w-0 flex flex-col gap-1.5">`
-          + `<span class="flex items-baseline gap-2.5"><span translate="no" class="font-serif text-[26px] leading-[1.1]">${esc(g.group)}</span>`
+          + `<span class="flex items-baseline gap-2.5"><span translate="no" class="font-display font-medium text-[22px] leading-[1.1] uppercase">${esc(g.group)}</span>`
           + `<span class="font-mono text-[11px] text-accent tabular-nums">${g.count}</span></span>`
-          + (top ? `<span class="font-serif italic text-[16px] text-ink-2 truncate">${esc(top.title)}</span>` : "")
+          + (top ? `<span class="text-[14px] text-ink-2 truncate">${esc(top.title)}</span>` : "")
           + `</span>`
           + `<span class="flex flex-col items-end justify-between gap-2">`
           + `<span class="font-mono text-[12px] text-ink-2 tabular-nums">${range}</span>`
-          + `<span class="font-serif text-[24px] leading-none" aria-hidden="true">→</span></span></a>`;
+          + icon("arrow-right", "size-5") + `</span></a>`;
       }).join("");
       // Credenciales únicas: una puede pertenecer a varios grupos.
       const totalCerts = certs.length;
@@ -490,11 +527,6 @@ const termJson = JSON.stringify(termDataMap);
       el.innerHTML = rows;
     }
 
-    function indexCell(x: any) {
-      return `<a href="${esc(x.h)}" class="flex flex-col gap-1 pr-3 py-3.5 border-b border-rule no-underline">`
-        + `<span class="font-mono text-[11px] text-accent">${esc(x.n)}</span>`
-        + `<span class="font-serif text-[clamp(17px,1.5vw,20px)] leading-[1.2] break-words">${esc(x.l)}</span></a>`;
-    }
 
 
     // § 04 — estado de filtros y desplegables (mismo render que el SSR).
@@ -513,12 +545,50 @@ const termJson = JSON.stringify(termDataMap);
       else list.push(key);
     };
 
-    // § 01 — fila abierta (la primera por defecto, como la referencia).
-    const workUI = { open: 1 };
+    const countsFor = (pg: PageData) => ({
+      fullstack: ((pg as any).fullstack?.projects || []).length,
+      data: ((pg as any).data?.projects || []).length,
+    });
+
+    // § 01 — release abierto (el más reciente).
+    const workUI = { open: 0 };
     function renderWork(pg: PageData, profile: Profile) {
       const el = document.getElementById("projects-list");
-      if (el) el.innerHTML = workHtml((pg as any)[profile].projects || [], pg.ui, { caseHref, open: workUI.open });
+      if (el) el.innerHTML = workHtml((pg as any)[profile].projects || [], pg.ui, {
+        caseHref,
+        open: workUI.open,
+        profile,
+        counts: countsFor(pg),
+        cvUrl: (pg as any).personal?.cvUrl || "#",
+      });
     }
+
+    // § 00 — Hero: identidad, versión y canales siguen al perfil activo.
+    function renderHero(pg: PageData, profile: Profile) {
+      const el = document.getElementById("hero-work");
+      if (!el) return;
+      const personal = (pg as any).personal || {};
+      el.innerHTML = releaseHeroHtml((pg as any)[profile].projects || [], pg.ui, {
+        caseHref,
+        cvUrl: personal.cvUrl || "#",
+        name: personal.name || "",
+        role: (pg as any)[profile].role || "",
+        availability: personal.availabilityLong || "",
+        location: personal.location || "",
+        intro: (pg as any)[profile]?.intro || "",
+        profile,
+        counts: countsFor(pg),
+      });
+    }
+
+    // Canales del release: el hero y el riel se repintan al cambiar de perfil,
+    // así que la delegación reemplaza a los listeners del render inicial.
+    document.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-release-profile]");
+      if (!btn || !btn.closest("#hero-work, #projects-list")) return;
+      const next = btn.dataset.releaseProfile as Profile | undefined;
+      if (next) setProfile(next);
+    });
 
     // § 06 — reloj local de la ubicación (zona IANA de site.ts o de la API).
     function tickClock() {
@@ -533,10 +603,8 @@ const termJson = JSON.stringify(termDataMap);
 
     window.__mgRender = (pg: PageData, profile: Profile) => {
       const p = pg[profile] as any;
-      const idx = pg.ui.index || [];
-      document.getElementById("index1")!.innerHTML = idx.slice(0, 3).map(indexCell).join("");
-      document.getElementById("index2")!.innerHTML = idx.slice(3).map(indexCell).join("");
 
+      renderHero(pg, profile);
       renderWork(pg, profile);
 
       document.getElementById("about-list")!.innerHTML = aboutHtml(p.about || []);
@@ -550,7 +618,7 @@ const termJson = JSON.stringify(termDataMap);
 
       document.getElementById("notes-list")!.innerHTML = p.notes.map((nt: any) =>
         `<div class="flex gap-2.5 border-t border-rule pt-2.5"><span class="font-mono text-[11px] text-accent">${esc(nt.n)}</span>`
-        + `<span class="font-serif italic text-[15px] leading-[1.45] text-ink-2">${esc(nt.t)}</span></div>`
+        + `<span class="text-[14px] leading-[1.5] text-ink-2">${esc(nt.t)}</span></div>`
       ).join("");
 
       renderStack(pg, profile);
@@ -561,45 +629,20 @@ const termJson = JSON.stringify(termDataMap);
       if (letterEl && p.letter) letterEl.textContent = p.letter;
 
       const edu = p.edu || (pg as any).edu || [];
-      document.getElementById("edu-list")!.innerHTML = edu.map((e: any) =>
-        `<div class="pb-8 border-b border-rule last:border-b-0">`
-        + `<div class="font-mono text-[13px] text-ink-2 tabular-nums">${esc(e.p)}</div>`
-        + `<div class="font-serif text-[24px] leading-[1.2] mt-2">${esc(e.d)}</div>`
-        + `<div class="font-serif italic text-[17px] text-ink-2 mt-1">${esc(e.s)}</div>`
-        + `<p class="text-[15px] leading-[1.55] text-ink-2 mt-2.5 mb-0 max-w-[46ch]">${esc(e.desc)}</p></div>`
-      ).join("");
+      document.getElementById("edu-list")!.innerHTML = eduHtml(edu);
 
       renderCertsTeaser(pg, profile);
 
       const ui = (pg as any).ui || {};
-      document.getElementById("exp-list")!.innerHTML = p.exp.map((e: any) =>
-        `<div class="grid grid-cols-[28px_minmax(0,1fr)] gap-x-[18px]">`
-        + `<div class="flex flex-col items-center" aria-hidden="true">`
-        + `<span class="w-px h-[30px] bg-rule"></span>`
-        + `<span class="w-[11px] h-[11px] rounded-full border-[1.5px] border-accent flex-none ${e.current ? "bg-accent" : "bg-paper"}"></span>`
-        + `<span class="w-px flex-1 bg-rule"></span></div>`
-        + `<div class="py-[22px] pb-[30px] flex flex-col gap-2.5">`
-        + `<div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[12px]">`
-        + `<span class="tabular-nums">${esc(e.y)}</span>`
-        + (e.current ? `<span class="text-[10.5px] tracking-[0.1em] uppercase text-accent">● ${esc(ui.actT || "Now")}</span>` : "")
-        + (e.dur ? `<span class="text-ink-2">${esc(e.dur)}</span>` : "")
-        + `</div>`
-        + `<h3 class="font-serif font-normal text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.015em] mt-1.5 mb-0">${esc(e.r)}</h3>`
-        + `<span class="text-[15px] text-ink-2">${esc(e.c)}</span>`
-        + `<p class="font-serif text-[19px] leading-[1.55] mt-1.5 mb-0 max-w-[56ch] text-pretty">${esc(e.d)}</p>`
-        + (e.wins || []).map((w: string) =>
-          `<p class="grid grid-cols-[18px_minmax(0,1fr)] text-[15px] leading-[1.5] text-ink-2 mt-1 mb-0 max-w-[56ch]"><span class="text-accent" aria-hidden="true">→</span><span>${esc(w)}</span></p>`).join("")
-        + ((e.stack || []).length > 0
-          ? `<div class="flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[11px] text-ink-2 mt-1">${e.stack.map((s: string) => `<span translate="no">${esc(s)}</span>`).join("")}</div>`
-          : "")
-        + `</div></div>`
-      ).join("");
+      document.getElementById("exp-list")!.innerHTML = expHtml(p.exp, ui);
 
       const cvHref = (pg as any).personal?.cvUrl || "#";
       const heroCv = document.getElementById("hero-cv") as HTMLAnchorElement | null;
       if (heroCv) heroCv.href = cvHref;
       const rowCv = document.getElementById("cv-link") as HTMLAnchorElement | null;
       if (rowCv) rowCv.href = cvHref;
+      const workCv = document.getElementById("work-cv") as HTMLAnchorElement | null;
+      if (workCv) workCv.href = cvHref;
       const expCv = document.getElementById("exp-cv") as HTMLAnchorElement | null;
       if (expCv) expCv.href = cvHref;
     };
@@ -612,6 +655,7 @@ const termJson = JSON.stringify(termDataMap);
       else if (year) pubUI.year = year;
       else return;
       renderPubs(window.__mgPage ?? page, getProfile());
+      stagger(document.getElementById("pubs-list"));
     });
     document.getElementById("pubs-list")?.addEventListener("click", (e) => {
       const el = e.target as HTMLElement;
@@ -620,7 +664,21 @@ const termJson = JSON.stringify(termDataMap);
       if (abs) toggleIn(pubUI.open, abs);
       else if (bib) toggleIn(pubUI.bib, bib);
       else return;
+      document.getElementById("pubs-list")?.classList.remove("mg-stagger");
       renderPubs(window.__mgPage ?? page, getProfile());
+      // Solo se despliega lo que se acaba de abrir, no lo que ya estaba abierto.
+      const key = abs ?? bib!;
+      document.querySelectorAll<HTMLElement>("[data-unfold]").forEach((x) => x.dataset.unfold === key && x.tagName === (abs ? "P" : "PRE") && x.classList.add("mg-unfold"));
+    });
+
+    // § 00 — la chuleta escribe el comando en la terminal y lo ejecuta.
+    document.getElementById("cons-cmds")?.addEventListener("click", (e) => {
+      const cmd = (e.target as HTMLElement).closest<HTMLElement>("[data-term-run]")?.dataset.termRun;
+      const input = document.querySelector<HTMLInputElement>("#term-main [data-term-input]");
+      if (!cmd || !input) return;
+      input.value = cmd;
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      input.focus({ preventScroll: true });
     });
 
     document.getElementById("projects-list")?.addEventListener("click", (e) => {
@@ -637,14 +695,21 @@ const termJson = JSON.stringify(termDataMap);
       const label = btn.textContent;
       navigator.clipboard.writeText(btn.dataset.copy || "").then(() => {
         btn.textContent = btn.dataset.copied || label;
-        window.setTimeout(() => { btn.textContent = label; }, 1600);
+        btn.dataset.done = "";
+        window.setTimeout(() => { btn.textContent = label; delete btn.dataset.done; }, 1600);
       }).catch(() => {});
     });
     tickClock();
     window.setInterval(tickClock, 30_000);
 
-    initSite(page, { spy: ["trabajo", "sobre-mi", "herramientas", "investigacion", "trayectoria", "contacto"], roleFallback: page.fullstack.role });
+    initSite(page, { spy: ["trabajo", "sobre-mi", "herramientas", "investigacion", "trayectoria", "contacto"], roleFallback: (page as any)[getProfile()].role });
+    // El prerender siempre sale de la edición de Ingeniería: si el perfil guardado
+    // es otro, se repinta para que hero, riel y secciones coincidan desde el inicio.
+    if (getProfile() !== "fullstack") setProfile(getProfile());
     initTerminals();
+    initMascot();
+    initTrophies();
+    initDither();
     renderStack(page, getProfile());
     renderCertsTeaser(page, getProfile());
     renderPubs(page, getProfile());
@@ -654,6 +719,15 @@ const termJson = JSON.stringify(termDataMap);
       if (!btn?.dataset.skillArea) return;
       skillUI.area = btn.dataset.skillArea;
       renderStack(page, getProfile());
+      stagger(document.getElementById("stack-grid"));
+    });
+    // Mapa del stack: pulsar un área filtra; pulsar la activa vuelve a "todas".
+    document.getElementById("skill-map")?.addEventListener("click", (e) => {
+      const area = (e.target as HTMLElement).closest<HTMLElement>("[data-skill-area]")?.dataset.skillArea;
+      if (!area) return;
+      skillUI.area = skillUI.area === area ? "all" : area;
+      renderStack(page, getProfile());
+      stagger(document.getElementById("stack-grid"));
     });
     document.getElementById("stack-grid")?.addEventListener("click", (e) => {
       const btn = (e.target as HTMLElement).closest("[data-skill-more]") as HTMLElement | null;
@@ -661,6 +735,7 @@ const termJson = JSON.stringify(termDataMap);
       const g = btn.dataset.skillMore;
       if (skillUI.more.has(g)) skillUI.more.delete(g);
       else skillUI.more.add(g);
+      document.getElementById("stack-grid")?.classList.remove("mg-stagger");
       renderStack(page, getProfile());
     });
     // DI: la fuente (mock|live) viaja en page.meta.sourceKind, inyectada por props.

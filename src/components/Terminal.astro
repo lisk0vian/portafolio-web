@@ -1,5 +1,6 @@
 ---
-/* Marginalia interactive terminal. Always dark, in both themes. */
+/* Terminal interactiva. Oscura por defecto; dentro de las notas de versión
+   ([data-release]) adopta la paleta de la portada. El acento sigue a la edición. */
 import type { TermData } from "../scripts/terminal";
 
 interface Props {
@@ -17,11 +18,11 @@ const config = JSON.stringify(data);
   id={id}
   role="region"
   aria-label="Terminal"
-  class="bg-term text-term-ink font-mono text-[13px] leading-[1.65] rounded-term overflow-hidden flex flex-col shadow-term text-left cursor-text"
+  class="mg-cross bg-term text-term-ink font-mono text-[13px] leading-[1.65] rounded-term flex flex-col shadow-term text-left cursor-text border border-term-rule"
 >
-  <div class="flex justify-between gap-3 px-4 py-2.5 border-b border-white/10 text-[11px] tracking-[0.06em] uppercase text-term-dim">
-    <span>~/portafolio — marginalia-sh</span>
-    <span data-term-hint></span>
+  <div class="flex justify-between gap-3 px-4 py-2.5 border-b border-term-rule text-[11px] tracking-[0.06em] uppercase text-term-dim">
+    <span class="flex items-center gap-2"><span class="size-2 bg-term-accent" aria-hidden="true"></span>jerremi@portafolio ~ sh</span>
+    <span class="flex items-center gap-4"><span data-term-hint class="hidden sm:inline"></span><span class="text-term-accent tabular-nums">[<span data-trophies>0/10</span>]</span></span>
   </div>
   <div data-term-body class="overflow-y-auto px-[18px] pt-4 pb-2.5" style={`height:${height}px`}>
     <div data-term-lines></div>
@@ -38,6 +39,6 @@ const config = JSON.stringify(data);
       />
     </div>
   </div>
-  <div data-term-chips class="flex flex-wrap gap-1.5 px-3.5 py-2.5 border-t border-white/10"></div>
+  <div data-term-chips class="flex flex-wrap gap-1.5 px-3.5 py-2.5 border-t border-term-rule"></div>
   <script type="application/json" class="term-config" set:html={config} />
 </div>
