@@ -220,7 +220,13 @@ export type CaseBlockDto =
   | { type: 'table'; head: string[]; rows: string[][]; caption?: string }
   | { type: 'metrics'; items: { value: string; label: string }[] }
   | { type: 'image'; src: string; alt: string; caption?: string }
-  | { type: 'demo'; url: string; caption?: string };
+  | { type: 'demo'; url: string; caption?: string }
+  | {
+      type: 'bars';
+      legend: { before: string; after: string };
+      rows: { label: string; unit: string; before: number; after: number; better: 'lower' | 'higher' }[];
+      caption?: string;
+    };
 
 export type CaseSectionDto = { id: string; heading: string; blocks: CaseBlockDto[] };
 

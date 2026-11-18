@@ -166,6 +166,15 @@
 @utility mg-section-head { @apply flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 border-t border-rule pt-3.5 font-mono text-label uppercase; }
 @utility mg-figcaption { @apply font-mono text-[11px] tracking-[0.06em] text-ink-2 mt-3; }
 
+/* Trama rayada de los gráficos (serie "antes"): identidad sin depender del color. */
+@utility mg-hatch { background-image: repeating-linear-gradient(135deg, var(--mg-ink-2) 0 1px, transparent 1px 5px); }
+
+/* Escenario de la mascota en el hero: en móvil toma el alto sobrante; con muy poco, se oculta. */
+.mg-stage { container-type: size; }
+@container (max-height: 140px) {
+  .mg-stage > [data-mascot-slot] { display: none; }
+}
+
 /* Retrato en duotono de marca: blanco y negro con contraste y el acento Pervinca
    teñido encima (mix-blend color conserva la luminancia, así el rostro se lee igual). */
 @utility mg-duotone { filter: grayscale(1) contrast(1.12) brightness(1.04); }

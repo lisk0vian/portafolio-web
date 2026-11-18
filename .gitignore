@@ -26,3 +26,5 @@ pnpm-debug.log*
 .impeccable/
 .playwright-cli/
 .pnpm-store/
+lhci-report/
+.lighthouseci/

@@ -423,7 +423,7 @@ const termJson = JSON.stringify(termDataMap);
       areasEl.innerHTML = `<span class="font-mono text-label uppercase text-ink-2 mr-2">${esc(ui.skillArea || "Área")}</span>`
         + areas.map((o) => {
           const active = skillUI.area === o.k;
-          return `<button type="button" data-skill-area="${esc(o.k)}" aria-pressed="${active}" class="flex items-center gap-1.5 h-8 px-2.5 border font-mono text-[11px] tracking-[0.08em] uppercase cursor-pointer whitespace-nowrap transition-colors ${active ? "bg-accent border-accent text-paper" : "bg-transparent border-rule text-ink-2 hover:text-ink hover:border-ink"}">${esc(o.label)}<span class="tabular-nums opacity-70">${o.n}</span></button>`;
+          return `<button type="button" data-skill-area="${esc(o.k)}" aria-pressed="${active}" class="flex items-center gap-1.5 h-8 px-2.5 border font-mono text-[11px] tracking-[0.08em] uppercase cursor-pointer whitespace-nowrap transition-colors ${active ? "bg-accent border-accent text-paper" : "bg-transparent border-rule text-ink-2 hover:text-ink hover:border-ink"}">${esc(o.label)}<span class="tabular-nums">${o.n}</span></button>`;
         }).join("");
 
       const shown = groups.filter((g: any) => skillUI.area === "all" || String(g.g) === skillUI.area);
@@ -466,10 +466,10 @@ const termJson = JSON.stringify(termDataMap);
         const most = Math.max(1, ...rows.map((r: any) => r.n));
         mapEl.innerHTML = rows.map((r: any) => {
           const active = skillUI.area === r.k;
-          return `<button type="button" data-skill-area="${esc(r.k)}" aria-pressed="${active}" aria-label="${esc(r.k)}: ${r.n} · ${esc(ui.mapDaily || "")} ${r.d}" class="group grid grid-cols-[minmax(0,104px)_minmax(0,1fr)_56px] items-center gap-4 w-full py-2.5 px-0 border-0 bg-transparent text-left">`
+          return `<button type="button" data-skill-area="${esc(r.k)}" aria-pressed="${active}" class="group grid grid-cols-[minmax(0,104px)_minmax(0,1fr)_56px] items-center gap-4 w-full py-2.5 px-0 border-0 bg-transparent text-left">`
             + `<span class="font-mono text-[11px] tracking-[0.08em] uppercase transition-colors ${active ? "text-accent" : "text-ink-2 group-hover:text-ink"}">/${esc(r.k.toLowerCase())}</span>`
             + `<span data-bar class="relative h-3 border transition-colors ${active ? "border-accent" : "border-rule group-hover:border-ink-2"}" style="width:${((r.n / most) * 100).toFixed(1)}%"><span class="absolute inset-y-0 left-0 bg-accent" style="width:${r.n ? ((r.d / r.n) * 100).toFixed(1) : 0}%"></span></span>`
-            + `<span class="font-mono text-[11px] text-ink-2 tabular-nums text-right"><span class="text-accent">${r.d}</span>/${r.n}</span></button>`;
+            + `<span class="font-mono text-[11px] text-ink-2 tabular-nums text-right"><span class="text-accent">${r.d}</span>/${r.n}</span><span class="sr-only"> — ${esc(ui.mapDaily || "")}: ${r.d} / ${r.n}</span></button>`;
         }).join("");
         const daily = rows.reduce((n: number, r: any) => n + r.d, 0);
         const maxYears = Math.max(0, ...groups.flatMap((g: any) => (g.meta || []).map((m: any) => Number(m.years) || 0)));
@@ -695,9 +695,22 @@ const termJson = JSON.stringify(termDataMap);
     // es otro, se repinta para que hero, riel y secciones coincidan desde el inicio.
     if (getProfile() !== "fullstack") setProfile(getProfile());
     initPhotoLens();
-    renderStack(page, getProfile());
-    renderCertsTeaser(page, getProfile());
-    renderPubs(page, getProfile());
+    // Secciones bajo el hero: se pintan al acercarse (800 px antes), no en la carga.
+    const whenNear = (id: string, fn: () => void) => {
+      const el = document.getElementById(id);
+      if (!el) return fn();
+      const io = new IntersectionObserver(([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        fn();
+      }, { rootMargin: "800px 0px" });
+      io.observe(el);
+    };
+    whenNear("herramientas", () => {
+      renderStack(page, getProfile());
+      renderCertsTeaser(page, getProfile());
+    });
+    whenNear("investigacion", () => renderPubs(page, getProfile()));
 
     document.getElementById("skill-areas")?.addEventListener("click", (e) => {
       const btn = (e.target as HTMLElement).closest("[data-skill-area]") as HTMLElement | null;

@@ -86,6 +86,28 @@ function block(b: CaseBlockDto): string {
     case "demo":
       return `<figure class="m-0 min-w-0"><div class="border border-rule bg-paper-2"><div class="flex items-center justify-between gap-3 px-4 py-2 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2"><span class="flex items-center gap-2 min-w-0"><span aria-hidden="true" class="size-1.5 bg-signal"></span><span class="truncate">${esc(b.url.replace(/^https?:\/\//, ""))}</span></span><a href="${esc(b.url)}" target="_blank" rel="noreferrer" class="shrink-0 text-accent no-underline hover:underline">${esc(t.openDemo)} ↗</a></div>`
         + `<iframe src="${esc(b.url)}" title="${esc(b.caption ?? b.url)}" loading="lazy" class="block w-full h-[min(640px,80svh)] border-0 bg-paper"></iframe></div>${caption(b.caption)}</figure>`;
+    case "bars": {
+      // Pequeños múltiplos: cada métrica con su propia escala (ms, KB y puntos no comparten eje).
+      // "Antes" = contorno con trama, "Después" = acento sólido: se distinguen sin depender del color.
+      const fmt = (n: number, unit: string) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, lang === "es" ? "." : ",")}${unit ? " " + unit : ""}`;
+      const bar = (v: number, max: number, unit: string, kind: "before" | "after", label: string, metric: string) =>
+        `<div class="flex items-center gap-2.5 min-w-0" title="${esc(`${metric} · ${label}: ${fmt(v, unit)}`)}">`
+        + `<span class="block h-3.5 rounded-r-[4px] shrink-0 ${kind === "before" ? "border border-ink-2 mg-hatch" : "bg-accent"}" style="width:${Math.max(1.5, (v / max) * 100 * 0.78).toFixed(1)}%"></span>`
+        + `<span class="font-mono text-[12px] tabular-nums whitespace-nowrap ${kind === "before" ? "text-ink-2" : "text-ink font-semibold"}">${esc(fmt(v, unit))}</span></div>`;
+      const legend = `<div class="flex flex-wrap gap-x-5 gap-y-2 pb-3 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">`
+        + `<span class="flex items-center gap-2"><span aria-hidden="true" class="size-3 border border-ink-2 mg-hatch"></span>${esc(b.legend.before)}</span>`
+        + `<span class="flex items-center gap-2"><span aria-hidden="true" class="size-3 bg-accent"></span>${esc(b.legend.after)}</span></div>`;
+      const rows = b.rows.map((r) => {
+        const max = Math.max(r.before, r.after) || 1;
+        const pct = r.before ? Math.round(((r.after - r.before) / r.before) * 100) : 0;
+        const good = r.better === "lower" ? r.after <= r.before : r.after >= r.before;
+        return `<div class="grid grid-cols-1 sm:grid-cols-[minmax(0,150px)_minmax(0,1fr)] gap-x-5 gap-y-2 py-3.5 border-b border-rule">`
+          + `<div class="flex sm:flex-col justify-between gap-1"><span class="text-[15px] text-ink">${esc(r.label)}</span>`
+          + `<span class="font-mono text-[12px] tabular-nums ${good ? "text-accent" : "text-ink-2"}">${pct > 0 ? "+" : ""}${pct} %</span></div>`
+          + `<div class="flex flex-col gap-1.5 min-w-0">${bar(r.before, max, r.unit, "before", b.legend.before, r.label)}${bar(r.after, max, r.unit, "after", b.legend.after, r.label)}</div></div>`;
+      }).join("");
+      return `<figure class="m-0 min-w-0" role="group" aria-label="${esc(b.caption ?? "")}">${legend}${rows}${caption(b.caption)}</figure>`;
+    }
     case "metrics":
       return `<dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] border-t border-rule">${b.items
         .map((m) => `<div class="flex flex-col-reverse gap-1.5 py-5 pr-4 border-b border-rule"><dt class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">${esc(m.label)}</dt><dd class="m-0 font-display font-semibold text-[clamp(28px,3vw,40px)] leading-none tracking-[-0.03em] text-accent tabular-nums">${esc(m.value)}</dd></div>`)

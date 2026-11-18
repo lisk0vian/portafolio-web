@@ -45,7 +45,7 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
     + `${esc(label)}<span class="tabular-nums">${n}</span></button>`;
   // Todo el hero cabe en la primera pantalla (lg): tamaños atados también al alto (vh).
   const left = `<div class="flex min-h-0 flex-col py-[clamp(20px,3.5vh,40px)] lg:pr-[clamp(24px,3.5vw,56px)]">`
-    + `<div class="flex flex-1 flex-col justify-center gap-[clamp(12px,2.2vh,24px)]">`
+    + `<div class="flex flex-1 flex-col lg:justify-center gap-[clamp(12px,2.2vh,24px)]">`
     + `<p class="font-mono text-[11px] tracking-[0.14em] uppercase text-accent m-0">${esc(ui.relOf)}</p>`
     + `<h1 data-rise class="font-display font-semibold text-[clamp(36px,min(4.6vw,9vh),72px)] leading-[0.92] tracking-[-0.045em] uppercase m-0">`
     + nameLines.map((line) => `<span class="block lg:whitespace-nowrap">${esc(line)}</span>`).join("")
@@ -64,18 +64,19 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
   // Escenario de la mascota: el panel entero es el marco; el hueco cuadrado se
   // ajusta al alto disponible y abajo van las acciones (mascot.ts las escucha).
   const acts: [string, string][] = [["wave", ui.actWave], ["think", ui.actThink], ["surprise", ui.actSurprise], ["shy", ui.actShy], ["sleep", ui.actSleep]];
-  // Escenario de la mascota solo en escritorio: en móvil el hero cabe entero en pantalla.
-  const right = `<div class="hidden lg:flex min-h-0 flex-col border-t border-rule lg:border-t-0 lg:border-l">`
-    + `<div class="flex items-center justify-between gap-4 px-[clamp(16px,2vw,28px)] pt-4 font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2">`
+  // En móvil el escenario ocupa solo el alto que sobra bajo el contenido (sin cabecera ni
+  // acciones); si sobra poco, .mg-stage lo oculta y la mascota va directo a la esquina.
+  const right = `<div class="flex min-h-0 flex-col lg:border-l lg:border-rule">`
+    + `<div class="hidden lg:flex items-center justify-between gap-4 px-[clamp(16px,2vw,28px)] pt-4 font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2">`
     + `<span>${esc(ui.mascotFig)}</span>`
     + `<span>${esc(ui.mascotMood)} · <span data-mascot-mood class="text-accent"></span></span></div>`
-    + `<div class="flex min-h-0 flex-1 items-center justify-center p-3">`
-    + `<div data-mascot-slot aria-hidden="true" class="aspect-square w-[min(100%,calc(100svh-17rem),540px)]"></div>`
+    + `<div class="mg-stage flex min-h-0 flex-1 items-center justify-center p-3">`
+    + `<div data-mascot-slot aria-hidden="true" class="aspect-square max-lg:h-full max-lg:max-h-[320px] max-lg:max-w-full lg:w-[min(100%,calc(100svh-17rem),540px)]"></div>`
     + `</div>`
-    + `<div class="flex flex-wrap justify-center gap-1.5 px-[clamp(16px,2vw,28px)] pb-4">`
+    + `<div class="hidden lg:flex flex-wrap justify-center gap-1.5 px-[clamp(16px,2vw,28px)] pb-4">`
     + acts.map(([k, l]) => `<button type="button" data-mascot-act="${k}" class="mg-chip">${esc(l)}</button>`).join("")
     + `</div></div>`;
-  return `<div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.3fr_1fr]">${left}${right}</div>`;
+  return `<div class="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-rows-1 lg:grid-cols-[1.3fr_1fr]">${left}${right}</div>`;
 }
 
 /* ---------- § 01 — Trabajo: destacado + filas desplegables (5.5) ---------- */
@@ -274,7 +275,7 @@ export function pubsHtml(pubs: Any[], ui: Any, st: PubState, me: string) {
       + `</div></div>`
       + `<aside class="flex-[0_1_300px] min-w-[240px] grid grid-cols-[110px_minmax(0,1fr)] gap-[18px] items-start">`
       + (pdfHref
-        ? `<a href="${esc(pdfHref)}" target="_blank" rel="noreferrer" aria-label="PDF — ${esc(w.title)}" data-sheet class="aspect-[3/4] border border-rule bg-paper-2 flex flex-col gap-[5px] px-2.5 py-3 no-underline">${thumb}</a>`
+        ? `<a href="${esc(pdfHref)}" target="_blank" rel="noreferrer" tabindex="-1" aria-hidden="true" data-sheet class="aspect-[3/4] border border-rule bg-paper-2 flex flex-col gap-[5px] px-2.5 py-3 no-underline">${thumb}</a>`
         : `<span aria-hidden="true" class="aspect-[3/4] border border-rule bg-paper-2 flex flex-col gap-[5px] px-2.5 py-3">${thumb}</span>`)
       + `<dl class="m-0 flex flex-col">`
       + meta.map((m) => `<div class="flex flex-col gap-0.5 py-2 border-t border-rule"><dt class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">${esc(m.k)}</dt><dd class="m-0 text-[14px] leading-[1.35]">${esc(m.v)}</dd></div>`).join("")

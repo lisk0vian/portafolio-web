@@ -4,8 +4,8 @@
 // ahí todo el recorrido. Habla con un globo, mira al cursor, cambia de ánimo por
 // sección y de forma por edición, responde a las acciones del hero y, posada en
 // la esquina, abre un menú (arriba, siguiente sección, consola, tema, minimizar).
-import { createDefinition } from "open-mascot";
-import { createMascot } from "open-mascot/web";
+import { buildScene, createDefinition, sampleAnimation, type MascotDefinition } from "open-mascot";
+import { createMascot, renderSceneToSvgString, type MascotController } from "open-mascot/web";
 import { getProfile, getTheme, onEvent } from "./store";
 import { grant } from "./terminal";
 
@@ -106,7 +106,32 @@ export function initMascot() {
       stageColor: "#12151A", // el escenario se pinta transparente en CSS
       ...(getTheme() === "dark" ? { color: "#949FD8", eyeColor: "#12151A" } : { color: "#55609C", eyeColor: "#F4F2EE" }),
     });
-  const mascot = createMascot(art, { definition: definition(), animation: "idle" });
+  // Fachada: primero un fotograma estático (sin bucle de animación que ocupe el hilo
+  // principal durante la carga); la mascota animada arranca con la primera interacción.
+  let real: MascotController | null = null;
+  let want = { def: definition(), anim: "idle" };
+  const still = () => {
+    const { pose } = sampleAnimation(want.def, want.anim, 0);
+    art.innerHTML = renderSceneToSvgString(buildScene(want.def, pose));
+  };
+  still();
+  const WAKE = ["pointermove", "pointerdown", "keydown", "scroll", "touchstart"] as const;
+  const animate = () => {
+    WAKE.forEach((ev) => removeEventListener(ev, animate));
+    if (real) return;
+    art.innerHTML = "";
+    real = createMascot(art, { definition: want.def, animation: want.anim });
+  };
+  WAKE.forEach((ev) => addEventListener(ev, animate, { passive: true }));
+  const mascot = {
+    play: (anim: string) => { want.anim = anim; real?.play(anim); },
+    setDefinition: (def: MascotDefinition) => { want.def = def; if (real) real.setDefinition(def); else still(); },
+    setExpression: (e: string) => real?.setExpression(e),
+    setLookTarget: (t: { x: number; y: number }) => real?.setLookTarget(t),
+    clearLookTarget: () => real?.clearLookTarget(),
+    pause: () => real?.pause(),
+    resume: () => real?.resume(),
+  };
   // Sin animar en segundo plano: ahorra CPU y batería con la pestaña oculta.
   document.addEventListener("visibilitychange", () => (document.hidden ? mascot.pause() : mascot.resume()));
 

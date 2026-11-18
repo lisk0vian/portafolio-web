@@ -36,3 +36,29 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Verifica el sitio ya publicado con Lighthouse CI (móvil, 3 corridas por página).
+  # Falla si rendimiento < 90, accesibilidad/buenas prácticas/SEO < 95, LCP > 2,5 s o CLS > 0,1.
+  lighthouse:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lighthouse CI
+        env:
+          SITE: https://lisk0vian.github.io/portafolio-web
+        run: |
+          npx --yes @lhci/cli@0.15.1 autorun \
+            --collect.url="$SITE/" \
+            --collect.url="$SITE/en/" \
+            --collect.url="$SITE/casos/chatcrm/" \
+            --collect.url="$SITE/certificaciones/"
+      - name: Reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lhci-report

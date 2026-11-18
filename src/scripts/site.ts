@@ -253,7 +253,9 @@ export function initSite(page: PageData, opts?: { spy?: string[]; roleFallback?:
   onEvent("mg:profile", () => rerender(page));
 
   initChrome();
-  applyI18n(page);
+  // El HTML ya sale con los textos de la edición Ingeniería: solo hace falta reescribirlos
+  // si el perfil guardado es otro (evita cientos de escrituras de texto en la carga).
+  if (getProfile() !== "fullstack") applyI18n(page);
   riseAll();
   if (opts?.spy) initScrollSpy(opts.spy, opts.roleFallback ?? "");
 }
