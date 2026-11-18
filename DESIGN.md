@@ -376,6 +376,5 @@ modelo?* and *AUC 0.74, ¿qué mejora generalización? / solo llaman al top 10%,
   `collaborative-editor`, `churn-prediction`, `recommendation-engine`,
   `aws-*`, `immutable-ledgers`, `crdts-sin-miedo`. Replica filtros en memoria,
   `fields=` con allowlist + 400 y 404 por slug.
-- Cambios API se prototipan aquí primero y se portan después: ver
-  `docs/api-changes/` (001 publications, 002 projects fields+metric,
-  003 offset+level+cvUrl).
+- Cambios API se prototipan aquí primero (`src/lib/contracts.ts` + mock) y se
+  portan después a la API.

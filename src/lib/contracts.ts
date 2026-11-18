@@ -1,7 +1,6 @@
 // Contratos canónicos espejo de la API (api/src/modules/*/*.dto.ts).
 // Single source para el mock y el cliente live: si la API cambia un DTO,
 // se actualiza aquí primero (mock-first) y luego se porta a NestJS.
-// Ver docs/api-changes/ para el formato de ficha por cambio.
 
 export type Lang = 'es' | 'en';
 
