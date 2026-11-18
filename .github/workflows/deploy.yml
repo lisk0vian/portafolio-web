@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: withastro/action@v3
+        with:
+          node-version: 22
         env:
           PUBLIC_DATA_URL: https://raw.githubusercontent.com/lisk0vian/portafolio-api/main
   deploy:
