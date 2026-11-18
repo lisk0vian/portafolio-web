@@ -89,7 +89,7 @@ export function workHtml(projects: Any[], ui: Any, opts: { caseHref: string; ope
   const rest = projects;
   const channel = channelOf(opts.profile, ui);
   const sideLink = "flex items-center justify-between gap-3 py-3 border-b border-rule no-underline font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 hover:text-accent";
-  const side = `<aside class="min-w-0 border-b border-rule pb-6 lg:border-b-0 lg:border-r lg:pr-8 lg:sticky lg:top-24 lg:self-start">`
+  const side = `<aside class="order-last lg:order-none min-w-0 border-t border-rule pt-6 lg:pt-0 lg:border-t-0 pb-6 lg:border-b-0 lg:border-r lg:pr-8 lg:sticky lg:top-24 lg:self-start">`
     + `<h3 class="mg-label m-0 pb-3 border-b border-rule">${esc(ui.relChannels)}</h3>`
     + `<div class="flex flex-col">`
     + ([["fullstack", ui.eng], ["data", ui.dat]] as [string, string][]).map(([key, label]) =>

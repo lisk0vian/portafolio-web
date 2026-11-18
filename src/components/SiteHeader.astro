@@ -25,10 +25,10 @@ const seg = "h-7 px-2 sm:px-3 uppercase border-0 bg-transparent text-ink-2 curso
 <header class="sticky top-0 z-30 bg-paper border-b border-rule">
   <span data-progress aria-hidden="true" class="absolute inset-x-0 -bottom-px h-0.5 bg-accent"></span>
   <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] h-14 flex items-center justify-between gap-x-3 sm:gap-x-6">
-    <a href={pageUrl(lang, "home")} class="flex items-center gap-2.5 font-display font-semibold text-[15px] tracking-[-0.02em] leading-none no-underline whitespace-nowrap uppercase">
+    <a href={pageUrl(lang, "home")} aria-label={`${site.firstName} ${site.lastName}`} class="flex items-center gap-2.5 font-display font-semibold text-[15px] tracking-[-0.02em] leading-none no-underline whitespace-nowrap uppercase">
       {/* Símbolo de marca "Escalera SOLID": peldaños en tinta, círculo en acento, sigue al tema. */}
       <svg viewBox="0 0 256 256" class="size-6 shrink-0" aria-hidden="true"><path fill="currentColor" d="M22 178h56v56h-56ZM100 178h56v56h-56ZM178 100h56v56h-56ZM178 22h56v56h-56Z"/><circle cx="128" cy="128" r="28" fill="var(--color-accent)"/></svg>
-      <span class="sm:hidden">{site.firstName[0]}{site.lastName[0]}</span><span class="hidden sm:inline">{site.firstName.split(" ")[0]} {site.lastName.split(" ")[0]}</span>
+      <span class="sm:hidden max-[359px]:hidden">{site.firstName[0]}{site.lastName[0]}</span><span class="hidden sm:inline">{site.firstName.split(" ")[0]} {site.lastName.split(" ")[0]}</span>
     </a>
 
     <div aria-live="polite" class={`hidden md:flex flex-1 min-w-0 items-center gap-6 ${meta} text-ink-2 whitespace-nowrap`}>
@@ -40,20 +40,20 @@ const seg = "h-7 px-2 sm:px-3 uppercase border-0 bg-transparent text-ink-2 curso
       </span>
     </div>
 
-    <div class="flex items-center gap-x-2.5 sm:gap-x-4">
+    <div class="flex items-center gap-x-1.5 sm:gap-x-4">
       <div role="group" aria-label="Edition" class={`flex items-center border border-rule p-0.5 ${meta} text-[10.5px]`}>
         <button type="button" data-set-profile="fullstack" data-profile-btn="fullstack" class={seg}><span data-t="ui.eng">Ingeniería</span></button>
         <button type="button" data-set-profile="data" data-profile-btn="data" class={seg}><span data-t="ui.dat">Datos</span></button>
       </div>
       <nav class={`flex items-center gap-1.5 ${meta}`} aria-label="Language">
-        <a href={esUrl} data-lang-link hreflang="es" aria-current={lang === "es" ? "page" : undefined} class="no-underline text-ink-2 aria-[current=page]:text-ink aria-[current=page]:underline decoration-accent decoration-2 underline-offset-[6px]">ES</a>
+        <a href={esUrl} data-lang-link hreflang="es" aria-current={lang === "es" ? "page" : undefined} class="inline-flex items-center justify-center min-h-11 no-underline text-ink-2 aria-[current=page]:text-ink aria-[current=page]:underline decoration-accent decoration-2 underline-offset-[6px]">ES</a>
         <span class="text-ink-2/60" aria-hidden="true">/</span>
-        <a href={enUrl} data-lang-link hreflang="en" aria-current={lang === "en" ? "page" : undefined} class="no-underline text-ink-2 aria-[current=page]:text-ink aria-[current=page]:underline decoration-accent decoration-2 underline-offset-[6px]">EN</a>
+        <a href={enUrl} data-lang-link hreflang="en" aria-current={lang === "en" ? "page" : undefined} class="inline-flex items-center justify-center min-h-11 no-underline text-ink-2 aria-[current=page]:text-ink aria-[current=page]:underline decoration-accent decoration-2 underline-offset-[6px]">EN</a>
       </nav>
       <button
         type="button"
         data-toggle-theme
-        class={`flex items-center gap-2 h-8 px-0 border-0 bg-transparent text-ink-2 cursor-pointer whitespace-nowrap hover:text-ink ${meta}`}
+        class={`flex items-center justify-center gap-2 h-11 min-w-9 max-[359px]:min-w-6 sm:h-8 sm:min-w-0 px-0 border-0 bg-transparent text-ink-2 cursor-pointer whitespace-nowrap hover:text-ink ${meta}`}
       ><Fragment set:html={icon("contrast", "size-4")} /><span data-theme-label={themeLabels} class="hidden sm:inline">Oscuro</span></button>
     </div>
   </div>

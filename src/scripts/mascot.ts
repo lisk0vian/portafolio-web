@@ -110,7 +110,7 @@ export function initMascot() {
 
   /* ---------- globo de diálogo ---------- */
   let sayTimer = 0;
-  const say = (text: string, ms = 3400) => {
+  const say = (text: string, ms = innerWidth < 768 ? 2600 : 3400) => {
     if (minimized) return;
     window.clearTimeout(sayTimer);
     bubble.textContent = text;
@@ -171,10 +171,13 @@ export function initMascot() {
     if (!bubble!.hidden) {
       const bw = bubble!.offsetWidth;
       const bh = bubble!.offsetHeight;
-      const left = docked ? r.left - bw - 12 : r.left + r.width / 2 - bw / 2;
-      const top = docked ? r.top + r.height * 0.3 - bh / 2 : r.top + r.height * 0.06;
+      // En móvil, posada, el globo va encima de la mascota y pegado a su borde derecho:
+      // a su izquierda taparía el contenido en mitad de la pantalla.
+      const above = docked && innerWidth < 768;
+      const left = above ? r.right - bw : docked ? r.left - bw - 12 : r.left + r.width / 2 - bw / 2;
+      const top = above ? r.top - bh - 12 : docked ? r.top + r.height * 0.3 - bh / 2 : r.top + r.height * 0.06;
       bubble!.style.transform = `translate(${Math.max(8, left)}px, ${Math.max(64, top)}px)`;
-      bubble!.dataset.tail = docked ? "right" : "down";
+      bubble!.dataset.tail = above ? "down-end" : docked ? "right" : "down";
     }
     if (!menu!.hidden) {
       menu!.style.transform = `translate(${r.right - menu!.offsetWidth}px, ${r.top - menu!.offsetHeight - 10}px)`;

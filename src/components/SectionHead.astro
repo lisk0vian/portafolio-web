@@ -14,8 +14,8 @@ const { num, metaKey, metaFallback = "", titleKey, titleProfileKey, titleFallbac
 ---
 
 <div data-chapter class="mg-cross border-t border-rule pt-6 mb-[clamp(36px,4.5vw,64px)] grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-[clamp(16px,2.5vw,40px)] gap-y-3">
-  <span data-chapter-n class="font-display font-medium text-h1 text-accent tabular-nums">{num}</span>
-  <h2 data-rise class="font-display font-medium text-h1 m-0 text-balance uppercase">
+  <span data-chapter-n class="font-display font-medium text-h1 max-[359px]:text-[21px] text-accent tabular-nums">{num}</span>
+  <h2 data-rise class="font-display font-medium text-h1 max-[359px]:text-[21px] m-0 text-balance uppercase">
     {titleKey ? <span data-t={titleKey}>{titleFallback}</span> : titleProfileKey ? <span data-tp={titleProfileKey}>{titleFallback}</span> : titleFallback}
   </h2>
   <span class="col-span-2 md:col-span-1 font-mono text-label uppercase text-ink-2 md:text-right">{metaKey ? <span data-t={metaKey}>{metaFallback}</span> : metaFallback}</span>

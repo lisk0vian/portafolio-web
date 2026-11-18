@@ -413,6 +413,8 @@
 }
 .mg-say[data-tail="down"]::after { left: calc(50% - 5px); bottom: -5px; rotate: 45deg; }
 .mg-say[data-tail="right"]::after { right: -5px; top: calc(50% - 5px); rotate: 45deg; }
+.mg-say[data-tail="down-end"]::after { right: 34px; bottom: -5px; rotate: 45deg; }
+@media (max-width: 767px) { .mg-say { max-width: min(240px, calc(100vw - 32px)); font-size: 13px; } }
 .mg-mascot-menu {
   position: fixed; left: 0; top: 0; z-index: 41;
   display: flex; flex-direction: column; min-width: 200px; padding: 4px;
