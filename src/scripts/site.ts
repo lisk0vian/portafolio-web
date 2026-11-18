@@ -72,27 +72,27 @@ function initReveal() {
   const els = [...document.querySelectorAll<HTMLElement>("[data-reveal]:not([data-rv])")];
   if (!els.length) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const check = () => {
-    const H = window.innerHeight;
-    document.querySelectorAll<HTMLElement>('[data-rv="1"]').forEach((el) => {
-      if (el.getBoundingClientRect().top < H - 30) {
-        el.dataset.rv = "2";
-        el.style.opacity = "1";
-        el.style.transform = "none";
-      }
-    });
+  // IntersectionObserver en vez de medir en cada scroll: sin layouts forzados.
+  const show = (el: HTMLElement) => {
+    el.dataset.rv = "2";
+    el.style.opacity = "1";
+    el.style.transform = "none";
   };
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      io.unobserve(e.target);
+      show(e.target as HTMLElement);
+    }
+  }, { rootMargin: "0px 0px -30px 0px" });
   els.forEach((el) => {
     el.dataset.rv = "1";
     const d = Number(el.dataset.reveal || 0);
     el.style.opacity = "0";
     el.style.transform = "translateY(18px)";
     el.style.transition = `opacity .9s cubic-bezier(.2,.7,.2,1) ${d}ms, transform .9s cubic-bezier(.2,.7,.2,1) ${d}ms`;
+    io.observe(el);
   });
-  requestAnimationFrame(() => requestAnimationFrame(check));
-  window.addEventListener("scroll", check, { passive: true });
-  window.addEventListener("resize", check);
-  window.setTimeout(check, 1200);
 }
 
 /**
@@ -109,9 +109,7 @@ export function riseAll() {
       if (!entry.isIntersecting) return;
       riseIO!.unobserve(entry.target);
       const el = entry.target as HTMLElement;
-      // El hero no arranca mientras el cargador inicial lo tapa.
-      const wait = document.querySelector("[data-boot]:not([hidden])") ? 1000 : 0;
-      window.setTimeout(() => (el.dataset.in = ""), wait);
+      el.dataset.in = "";
     });
   }, { rootMargin: "0px 0px -8% 0px" });
   document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => {
@@ -191,25 +189,40 @@ function initScrollSpy(ids: string[], fallback: string) {
     .map((id) => ({ id, el: document.getElementById(id) }))
     .filter((x) => x.el) as { id: string; el: HTMLElement }[];
   if (!sections.length) return;
-  const onScroll = () => {
-    let current: string | null = null;
-    for (const section of sections) {
-      if (section.el.getBoundingClientRect().top < 140) current = section.id;
-    }
+  // Sección actual = la que cruza una franja de 1 px a 140 px del borde superior (bajo
+  // el encabezado). IntersectionObserver evita medir todas las secciones en cada scroll.
+  const inBand = new Set<string>();
+  const update = () => {
+    const current = sections.find((x) => inBand.has(x.id))?.id ?? null;
     document.querySelectorAll<HTMLElement>("[data-dock-link]").forEach((a) => a.setAttribute("aria-current", String(a.dataset.dockLink === current)));
-    if (dock && hero) dock.dataset.hidden = String(hero.getBoundingClientRect().bottom > window.innerHeight * 0.55);
     const index: any[] = window.__mgPage?.ui?.index ?? [];
     const match = index.find((x: any) => x.h.replace("#", "") === current);
-    if (match) {
-      numberEl.textContent = "§ " + match.n;
-      labelEl.textContent = match.l;
-      return;
-    }
-    numberEl.textContent = "●";
-    labelEl.textContent = fallback;
+    numberEl.textContent = match ? "§ " + match.n : "●";
+    labelEl.textContent = match ? match.l : fallback;
   };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+  let spy: IntersectionObserver | null = null;
+  const observe = () => {
+    spy?.disconnect();
+    inBand.clear();
+    spy = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const id = (e.target as HTMLElement).id;
+        if (e.isIntersecting) inBand.add(id);
+        else inBand.delete(id);
+      }
+      update();
+    }, { rootMargin: `-140px 0px -${Math.max(0, window.innerHeight - 141)}px 0px` });
+    sections.forEach((x) => spy!.observe(x.el));
+  };
+  observe();
+  let rz = 0;
+  window.addEventListener("resize", () => { window.clearTimeout(rz); rz = window.setTimeout(observe, 200); });
+  // El dock aparece cuando el hero sale (menos de 55% visible por abajo).
+  if (dock && hero) {
+    new IntersectionObserver(([e]) => {
+      dock.dataset.hidden = String(e.boundingClientRect.bottom > window.innerHeight * 0.55);
+    }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) }).observe(hero);
+  }
 }
 
 /** Theme toggle + reveal. Used by pages without switchable content. */

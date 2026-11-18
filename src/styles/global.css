@@ -165,6 +165,21 @@
 @utility mg-tag { @apply font-mono text-[11px] px-2 py-0.5 border border-rule; }
 @utility mg-section-head { @apply flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 border-t border-rule pt-3.5 font-mono text-label uppercase; }
 @utility mg-figcaption { @apply font-mono text-[11px] tracking-[0.06em] text-ink-2 mt-3; }
+
+/* Retrato en duotono de marca: blanco y negro con contraste y el acento Pervinca
+   teñido encima (mix-blend color conserva la luminancia, así el rostro se lee igual). */
+@utility mg-duotone { filter: grayscale(1) contrast(1.12) brightness(1.04); }
+/* Trama fina de puntos: guiño de imprenta sin tapar detalles. */
+@utility mg-halftone {
+  mix-blend-mode: multiply;
+  background-image: radial-gradient(circle at center, rgb(0 0 0 / 0.3) 0.7px, transparent 1.1px);
+  background-size: 4px 4px;
+}
+@utility mg-duotone-tint {
+  background-color: var(--mg-accent);
+  mix-blend-mode: color;
+  opacity: 0.55;
+}
 @utility mg-placeholder { @apply border border-rule flex items-center justify-center bg-paper-2; }
 
 /* Marco HUD: cruces en las esquinas de un bloque. */

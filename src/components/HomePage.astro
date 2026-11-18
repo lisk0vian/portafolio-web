@@ -2,6 +2,7 @@
 // Home (portfolio) template, shared by the "es" and "en" pages.
 // DI: recibe `sourceKind` por props (mock|live). Default = composition por env.
 // Astro resuelve copy en build y embebe JSON para switches de perfil en cliente.
+import { getImage } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
 import SiteHeader from "./SiteHeader.astro";
 import SectionHead from "./SectionHead.astro";
@@ -29,6 +30,11 @@ const t = pick(ui, lang);
 const getProfileData = (profile: Profile) => pick(profiles[profile], lang);
 const withNumbers = (projects: any[]) => projects.map((x: any, i: number) => ({ ...x, no: "0" + (i + 1) }));
 const personal = resolvePersonal(lang);
+// Foto de marca (repo lisk0vian/me) recortada a 4:5 y convertida a WebP en build: ~1,1 MB → decenas de KB.
+const photo = await getImage({
+  src: "https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg",
+  width: 720, height: 900, widths: [360, 540, 720], fit: "cover", format: "webp", quality: 72,
+});
 const caseHref = pageUrl(lang, "case");
 const systemHref = pageUrl(lang, "system");
 const langAltUrl = altPageUrl(lang, "home");
@@ -97,29 +103,6 @@ const termJson = JSON.stringify(termDataMap);
 ---
 
 <Layout title={`${personal.name} — ${p.role}`} description={p.intro} lang={lang}>
-  <div data-boot hidden class="fixed inset-0 z-50 bg-paper flex items-center justify-center font-mono text-[13px] tracking-[0.14em] text-ink transition-transform duration-700 ease-[cubic-bezier(.76,0,.24,1)]" aria-hidden="true">
-    <span><span data-boot-n class="tabular-nums">0</span>%</span>
-  </div>
-  <script is:inline>
-    (function () {
-      var el = document.querySelector("[data-boot]");
-      try {
-        if (!el || sessionStorage.getItem("mg-boot") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        sessionStorage.setItem("mg-boot", "1");
-      } catch (e) { return; }
-      el.hidden = false;
-      var n = el.querySelector("[data-boot-n]"), t0 = performance.now();
-      function tick(now) {
-        var k = Math.min(1, (now - t0) / 900);
-        n.textContent = String(Math.round(100 * (1 - Math.pow(1 - k, 3))));
-        if (k < 1) return requestAnimationFrame(tick);
-        el.style.transform = "translateY(-100%)";
-        setTimeout(function () { el.remove(); }, 750);
-      }
-      requestAnimationFrame(tick);
-      el.addEventListener("click", function () { el.remove(); });
-    })();
-  </script>
 
   <div data-release class="min-h-screen bg-paper text-ink font-sans antialiased">
     <SiteHeader lang={lang} page="home" themeLabels={`${t.light}|${t.dark}`} spyFallback={p.role} />
@@ -131,7 +114,7 @@ const termJson = JSON.stringify(termDataMap);
           <p class="flex items-center gap-3 font-mono text-label uppercase text-ink-2 m-0">
             <span class="size-2 bg-signal motion-safe:animate-pulse" aria-hidden="true"></span><span>{personal.availabilityLong}</span>
           </p>
-          <a href="#trabajo" class="flex items-center gap-2 no-underline font-mono text-label uppercase text-ink-2 hover:text-accent">
+          <a href="#trabajo" class="hidden sm:flex items-center gap-2 no-underline font-mono text-label uppercase text-ink-2 hover:text-accent">
             <span data-t="ui.relAll">{t.relAll}</span><Fragment set:html={icon("arrow-down", "size-3.5")} />
           </a>
         </div>
@@ -140,7 +123,7 @@ const termJson = JSON.stringify(termDataMap);
     </section>
 
     {/* Mascota: fija; mascot.ts la posa sobre el hueco del hero y la lleva a la esquina al bajar. */}
-    <button type="button" data-mascot hidden aria-label={t.mascotLabel} data-label={t.mascotLabel} data-label-menu={t.mascotMenuLabel} data-label-restore={t.mascotRestore} aria-controls="mascot-menu" class="fixed left-0 top-0 z-40 origin-top-left p-0 border-0 bg-transparent cursor-pointer will-change-transform">
+    <button type="button" data-mascot hidden aria-label={t.mascotLabel} data-label={t.mascotLabel} data-label-menu={t.mascotMenuLabel} data-label-restore={t.mascotRestore} aria-controls="mascot-menu" class="fixed left-0 top-0 z-40 origin-top-left p-0 border-0 bg-transparent cursor-pointer will-change-transform motion-safe:transition-opacity motion-safe:duration-300">
       <span data-mascot-art class="block size-full"></span>
     </button>
     <p data-mascot-say aria-hidden="true" hidden class="mg-say"></p>
@@ -193,10 +176,11 @@ const termJson = JSON.stringify(termDataMap);
         <div class="flex flex-wrap gap-y-12 gap-x-[clamp(32px,5vw,80px)] items-start">
           <div class="flex-[0_1_340px] min-w-[250px] flex flex-col gap-8 min-[1100px]:sticky min-[1100px]:top-24">
             <figure data-reveal="0" class="m-0">
-              <div data-dither-frame data-state="loading" class="group mg-cross relative aspect-[4/5] border border-rule bg-paper-2">
-                <canvas data-dither-src="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg" role="img" aria-label={t.portraitCap} class="absolute inset-0 w-full h-full"></canvas>
-                <img data-dither-reveal src="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover pointer-events-none [clip-path:circle(0px_at_50%_50%)] motion-safe:transition-[clip-path] motion-safe:duration-200 motion-safe:ease-out" />
-                <span class="absolute inset-0 hidden group-data-[state=empty]:flex items-center justify-center font-mono text-label uppercase text-ink-2"><span data-t="ui.portrait">{t.portrait}</span></span>
+              <div data-photo-frame class="group mg-cross relative aspect-[4/5] border border-rule bg-paper-2 overflow-hidden cursor-crosshair">
+                <img src={photo.src} srcset={photo.srcSet.attribute} sizes="(min-width: 640px) 340px, calc(100vw - 32px)" width="720" height="900" loading="lazy" decoding="async" alt={t.portraitAlt} class="absolute inset-0 w-full h-full object-cover mg-duotone" />
+                <span aria-hidden="true" class="absolute inset-0 mg-duotone-tint"></span>
+                <span aria-hidden="true" class="absolute inset-0 mg-halftone"></span>
+                <img data-photo-reveal src={photo.src} srcset={photo.srcSet.attribute} sizes="(min-width: 640px) 340px, calc(100vw - 32px)" width="720" height="900" alt="" aria-hidden="true" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover pointer-events-none [clip-path:circle(0px_at_50%_40%)] motion-safe:transition-[clip-path] motion-safe:duration-300 motion-safe:ease-out" />
               </div>
               <figcaption class="mg-figcaption mt-3"><span class="text-ink">Fig. 2 —</span>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
             </figure>
@@ -360,14 +344,10 @@ const termJson = JSON.stringify(termDataMap);
   <script type="application/json" id="mg-terminals" set:html={termJson} />
   <script>
     import { initSite, stagger, type PageData } from "../scripts/site";
-    import { initMascot } from "../scripts/mascot";
-    import { initTerminals } from "../scripts/terminal";
-    import { refreshHomeFromApi } from "../scripts/api-live";
     import { createPortfolioSource } from "../lib/composition";
     import { getProfile, setProfile, type Profile } from "../scripts/store";
     import { esc, workHtml, releaseHeroHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, expHtml, eduHtml, certRowClass, type PubState } from "../scripts/home-render";
-    import { initDither } from "../scripts/dither";
-    import { initTrophies } from "../scripts/terminal";
+    import { initPhotoLens } from "../scripts/photo";
     import { icon } from "../utils/icons";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
@@ -714,10 +694,7 @@ const termJson = JSON.stringify(termDataMap);
     // El prerender siempre sale de la edición de Ingeniería: si el perfil guardado
     // es otro, se repinta para que hero, riel y secciones coincidan desde el inicio.
     if (getProfile() !== "fullstack") setProfile(getProfile());
-    initTerminals();
-    initMascot();
-    initTrophies();
-    initDither();
+    initPhotoLens();
     renderStack(page, getProfile());
     renderCertsTeaser(page, getProfile());
     renderPubs(page, getProfile());
@@ -749,6 +726,22 @@ const termJson = JSON.stringify(termDataMap);
     // DI: la fuente (mock|live) viaja en page.meta.sourceKind, inyectada por props.
     // Mock-first: con PUBLIC_USE_MOCK=true ves la plantilla sin levantar la API.
     const source = createPortfolioSource((page.meta as any)?.sourceKind ?? "mock");
-    refreshHomeFromApi(page, source).catch(() => {});
+
+    // Lo no crítico se descarga y arranca en tiempo ocioso, después del primer pintado:
+    // el hero ya viene completo en el HTML, así que nada de esto lo retrasa.
+    const idle = (fn: () => void, timeout = 2000) =>
+      "requestIdleCallback" in window ? requestIdleCallback(fn, { timeout }) : window.setTimeout(fn, 400);
+    idle(async () => {
+      const { initTerminals, initTrophies } = await import("../scripts/terminal");
+      initTerminals();
+      initTrophies();
+      const { initMascot } = await import("../scripts/mascot");
+      initMascot();
+    });
+    // Revalida contra GitHub para recoger cambios de datos sin redesplegar.
+    idle(async () => {
+      const { refreshHomeFromApi } = await import("../scripts/api-live");
+      refreshHomeFromApi(page, source).catch(() => {});
+    }, 4000);
   </script>
 </Layout>

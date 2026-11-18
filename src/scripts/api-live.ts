@@ -63,10 +63,11 @@ function applyFreshCache(page: PageData, lang: Lang): boolean {
   const cached = readCache(lang);
   if (!cached || Date.now() - cached.at > CACHE_TTL_MS) return false;
   try {
+    const before = JSON.stringify(page);
     const updated = mergeHomeLive(page, cached.live as never);
     if (updated.length > 0) {
       window.__mgPage = page;
-      render(page);
+      if (JSON.stringify(page) !== before) render(page);
       setStatus("cached");
       return true;
     }
@@ -110,9 +111,11 @@ export async function refreshHomeFromApi(
       live.publications !== undefined ||
       live.education !== undefined
     ) {
+      const before = JSON.stringify(page);
       const updated = mergeHomeLive(page, live);
       window.__mgPage = page;
-      render(page);
+      // El HTML ya trae los datos del build: solo se repinta si GitHub tiene algo nuevo.
+      if (JSON.stringify(page) !== before) render(page);
       writeCache(lang, {
         profile: live.profile,
         projects: live.projects,

@@ -18,6 +18,7 @@
     "astro": "^7.3.5",
     "mermaid": "^12.3.0",
     "open-mascot": "github:0oooh/open-mascot-studio#b83ca3863f4e35424342d42538873af1bacddf9f&path:/packages/open-mascot",
+    "sharp": "0.35.4",
     "shiki": "4.4.3"
   },
   "allowScripts": {

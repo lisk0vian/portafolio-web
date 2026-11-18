@@ -52,7 +52,8 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
     + `</h1>`
     + `<p class="font-mono text-[12px] leading-[1.6] tracking-[0.08em] uppercase text-ink-2 m-0">${esc(opts.role)} · ${esc(opts.location)}</p>`
     + `<p class="text-[clamp(16px,min(1.35vw,2.4vh),20px)] leading-[1.5] text-ink-2 m-0 max-w-[50ch] text-pretty">${esc(opts.intro)}</p>`
-    + `<div class="flex flex-wrap gap-2.5 pt-1">`
+    // En móvil, los dos botones en una fila: apilados empujaban el hero fuera de la pantalla.
+    + `<div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2.5 pt-1 [&>a]:justify-center [&>a]:max-sm:px-3 [&>a]:max-sm:tracking-[0.08em]">`
     + (projects.find((p) => p.case) ? `<a href="${esc(caseLink(opts.caseHref, projects.find((p) => p.case).case))}" class="mg-btn-solid">${esc(ui.readCase)}${icon("arrow-right", "size-4")}</a>` : "")
     + `<a id="hero-cv" href="${esc(opts.cvUrl)}" class="mg-btn-ghost">${esc(ui.cv)}${icon("arrow-down", "size-4")}</a>`
     + `</div></div>`
@@ -63,7 +64,8 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
   // Escenario de la mascota: el panel entero es el marco; el hueco cuadrado se
   // ajusta al alto disponible y abajo van las acciones (mascot.ts las escucha).
   const acts: [string, string][] = [["wave", ui.actWave], ["think", ui.actThink], ["surprise", ui.actSurprise], ["shy", ui.actShy], ["sleep", ui.actSleep]];
-  const right = `<div class="flex min-h-0 flex-col border-t border-rule lg:border-t-0 lg:border-l">`
+  // Escenario de la mascota solo en escritorio: en móvil el hero cabe entero en pantalla.
+  const right = `<div class="hidden lg:flex min-h-0 flex-col border-t border-rule lg:border-t-0 lg:border-l">`
     + `<div class="flex items-center justify-between gap-4 px-[clamp(16px,2vw,28px)] pt-4 font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2">`
     + `<span>${esc(ui.mascotFig)}</span>`
     + `<span>${esc(ui.mascotMood)} · <span data-mascot-mood class="text-accent"></span></span></div>`

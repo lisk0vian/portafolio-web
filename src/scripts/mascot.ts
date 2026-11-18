@@ -107,6 +107,8 @@ export function initMascot() {
       ...(getTheme() === "dark" ? { color: "#949FD8", eyeColor: "#12151A" } : { color: "#55609C", eyeColor: "#F4F2EE" }),
     });
   const mascot = createMascot(art, { definition: definition(), animation: "idle" });
+  // Sin animar en segundo plano: ahorra CPU y batería con la pestaña oculta.
+  document.addEventListener("visibilitychange", () => (document.hidden ? mascot.pause() : mascot.resume()));
 
   /* ---------- globo de diálogo ---------- */
   let sayTimer = 0;
@@ -188,22 +190,38 @@ export function initMascot() {
     const slot = document.querySelector<HTMLElement>("[data-mascot-slot]");
     if (!slot) return;
     const r = slot.getBoundingClientRect();
-    if (!base || Math.abs(base - r.width) > 1) {
-      base = r.width;
-      host.style.width = host.style.height = `${base}px`;
-    }
     const narrow = innerWidth < 768;
     const size = minimized ? 44 : narrow ? 84 : 128;
+    // En móvil el hero no muestra su escenario (ocupa toda la pantalla): la mascota va
+    // directo a la esquina con su tamaño final.
+    const inHero = r.width > 0;
+    const want = inHero ? r.width : size;
+    if (!base || Math.abs(base - want) > 1) {
+      base = want;
+      host.style.width = host.style.height = `${base}px`;
+    }
     const cx = innerWidth - size - (narrow ? 16 : 28);
     const cy = innerHeight - size - (narrow ? 80 : 92); // por encima del dock
     // Sale cuando su propio escenario llega bajo el encabezado (56px), no por el alto
     // del hero: en móvil el escenario va al final del hero y saldría antes de verla.
-    const raw = minimized ? 1 : Math.min(1, Math.max(0, (56 - r.top) / (r.height * 0.8)));
+    const raw = minimized || !inHero ? 1 : Math.min(1, Math.max(0, (56 - r.top) / (r.height * 0.8)));
     const p = raw * raw * (3 - 2 * raw); // smoothstep
     const x = r.left + (cx - r.left) * p;
     const y = r.top + (cy - r.top) * p;
     const s = (base + (size - base) * p) / base;
     host.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+    // Móvil: la esquina cae sobre los botones del hero; aparece cuando el hero ya se fue.
+    if (!inHero) {
+      const hero = document.querySelector<HTMLElement>("[data-hero]");
+      const away = !hero || hero.getBoundingClientRect().bottom < innerHeight * 0.6;
+      host.style.opacity = away ? "1" : "0";
+      host.style.pointerEvents = away ? "" : "none";
+      host.tabIndex = away ? 0 : -1;
+    } else {
+      host.style.opacity = "";
+      host.style.pointerEvents = "";
+      host.tabIndex = 0;
+    }
     const nowDocked = p > 0.98;
     if (nowDocked !== docked) {
       docked = nowDocked;
@@ -391,5 +409,6 @@ export function initMascot() {
   showMood(mood);
   host.hidden = false;
   wake();
-  window.setTimeout(() => scrollY < 40 && say(L().greet(new Date().getHours()), 4200), document.querySelector("[data-boot]:not([hidden])") ? 1800 : 900);
+  // En móvil el saludo tapaba el texto y los botones del hero: solo en escritorio.
+  if (innerWidth >= 768) window.setTimeout(() => scrollY < 40 && say(L().greet(new Date().getHours()), 4200), 900);
 }
