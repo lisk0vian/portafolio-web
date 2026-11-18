@@ -2,6 +2,7 @@
 // Caso de estudio (es/en). El contenido llega del repo de datos en build
 // (`{lang}/case-studies/<slug>.json`) y se pinta por bloques: paragraph, list,
 // code, diagram (Mermaid), table y metrics.
+import { codeToHtml } from "shiki";
 import Layout from "../layouts/Layout.astro";
 import SiteHeader from "./SiteHeader.astro";
 import { caseUi, pick } from "../data/content";
@@ -21,6 +22,16 @@ const t = pick(caseUi, lang);
 const personal = resolvePersonal(lang);
 const homeWorkHref = `${pageUrl(lang, "home")}#trabajo`;
 const nextHref = c.nextCaseSlug ? caseUrl(lang, c.nextCaseSlug) : homeWorkHref;
+// Etiqueta del destino de cada enlace, para que se sepa qué hay detrás antes de pulsar.
+const linkKind = (url: string) => {
+  const host = new URL(url).hostname;
+  if (host.endsWith("github.io")) return lang === "es" ? "Sitio en vivo" : "Live site";
+  if (host === "github.com") return "GitHub";
+  if (host.endsWith("npmjs.com")) return "npm";
+  if (host === "doi.org") return lang === "es" ? "Artículo · DOI" : "Paper · DOI";
+  if (host === "orcid.org") return "ORCID";
+  return host;
+};
 const sections = c.sections.map((s, i) => ({ ...s, n: String(i + 1).padStart(2, "0") }));
 
 const esc = (s: string) =>
@@ -36,9 +47,20 @@ let fig = 0;
 const caption = (text?: string) => {
   if (!text) return "";
   // Las figuras traen su propio "Fig. N —"; el resto se numera aquí.
-  const label = /^Fig\.\s*\d+/.test(text) ? "" : `<strong class="font-semibold text-ink">Fig. ${++fig} —</strong> `;
+  const own = text.match(/^Fig\.\s*(\d+)/);
+  if (own) fig = Math.max(fig, Number(own[1]));
+  const label = own ? "" : `<strong class="font-semibold text-ink">Fig. ${++fig} —</strong> `;
   return `<figcaption class="font-serif text-[15px] text-ink-2 mt-3 text-pretty">${label}${inline(text)}</figcaption>`;
 };
+
+// Resaltado en build (Shiki, el mismo motor de Astro). El fondo siempre es el de terminal
+// (oscuro en ambos temas), así que basta un tema oscuro; github-dark pasa 4.5:1 en comentarios.
+const highlighted = new Map<CaseBlockDto, string>();
+for (const b of c.sections.flatMap((s) => s.blocks)) {
+  if (b.type !== "code") continue;
+  const html = await codeToHtml(b.code, { lang: b.lang, theme: "github-dark" }).catch(() => "");
+  highlighted.set(b, html.match(/<code>([\s\S]*)<\/code>/)?.[1] ?? esc(b.code));
+}
 
 function block(b: CaseBlockDto): string {
   switch (b.type) {
@@ -51,7 +73,7 @@ function block(b: CaseBlockDto): string {
     case "code":
       return `<figure class="m-0 min-w-0"><div class="flex items-center justify-between gap-3 px-4 py-2 bg-term border-b border-term-rule rounded-t-term font-mono text-[11px] tracking-[0.08em] uppercase text-term-dim"><span>${esc(b.lang)}</span>`
         + (b.source ? `<a href="${esc(b.source)}" target="_blank" rel="noreferrer" class="text-term-accent no-underline hover:underline">${esc(t.source)} ↗</a>` : "")
-        + `</div><pre class="m-0 bg-term text-term-ink font-mono text-[13px] leading-[1.7] p-5 rounded-b-term overflow-x-auto [font-variant-ligatures:none]"><code>${esc(b.code)}</code></pre>${caption(b.caption)}</figure>`;
+        + `</div><pre class="m-0 bg-term text-term-ink font-mono text-[13px] leading-[1.7] p-5 rounded-b-term overflow-x-auto [font-variant-ligatures:none]"><code>${highlighted.get(b) ?? esc(b.code)}</code></pre>${caption(b.caption)}</figure>`;
     case "diagram":
       return `<figure class="m-0 min-w-0"><div class="border border-rule bg-paper-2 p-4 overflow-x-auto"><pre data-mermaid class="m-0 font-mono text-[12px] leading-[1.6] text-ink-2 whitespace-pre">${esc(b.source)}</pre></div>${caption(b.caption)}</figure>`;
     case "table":
@@ -59,6 +81,11 @@ function block(b: CaseBlockDto): string {
         + `<thead><tr>${b.head.map((h) => `<th scope="col" class="py-2.5 pr-4 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 font-normal align-bottom">${inline(h)}</th>`).join("")}</tr></thead>`
         + `<tbody>${b.rows.map((r) => `<tr class="border-b border-rule last:border-b-0">${r.map((cell, i) => `<td class="py-3.5 pr-4 align-top ${i === 0 ? "text-ink" : "text-ink-2"}">${inline(cell)}</td>`).join("")}</tr>`).join("")}</tbody>`
         + `</table></div>${caption(b.caption)}</figure>`;
+    case "image":
+      return `<figure class="m-0 min-w-0"><a href="${esc(b.src)}" target="_blank" rel="noreferrer" class="block border border-rule bg-paper-2 overflow-hidden"><img src="${esc(b.src)}" alt="${esc(b.alt)}" loading="lazy" decoding="async" class="block w-full h-auto max-h-[640px] object-contain mx-auto" /></a>${caption(b.caption)}</figure>`;
+    case "demo":
+      return `<figure class="m-0 min-w-0"><div class="border border-rule bg-paper-2"><div class="flex items-center justify-between gap-3 px-4 py-2 border-b border-rule font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2"><span class="flex items-center gap-2 min-w-0"><span aria-hidden="true" class="size-1.5 bg-signal"></span><span class="truncate">${esc(b.url.replace(/^https?:\/\//, ""))}</span></span><a href="${esc(b.url)}" target="_blank" rel="noreferrer" class="shrink-0 text-accent no-underline hover:underline">${esc(t.openDemo)} ↗</a></div>`
+        + `<iframe src="${esc(b.url)}" title="${esc(b.caption ?? b.url)}" loading="lazy" class="block w-full h-[min(640px,80svh)] border-0 bg-paper"></iframe></div>${caption(b.caption)}</figure>`;
     case "metrics":
       return `<dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] border-t border-rule">${b.items
         .map((m) => `<div class="flex flex-col-reverse gap-1.5 py-5 pr-4 border-b border-rule"><dt class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2">${esc(m.label)}</dt><dd class="m-0 font-display font-semibold text-[clamp(28px,3vw,40px)] leading-none tracking-[-0.03em] text-accent tabular-nums">${esc(m.value)}</dd></div>`)
@@ -94,6 +121,25 @@ const contentJson = JSON.stringify({ ui: t, fullstack: {}, data: {}, personal, m
         <ul data-reveal="140" class="flex flex-wrap gap-1.5 mt-8 p-0 list-none" aria-label={t.stack}>
           {c.stack.map((s) => <li class="mg-chip">{s}</li>)}
         </ul>
+        {c.links.length > 0 && (
+          <nav data-reveal="180" aria-label={t.linksTitle} class="mt-10">
+            <p class="font-mono text-[11px] tracking-[0.08em] uppercase text-ink-2 m-0 mb-3">{t.linksTitle}</p>
+            <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-3">
+              {c.links.map((l) => (
+                <li class="min-w-0">
+                  <a href={l.url} target="_blank" rel="noreferrer" class="group flex h-full items-start justify-between gap-4 p-4 border border-rule bg-paper-2 no-underline transition-colors hover:border-accent focus-visible:border-accent">
+                    <span class="min-w-0 flex flex-col gap-1.5">
+                      <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-accent">{linkKind(l.url)}</span>
+                      <span class="text-[15px] leading-[1.35] text-ink font-medium text-pretty">{l.label}</span>
+                      <span class="font-mono text-[11.5px] text-ink-2 truncate">{l.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</span>
+                    </span>
+                    <span aria-hidden="true" class="text-ink-2 group-hover:text-accent transition-colors">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
       </section>
 
       <div data-reveal="160" class="grid grid-cols-2 md:grid-cols-4 border-t border-rule border-b border-rule">

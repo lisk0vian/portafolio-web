@@ -38,19 +38,26 @@ export function initDither(scope: ParentNode = document) {
 
       const cs = getComputedStyle(document.documentElement);
       const ink = cs.getPropertyValue("--mg-ink").trim();
-      const accent = cs.getPropertyValue("--mg-accent").trim();
       const dark = document.documentElement.dataset.theme !== "light";
+      const lums = new Float32Array(cols * rows);
+      for (let k = 0; k < lums.length; k++) {
+        lums[k] = (0.2126 * px[k * 4] + 0.7152 * px[k * 4 + 1] + 0.0722 * px[k * 4 + 2]) / 255;
+      }
+      // Estira el contraste entre los percentiles 3 y 97: la foto (fondo oscuro, piel
+      // en tonos medios) ocupa poco rango y sin esto el rostro se pierde en ambos temas.
+      const sorted = Float32Array.from(lums).sort();
+      const lo = sorted[Math.floor(sorted.length * 0.03)];
+      const hi = Math.max(lo + 0.01, sorted[Math.floor(sorted.length * 0.97)]);
       ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.fillStyle = ink;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const i = (y * cols + x) * 4;
-          const lum = (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
-          // En oscuro, la luz es tinta; en claro, la sombra es tinta.
+          const lum = Math.min(1, Math.max(0, (lums[y * cols + x] - lo) / (hi - lo))) ** 0.85;
+          // En oscuro, la luz es tinta; en claro, la sombra es tinta (como un grabado).
           const v = dark ? lum : 1 - lum;
-          if (v < 0.08) continue;
-          const r = (CELL / 2) * Math.min(1, v * 1.1);
-          ctx.fillStyle = v > 0.82 ? accent : ink;
-          ctx.globalAlpha = 0.35 + v * 0.65;
+          if (v < 0.06) continue;
+          const r = (CELL / 2) * Math.min(1, 0.25 + v * 0.85);
+          ctx.globalAlpha = 0.25 + v * 0.75;
           ctx.fillRect(x * CELL + CELL / 2 - r, y * CELL + CELL / 2 - r, r * 2, r * 2);
         }
       }
@@ -65,6 +72,18 @@ export function initDither(scope: ParentNode = document) {
       if (frame) frame.dataset.state = "empty";
     });
     new ResizeObserver(() => paint()).observe(canvas);
+
+    // Hover: una lupa circular muestra la foto real bajo el puntero.
+    const reveal = frame?.querySelector<HTMLImageElement>("[data-dither-reveal]");
+    if (frame && reveal) {
+      const lens = (e: PointerEvent, radius: string) => {
+        const b = frame.getBoundingClientRect();
+        reveal.style.clipPath = `circle(${radius} at ${e.clientX - b.left}px ${e.clientY - b.top}px)`;
+      };
+      frame.addEventListener("pointerenter", (e) => lens(e, "clamp(70px, 28%, 120px)"));
+      frame.addEventListener("pointermove", (e) => lens(e, "clamp(70px, 28%, 120px)"));
+      frame.addEventListener("pointerleave", (e) => lens(e, "0px"));
+    }
     onEvent("mg:theme", paint);
     onEvent("mg:profile", paint);
   });

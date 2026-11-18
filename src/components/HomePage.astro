@@ -195,6 +195,7 @@ const termJson = JSON.stringify(termDataMap);
             <figure data-reveal="0" class="m-0">
               <div data-dither-frame data-state="loading" class="group mg-cross relative aspect-[4/5] border border-rule bg-paper-2">
                 <canvas data-dither-src="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg" role="img" aria-label={t.portraitCap} class="absolute inset-0 w-full h-full"></canvas>
+                <img data-dither-reveal src="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover pointer-events-none [clip-path:circle(0px_at_50%_50%)] motion-safe:transition-[clip-path] motion-safe:duration-200 motion-safe:ease-out" />
                 <span class="absolute inset-0 hidden group-data-[state=empty]:flex items-center justify-center font-mono text-label uppercase text-ink-2"><span data-t="ui.portrait">{t.portrait}</span></span>
               </div>
               <figcaption class="mg-figcaption mt-3"><span class="text-ink">Fig. 2 —</span>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>
@@ -243,6 +244,19 @@ const termJson = JSON.stringify(termDataMap);
             </div>
             <div id="skill-areas" class="flex flex-wrap items-center gap-x-1 gap-y-2 py-3.5 border-b border-rule"></div>
             <div id="stack-grid" class="mt-1"></div>
+            {/* Mapa del stack: una barra por área (relleno = uso diario); filtra la lista. */}
+            <div class="mt-[clamp(36px,4vw,56px)]">
+              <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-rule font-mono text-label uppercase text-ink-2">
+                <span data-t="ui.mapT">{t.mapT}</span>
+                <span class="flex items-center gap-4">
+                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] bg-accent"></span><span data-t="ui.mapDaily">{t.mapDaily}</span></span>
+                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] shadow-[inset_0_0_0_1px_var(--color-ink-2)]"></span><span data-t="ui.mapOcc">{t.mapOcc}</span></span>
+                </span>
+              </div>
+              <div id="skill-map" class="flex flex-col py-2 border-b border-rule"></div>
+              <dl id="skill-stats" class="m-0 grid grid-cols-3 border-b border-rule"></dl>
+              <p data-t="ui.mapHint" class="mg-figcaption">{t.mapHint}</p>
+            </div>
           </div>
           <div id="certs-col" data-reveal="100" class="min-w-0 flex flex-col gap-[clamp(36px,4vw,56px)] lg:sticky lg:top-24 lg:self-start">
             <div>
@@ -269,19 +283,6 @@ const termJson = JSON.stringify(termDataMap);
             <a href={certsBase} class="mg-btn-primary mt-5"><span data-t="ui.certsSeeAll">{t.certsSeeAll}</span><Fragment set:html={icon("arrow-right", "size-4 text-accent")} /></a>
             </div>
 
-            {/* Mapa del stack: una barra por área (relleno = uso diario); filtra la lista. */}
-            <div>
-              <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2 pb-3 border-b border-rule font-mono text-label uppercase text-ink-2">
-                <span data-t="ui.mapT">{t.mapT}</span>
-                <span class="flex items-center gap-4">
-                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] bg-accent"></span><span data-t="ui.mapDaily">{t.mapDaily}</span></span>
-                  <span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-[7px] shadow-[inset_0_0_0_1px_var(--color-ink-2)]"></span><span data-t="ui.mapOcc">{t.mapOcc}</span></span>
-                </span>
-              </div>
-              <div id="skill-map" class="flex flex-col py-2 border-b border-rule"></div>
-              <dl id="skill-stats" class="m-0 grid grid-cols-3 border-b border-rule"></dl>
-              <p data-t="ui.mapHint" class="mg-figcaption">{t.mapHint}</p>
-            </div>
           </div>
         </div>
       </section>

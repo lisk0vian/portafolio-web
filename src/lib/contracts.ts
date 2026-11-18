@@ -218,7 +218,9 @@ export type CaseBlockDto =
   | { type: 'code'; lang: string; code: string; caption?: string; source?: string }
   | { type: 'diagram'; format: 'mermaid'; source: string; caption?: string }
   | { type: 'table'; head: string[]; rows: string[][]; caption?: string }
-  | { type: 'metrics'; items: { value: string; label: string }[] };
+  | { type: 'metrics'; items: { value: string; label: string }[] }
+  | { type: 'image'; src: string; alt: string; caption?: string }
+  | { type: 'demo'; url: string; caption?: string };
 
 export type CaseSectionDto = { id: string; heading: string; blocks: CaseBlockDto[] };
 
