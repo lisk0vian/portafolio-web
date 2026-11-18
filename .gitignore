@@ -21,3 +21,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# tool caches and design-tool state
+.impeccable/
+.playwright-cli/
+.pnpm-store/
