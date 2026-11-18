@@ -8,6 +8,18 @@
 
 @import "tailwindcss";
 
+/* Respaldo de Sora con sus métricas: mientras la fuente carga, Arial ocupa exactamente
+   el mismo espacio y el cambio no desplaza el contenido (CLS). Valores calculados con
+   fontTools sobre sora-latin-wght-normal.woff2 y arial.ttf. */
+@font-face {
+  font-family: "Sora Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Helvetica");
+  size-adjust: 111%;
+  ascent-override: 87.39%;
+  descent-override: 26.13%;
+  line-gap-override: 0%;
+}
+
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root,
@@ -63,10 +75,10 @@
 }
 
 @theme {
-  --font-display: "Sora Variable", ui-sans-serif, sans-serif;
+  --font-display: "Sora Variable", "Sora Fallback", ui-sans-serif, sans-serif;
   /* serif queda como alias del cuerpo: el sistema ya no usa serif. */
-  --font-serif: "Sora Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Sora Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Sora Variable", "Sora Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Sora Variable", "Sora Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   --text-name: clamp(52px, 10.4vw, 168px);

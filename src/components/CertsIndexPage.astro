@@ -8,6 +8,10 @@ import type { Lang } from "../scripts/store";
 import { resolvePersonal } from "../utils/personal";
 import { pageUrl } from "../utils/urls";
 import { apiStatusText } from "../utils/api-status";
+import { createPortfolioSource } from "../lib/composition";
+import { CERTS_FIELDS } from "../lib/contracts";
+import { mapCertifications } from "../lib/adapters";
+import { certsHtml, type CertsState } from "../scripts/certs-render";
 
 interface Props {
   lang: Lang;
@@ -19,7 +23,14 @@ const personal = resolvePersonal(lang);
 const homeUrl = `${pageUrl(lang, "home")}#herramientas`;
 const systemHref = pageUrl(lang, "system");
 
-const pageData = { ui: t, personal, meta: { lang, homeUrl, systemHref } };
+// Vista inicial ("todas") generada en build con los mismos datos y el mismo render que
+// el cliente: antes la página llegaba vacía y el contenido empujaba todo (CLS 0,7).
+const source = createPortfolioSource();
+const groups = await source.fetchCertificationGroups(lang);
+const rows = (await Promise.all(groups.map((g) => source.fetchCertificationsByGroup(lang, g.group, { limit: 50, fields: CERTS_FIELDS })))).flat();
+const initial: CertsState = { grupo: "todas", groups, certs: mapCertifications([...new Map(rows.map((c: any) => [c.slug, c])).values()]) };
+const html = certsHtml(initial, t);
+const pageData = { ui: t, personal, meta: { lang, homeUrl, systemHref }, initial };
 const contentJson = JSON.stringify(pageData);
 const now = new Date().getFullYear();
 ---
@@ -31,13 +42,13 @@ const now = new Date().getFullYear();
     <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] pb-[clamp(64px,8vw,120px)]">
       <div data-reveal="0" class="flex flex-wrap justify-between items-baseline gap-x-6 gap-y-2 pt-3.5 border-t border-rule font-mono text-label uppercase">
         <span>§ 03.2 — <span data-t="ui.certsT">{t.certsT}</span></span>
-        <span id="certs-total" class="text-ink-2"></span>
+        <span id="certs-total" class="text-ink-2">{html.total}</span>
       </div>
       <h1 data-reveal="0" class="font-display font-medium uppercase text-[clamp(28px,7vw,104px)] leading-[0.98] tracking-[-0.03em] mt-6 mb-0 text-balance" data-t="ui.certsT">{t.certsT}</h1>
-      <p id="certs-deck" data-reveal="60" class="text-[clamp(20px,2vw,28px)] leading-[1.35] text-ink-2 mt-4 mb-0 max-w-[40ch]"></p>
+      <p id="certs-deck" data-reveal="60" class="text-[clamp(20px,2vw,28px)] leading-[1.35] text-ink-2 mt-4 mb-0 max-w-[40ch]">{html.deck}</p>
 
-      <nav id="certs-nav" class="flex flex-wrap items-baseline gap-x-2.5 gap-y-2 py-3.5 border-y border-rule" aria-label="Grupos"></nav>
-      <div id="certs-sections"></div>
+      <nav id="certs-nav" class="flex flex-wrap items-baseline gap-x-2.5 gap-y-2 py-3.5 border-y border-rule" aria-label="Grupos" set:html={html.nav} />
+      <div id="certs-sections" set:html={html.sections} />
     </main>
 
     <footer class="border-t border-rule">
@@ -57,12 +68,11 @@ const now = new Date().getFullYear();
     import { CERTS_FIELDS } from "../lib/contracts";
     import { mapCertifications } from "../lib/adapters";
     import { getProfile, type Lang } from "../scripts/store";
+    import { certsHtml, type CertsState } from "../scripts/certs-render";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
-    const esc = (s: string) =>
-      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
     const meta = page.meta as any;
-    const state = { grupo: "todas", groups: [] as any[], certs: [] as any[] };
+    const state: CertsState = { ...((page as any).initial ?? { grupo: "todas", groups: [], certs: [] }) };
 
     function setStatus(mode: string) {
       const el = document.getElementById("api-status");
@@ -71,84 +81,17 @@ const now = new Date().getFullYear();
       el.textContent = apiStatusText(mode, document.documentElement.lang);
     }
 
-    function yearOf(ym: string | null | undefined) {
-      return ym ? String(ym).slice(0, 4) : "";
-    }
-
-    function statusOf(c: any, ui: any) {
-      if (!c.expiry) return [`${ui.certNoExp || "Sin vencimiento"}`, ""];
-      const y = yearOf(c.expiry);
-      const n = new Date().getFullYear();
-      if (y < n) return [`${ui.certExpired2 || "Vencida"}`, ""];
-      if (y === n) return [`${ui.certEnds || "Vence este año"}`, "text-accent"];
-      return [`● ${ui.certValid || "Vigente"}`, "text-accent"];
-    }
-
-    function certCard(c: any, ui: any, i: number) {
-      const [status, color] = statusOf(c, ui);
-      const no = String(i + 1).padStart(2, "0");
-      return `<article class="flex flex-col gap-4 py-7 border-b border-rule">`
-        + `<div class="flex justify-between items-baseline gap-3 font-mono text-[11px] tracking-[0.08em] uppercase">`
-        + `<span class="text-accent">${no}${c.category ? ` · ${esc(c.category)}` : ""}</span>`
-        + `<span class="${color}">${esc(status)}</span></div>`
-        + `<h2 class="font-display font-medium uppercase text-[clamp(20px,2vw,28px)] leading-[1.15] tracking-[-0.025em] m-0">${esc(c.title)}</h2>`
-        + `<div class="grid grid-cols-3 border-t border-rule">`
-        + `<div class="py-2.5 pr-3 flex flex-col gap-1"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">${esc(ui.certIssued || "Emitida")}</span><span class="font-mono text-[13px] tabular-nums">${yearOf(c.date)}</span></div>`
-        + `<div class="py-2.5 px-3 border-l border-rule flex flex-col gap-1"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">${esc(ui.certExpiresLbl || "Vence")}</span><span class="font-mono text-[13px] tabular-nums">${c.expiry ? yearOf(c.expiry) : "—"}</span></div>`
-        + `<div class="py-2.5 pl-3 border-l border-rule flex flex-col gap-1 min-w-0"><span class="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-2">ID</span><span class="font-mono text-[12px] truncate">${esc(c.ref || "")}</span></div></div>`
-        + `<div class="flex flex-wrap gap-x-3.5 gap-y-1 text-[16px] text-ink-2">${(c.skills || []).map((s: string) => `<span translate="no">${esc(s)}</span>`).join("")}</div>`
-        + `<div class="flex flex-wrap items-baseline gap-x-6 gap-y-2 mt-auto pt-1">`
-        + (c.url
-          ? `<a href="${esc(c.url)}" target="_blank" rel="noreferrer" class="mg-btn-primary text-[19px]"><span>${esc(ui.certVerifyCred || "Verificar credencial")}</span><span class="font-mono text-[13px] text-accent">↗</span></a>`
-          : "")
-        + (c.pdf && c.pdf !== "#" ? `<a href="${esc(c.pdf)}" target="_blank" rel="noreferrer" class="mg-btn-secondary">${esc(ui.certPdf || "PDF")} ↓</a>` : "")
-        + `</div></article>`;
-    }
-
-    function groupCerts(group: string) {
-      const g = String(group).toLowerCase();
-      return state.certs.filter((c: any) => (c.tags || []).some((t: string) => String(t).trim().toLowerCase() === g));
-    }
-
+    // Clave del HTML que ya trae la página: si un render produce lo mismo, no toca el DOM.
+    let last = JSON.stringify(certsHtml(state, (page as any).ui || {}));
     function render() {
-      const ui = (page as any).ui || {};
-      const all = state.grupo === "todas";
-      const groups = state.groups.length > 0
-        ? state.groups
-        : [...new Set(state.certs.flatMap((c: any) => c.tags || []).map((t: string) => String(t).toLowerCase()))]
-            .map((g) => ({ group: g, count: groupCerts(g).length }));
-      const total = state.certs.length;
-      document.getElementById("certs-total")!.textContent =
-        `${total} ${total === 1 ? (ui.certOne || "credencial") : (ui.certMany || "credenciales")}`;
-      const deck = document.getElementById("certs-deck")!;
-      deck.textContent = all
-        ? (ui.certsAllDeck || "Todas las credenciales, agrupadas por área.")
-        : `${groupCerts(state.grupo).length} ${groupCerts(state.grupo).length === 1 ? (ui.certOne || "credencial") : (ui.certMany || "credenciales")} · ${state.grupo}`;
-      const nav = document.getElementById("certs-nav")!;
-      const opts = [{ group: "todas", count: total }, ...groups];
-      nav.innerHTML = `<span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-2 mr-1">${esc(ui.certGroup || "Grupo")}</span>`
-        + opts.map((o, i) => {
-          const active = state.grupo === o.group;
-          return `<span class="flex items-baseline gap-2.5">`
-            + (i > 0 ? `<span class="font-serif text-ink-2" aria-hidden="true">/</span>` : "")
-            + `<button type="button" data-grupo="${esc(o.group)}" aria-current="${active ? "true" : "false"}" class="text-[19px] leading-none py-0.5 px-0 border-0 bg-transparent cursor-pointer whitespace-nowrap ${active ? "text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]" : "text-ink-2 hover:text-ink"}">${esc(o.group)}<sup class="font-mono text-[10px] ml-0.5">${o.count}</sup></button></span>`;
-        }).join("");
-
-      const sections = all
-        ? groups.map((g: any) => ({ group: g.group, certs: groupCerts(g.group) })).filter((s: any) => s.certs.length > 0)
-        : [{ group: state.grupo, certs: groupCerts(state.grupo) }];
-      document.getElementById("certs-sections")!.innerHTML = sections.length === 0
-        ? `<p class="text-[19px] text-ink-2 py-8">${esc(ui.certEmpty || "")}</p>`
-        : sections.map((s: any) => {
-          const head = all
-            ? `<div class="flex items-baseline gap-3 mt-[clamp(40px,5vw,64px)] pb-2.5 border-b border-rule">`
-              + `<span class="font-display font-medium uppercase text-[clamp(22px,2.4vw,32px)] tracking-[-0.025em]">${esc(s.group)}</span>`
-              + `<span class="font-mono text-[11px] text-accent">${s.certs.length}</span></div>`
-            : "";
-          return `<section>${head}<div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-x-[clamp(24px,3vw,48px)] mt-2">`
-            + s.certs.map((c: any, i: number) => certCard(c, ui, i)).join("")
-            + `</div></section>`;
-        }).join("");
+      const h = certsHtml(state, (page as any).ui || {});
+      const key = JSON.stringify(h);
+      if (key === last) return; // nada cambió: no se toca el DOM
+      last = key;
+      document.getElementById("certs-total")!.textContent = h.total;
+      document.getElementById("certs-deck")!.textContent = h.deck;
+      document.getElementById("certs-nav")!.innerHTML = h.nav;
+      document.getElementById("certs-sections")!.innerHTML = h.sections;
     }
 
     function syncUrl() {
@@ -161,8 +104,11 @@ const now = new Date().getFullYear();
     function applyProfile() {
       const profile = getProfile();
       const p = (page as any)[profile] as any;
-      state.groups = p?.certGroups || [];
-      state.certs = p?.certs || [];
+      // Esta página trae sus datos en `initial`; solo se usan los del perfil si existen.
+      if (p?.certs?.length) {
+        state.groups = p.certGroups || [];
+        state.certs = p.certs;
+      }
       // Solo se valida el grupo pedido cuando ya hay grupos (si no, se pierde ?grupo= al cargar).
       if (state.grupo !== "todas" && state.groups.length > 0 && !state.groups.some((g: any) => g.group === state.grupo)) state.grupo = "todas";
       render();

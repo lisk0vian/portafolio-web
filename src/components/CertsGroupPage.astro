@@ -11,6 +11,7 @@ import { apiStatusText } from "../utils/api-status";
 import { CERTS_FIELDS } from "../lib/contracts";
 import { createPortfolioSource } from "../lib/composition";
 import { mapCertifications } from "../lib/adapters";
+import { groupListHtml } from "../scripts/certs-render";
 
 interface Props {
   lang: Lang;
@@ -34,6 +35,8 @@ try {
 const pageData = { ui: t, group, certs: initial, personal, meta: { lang, certsUrl } };
 const contentJson = JSON.stringify(pageData);
 const BATCH = 10;
+// Lista inicial en el HTML (mismo render que el cliente): sin saltos de layout al cargar.
+const html = groupListHtml(initial, "", BATCH, t);
 ---
 
 <Layout title={`${group} — ${t.certsT}`} description={`${initial.length} ${t.certsCount}`} lang={lang}>
@@ -43,7 +46,7 @@ const BATCH = 10;
     <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)]">
       <div class="flex flex-wrap justify-between gap-x-6 gap-y-2 py-[18px] font-mono text-xs tracking-[0.06em] uppercase text-ink-2">
         <a href={`${pageUrl(lang, "home")}#herramientas`} class="no-underline">← <span>{t.skillT}</span></a>
-        <span id="group-meta"></span>
+        <span id="group-meta">{html.meta}</span>
       </div>
 
       <section class="py-[clamp(40px,6vw,88px)] pb-[clamp(32px,4vw,56px)] border-t border-rule">
@@ -56,8 +59,8 @@ const BATCH = 10;
           class="flex-1 basis-[240px] min-w-0 bg-transparent border-b border-rule focus:border-accent outline-none font-mono text-[13px] py-2 placeholder:text-ink-2" />
       </div>
 
-      <div id="group-list" class="border-b border-rule"></div>
-      <div id="group-more" class="py-6"></div>
+      <div id="group-list" class="border-b border-rule" set:html={html.list} />
+      <div id="group-more" class="py-6" set:html={html.more} />
     </main>
 
     <footer class="border-t border-rule">
@@ -77,10 +80,9 @@ const BATCH = 10;
     import { createPortfolioSource } from "../lib/composition";
     import { mapCertifications } from "../lib/adapters";
     import type { Lang } from "../scripts/store";
+    import { groupListHtml } from "../scripts/certs-render";
 
     const page = JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData;
-    const esc = (s: string) =>
-      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
     const BATCH = 10;
     const state = { q: "", shown: BATCH };
     const store = { certs: ((page as any).certs || []) as any[] };
@@ -93,42 +95,23 @@ const BATCH = 10;
       }
     }
 
-    function matches(c: any, q: string) {
-      if (!q) return true;
-      const hay = `${c.title} ${c.issuer} ${(c.skills || []).join(" ")} ${(c.tags || []).join(" ")}`.toLowerCase();
-      return q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
-    }
-
-    function row(c: any, ui: any) {
-      const inner = `<span class="font-mono text-[12px] text-ink-2 flex-[0_0_64px]">${esc(c.date || "")}</span>`
-        + `<div class="flex-1 basis-[220px] min-w-0"><div class="font-serif text-[19px] leading-[1.25]">${esc(c.title)}${c.featured ? ` <span class="font-mono text-[11px] text-accent">★</span>` : ""}</div>`
-        + `<div class="text-[13px] text-ink-2 mt-0.5">${esc(c.issuer)}${c.category ? ` · <span class="font-mono text-[11px] uppercase tracking-[0.06em]">${esc(c.category)}</span>` : ""}${c.expired ? ` · <span class="font-mono text-[11px] uppercase tracking-[0.06em]">${esc(ui.certExpired || "expirada")}</span>` : ""}</div></div>`
-        + `<div class="flex-[0_1_180px] flex flex-wrap gap-1.5">${(c.tags || []).map((s: string) => `<span class="mg-tag">${esc(s)}</span>`).join("")}</div>`
-        + (c.url
-          ? `<a href="${esc(c.url)}" target="_blank" rel="noreferrer" class="font-serif text-[20px] leading-none no-underline" aria-label="${esc(c.title)}">↗</a>`
-          : `<span class="font-mono text-[11px] text-ink-2">${esc(c.ref || "")}</span>`);
-      return `<div class="flex flex-wrap gap-x-6 gap-y-2 items-baseline py-4 border-t border-rule ${c.expired ? "opacity-70" : ""}">${inner}</div>`;
-    }
-
+    let last = JSON.stringify(groupListHtml(store.certs, "", BATCH, (page as any).ui));
     function render() {
-      const ui = (page as any).ui;
-      const listEl = document.getElementById("group-list")!;
-      const moreEl = document.getElementById("group-more")!;
-      const metaEl = document.getElementById("group-meta")!;
-      const shown = store.certs.filter((c: any) => matches(c, state.q));
-      metaEl.textContent = `${store.certs.length} ${ui.certsCount || ""}`;
-      listEl.innerHTML = shown.length === 0
-        ? `<p class="text-[15px] text-ink-2 py-4 border-t border-rule">${esc(ui.certEmpty || "")}</p>`
-        : shown.slice(0, state.shown).map((c: any) => row(c, ui)).join("");
-      const rest = shown.length - state.shown;
-      moreEl.innerHTML = rest > 0
-        ? `<button type="button" id="group-more-btn" class="mg-btn-secondary">${esc(ui.certMore || "Ver más")} (${rest}) ↓</button>`
-        : "";
-      document.getElementById("group-more-btn")?.addEventListener("click", () => {
-        state.shown += BATCH;
-        render();
-      });
+      const h = groupListHtml(store.certs, state.q, state.shown, (page as any).ui);
+      const key = JSON.stringify(h);
+      if (key !== last) {
+        last = key;
+        document.getElementById("group-meta")!.textContent = h.meta;
+        document.getElementById("group-list")!.innerHTML = h.list;
+        document.getElementById("group-more")!.innerHTML = h.more;
+      }
     }
+    // Un solo listener delegado: el botón puede venir del HTML del build o de un render.
+    document.getElementById("group-more")?.addEventListener("click", (e) => {
+      if (!(e.target as HTMLElement).closest("#group-more-btn")) return;
+      state.shown += BATCH;
+      render();
+    });
 
     function syncUrl() {
       const url = new URL(window.location.href);

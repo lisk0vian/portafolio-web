@@ -89,7 +89,11 @@ function block(b: CaseBlockDto): string {
     case "bars": {
       // Pequeños múltiplos: cada métrica con su propia escala (ms, KB y puntos no comparten eje).
       // "Antes" = contorno con trama, "Después" = acento sólido: se distinguen sin depender del color.
-      const fmt = (n: number, unit: string) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, lang === "es" ? "." : ",")}${unit ? " " + unit : ""}`;
+      const fmt = (n: number, unit: string) => {
+        const [int, dec] = String(n).split(".");
+        const es = lang === "es";
+        return `${int.replace(/\B(?=(\d{3})+(?!\d))/g, es ? "." : ",")}${dec ? (es ? "," : ".") + dec : ""}${unit ? " " + unit : ""}`;
+      };
       const bar = (v: number, max: number, unit: string, kind: "before" | "after", label: string, metric: string) =>
         `<div class="flex items-center gap-2.5 min-w-0" title="${esc(`${metric} · ${label}: ${fmt(v, unit)}`)}">`
         + `<span class="block h-3.5 rounded-r-[4px] shrink-0 ${kind === "before" ? "border border-ink-2 mg-hatch" : "bg-accent"}" style="width:${Math.max(1.5, (v / max) * 100 * 0.78).toFixed(1)}%"></span>`
@@ -106,7 +110,7 @@ function block(b: CaseBlockDto): string {
           + `<span class="font-mono text-[12px] tabular-nums ${good ? "text-accent" : "text-ink-2"}">${pct > 0 ? "+" : ""}${pct} %</span></div>`
           + `<div class="flex flex-col gap-1.5 min-w-0">${bar(r.before, max, r.unit, "before", b.legend.before, r.label)}${bar(r.after, max, r.unit, "after", b.legend.after, r.label)}</div></div>`;
       }).join("");
-      return `<figure class="m-0 min-w-0" role="group" aria-label="${esc(b.caption ?? "")}">${legend}${rows}${caption(b.caption)}</figure>`;
+      return `<figure class="m-0 min-w-0">${legend}${rows}${caption(b.caption)}</figure>`;
     }
     case "metrics":
       return `<dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] border-t border-rule">${b.items
