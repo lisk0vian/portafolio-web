@@ -174,7 +174,7 @@ function readConfig(root: HTMLElement): TermData {
     return {
       name: "", role: "", bio: "", projects: [], stack: [],
       email: "", links: [], profile: "fullstack", theme: "light",
-      lang: "es", langAltUrl: "/en/",
+      lang: "es", langAltUrl: `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}en/`,
     };
   }
 }

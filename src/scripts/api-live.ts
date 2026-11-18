@@ -1,7 +1,7 @@
 // Revalidación cliente de la home contra un `PortfolioSource` inyectado.
 // Buena práctica DI: no importa el singleton axios directo; recibe el puerto
 // desde `composition.ts`. Por defecto usa mock o live según PUBLIC_USE_MOCK.
-import { getApiBaseUrl } from "../lib/api";
+import { getDataBaseUrl } from "../lib/live-source";
 import { createPortfolioSource } from "../lib/composition";
 import type { PortfolioSource } from "../lib/ports";
 import { mergeHomeLive } from "../lib/adapters";
@@ -88,7 +88,7 @@ export async function refreshHomeFromApi(
   try {
     const live = await source.fetchHomeLive(lang);
     if (import.meta.env.DEV) {
-      console.groupCollapsed(`[api] live (${lang}): ${getApiBaseUrl()}`);
+      console.groupCollapsed(`[api] live (${lang}): ${getDataBaseUrl()}`);
       console.log("profile:", live.profile);
       console.log("projects:", live.projects);
       console.log("experience:", live.experience);

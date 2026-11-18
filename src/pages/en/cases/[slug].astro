@@ -1,0 +1,10 @@
+---
+// Case studies (en), one page per case in the data repo, built at build time.
+import CasePage from "../../../components/CasePage.astro";
+import { caseStaticPaths } from "../../../lib/case-paths";
+
+export const getStaticPaths = () => caseStaticPaths("en");
+const { c, nextTitle } = Astro.props;
+---
+
+<CasePage lang="en" c={c} nextTitle={nextTitle} />

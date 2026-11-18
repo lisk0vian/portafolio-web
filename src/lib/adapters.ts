@@ -52,6 +52,7 @@ export function mapProjects(projects: ProjectDto[]): WebProject[] {
       metric: p.metric ?? (p.featured ? "★ destacado" : ""),
       slug: p.slug,
       links: p.links ?? {},
+      ...(p.case ? { case: p.case } : {}),
       // Ficha 004: detalle del destacado y de las filas desplegables.
       ...(p.role ? { role: p.role } : {}),
       ...(p.problem ? { problem: p.problem } : {}),

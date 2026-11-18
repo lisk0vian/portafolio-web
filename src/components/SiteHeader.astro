@@ -13,11 +13,13 @@ interface Props {
   page: SitePage;
   themeLabels: string;
   spyFallback?: string;
+  /** URLs del selector de idioma cuando la página no es una de `SitePage` (p. ej. un caso). */
+  altUrls?: { es: string; en: string };
 }
 
-const { lang, page, themeLabels, spyFallback = "" } = Astro.props;
-const esUrl = pageUrl("es", page);
-const enUrl = pageUrl("en", page);
+const { lang, page, themeLabels, spyFallback = "", altUrls } = Astro.props;
+const esUrl = altUrls?.es ?? pageUrl("es", page);
+const enUrl = altUrls?.en ?? pageUrl("en", page);
 const meta = "font-mono text-[11px] tracking-[0.14em] uppercase";
 const seg = "h-7 px-2 sm:px-3 uppercase border-0 bg-transparent text-ink-2 cursor-pointer whitespace-nowrap transition-colors hover:text-ink data-[active=true]:bg-accent data-[active=true]:text-paper";
 ---

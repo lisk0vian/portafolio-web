@@ -8,7 +8,7 @@ import type { Lang } from "../scripts/store";
 import { resolvePersonal } from "../utils/personal";
 import { pageUrl } from "../utils/urls";
 import { apiStatusText } from "../utils/api-status";
-import { CERTS_FIELDS } from "../lib/api";
+import { CERTS_FIELDS } from "../lib/contracts";
 import { createPortfolioSource } from "../lib/composition";
 import { mapCertifications } from "../lib/adapters";
 
@@ -73,7 +73,7 @@ const BATCH = 10;
   <script>
     import { apiStatusText } from "../utils/api-status";
     import { initSite, type PageData } from "../scripts/site";
-    import { CERTS_FIELDS } from "../lib/api";
+    import { CERTS_FIELDS } from "../lib/contracts";
     import { createPortfolioSource } from "../lib/composition";
     import { mapCertifications } from "../lib/adapters";
     import type { Lang } from "../scripts/store";

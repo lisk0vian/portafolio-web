@@ -15,7 +15,8 @@ import { pageUrl, altPageUrl } from "../utils/urls";
 import { apiStatusText } from "../utils/api-status";
 import { site } from "../data/site";
 import type { TermData } from "../scripts/terminal";
-import { resolveSourceKind, type SourceKind } from "../lib/composition";
+import { createPortfolioSource, resolveSourceKind, type SourceKind } from "../lib/composition";
+import { mergeHomeLive } from "../lib/adapters";
 import { workHtml, releaseHeroHtml, aboutHtml, factsHtml, quoteHtml, principlesHtml, nowHtml, directoryHtml, pubFiltersHtml, pubsHtml, expHtml, eduHtml, certRowClass } from "../scripts/home-render";
 
 interface Props {
@@ -36,6 +37,11 @@ const resolved = {
   fullstack: { ...getProfileData("fullstack"), projects: withNumbers(getProfileData("fullstack").projects), certs: [], certGroups: [] },
   data: { ...getProfileData("data"), projects: withNumbers(getProfileData("data").projects), certs: [], certGroups: [] },
 };
+
+// Datos reales en el HTML estático (SEO, sin parpadeo); el cliente revalida después.
+const buildLive = await createPortfolioSource(sourceKind).fetchHomeLive(lang);
+if (buildLive.errors.length) console.warn(`[data] build ${lang}:`, buildLive.errors);
+mergeHomeLive({ ui: t, fullstack: resolved.fullstack, data: resolved.data, personal, meta: { lang, homeUrl: "" } }, buildLive);
 
 const termFor = (profile: Profile): TermData => {
   const pp = resolved[profile];
@@ -188,7 +194,7 @@ const termJson = JSON.stringify(termDataMap);
           <div class="flex-[0_1_340px] min-w-[250px] flex flex-col gap-8 min-[1100px]:sticky min-[1100px]:top-24">
             <figure data-reveal="0" class="m-0">
               <div data-dither-frame data-state="loading" class="group mg-cross relative aspect-[4/5] border border-rule bg-paper-2">
-                <canvas data-dither-src="/retrato.jpg" role="img" aria-label={t.portraitCap} class="absolute inset-0 w-full h-full"></canvas>
+                <canvas data-dither-src="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/foto.jpg" role="img" aria-label={t.portraitCap} class="absolute inset-0 w-full h-full"></canvas>
                 <span class="absolute inset-0 hidden group-data-[state=empty]:flex items-center justify-center font-mono text-label uppercase text-ink-2"><span data-t="ui.portrait">{t.portrait}</span></span>
               </div>
               <figcaption class="mg-figcaption mt-3"><span class="text-ink">Fig. 2 —</span>{` `}<span data-t="ui.portraitCap">{t.portraitCap}</span></figcaption>

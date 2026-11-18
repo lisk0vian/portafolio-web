@@ -412,17 +412,23 @@ export const education = [
 
 /* Respaldo de slugs para getStaticPaths si la API no responde en build.
    Editar con los grupos reales; la plantilla no depende de los valores. */
-export const certGroupFallback = ["aws", "cloud", "devops"];
+export const certGroupFallback = ["aws", "datos", "ia", "sql", "web"];
 
 /* ---------- Caso de estudio ---------- */
 export const caseUi = {
   back: t("Volver al índice", "Back to index"),
   kicker: t("Caso de estudio", "Case study"),
+  indexTitle: t("Casos de estudio", "Case studies"),
+  indexDeck: t("Cómo diseñé, construí y llevé a producción cada proyecto: arquitectura, decisiones, código y resultados.", "How I designed, built and shipped each project: architecture, decisions, code and results."),
+  read: t("Leer caso", "Read case"),
   toc: t("Contenido", "Contents"),
   metric: t("Métrica", "Metric"),
   before: t("Antes", "Before"),
   after: t("Después", "After"),
   next: t("Siguiente caso", "Next case"),
+  stack: t("Stack", "Stack"),
+  links: t("Enlaces", "Links"),
+  source: t("Ver archivo original", "View original file"),
   ds: t("Sistema de diseño", "Design system"),
   light: t("Claro", "Light"),
   dark: t("Oscuro", "Dark"),
@@ -431,70 +437,6 @@ export const caseUi = {
   dat: t("Datos", "Data"),
 };
 
-export const caseFullstack = {
-  title: t("Plataforma de pagos", "Payments platform"),
-  deck: t(
-    "Cómo rediseñamos la conciliación de pagos para 4.000 comercios sin detener el servicio.",
-    "How we redesigned payment reconciliation for 4,000 merchants without stopping the service."
-  ),
-  meta: [
-    { k: t("Rol", "Role"), v: t("Líder técnico · Ingeniería", "Tech lead · Engineering") },
-    { k: t("Año", "Year"), v: "2026" },
-    { k: t("Duración", "Duration"), v: t("7 meses", "7 months") },
-    { k: "Stack", v: "Go · PostgreSQL · React · AWS" },
-  ],
-  figPh: t("captura del panel de conciliación", "reconciliation dashboard screenshot"),
-  figCap: t("Panel de conciliación en tiempo casi real.", "Near real-time reconciliation dashboard."),
-  heads: [t("Problema", "Problem"), t("Enfoque", "Approach"), t("Arquitectura", "Architecture"), t("Resultados", "Results"), t("Aprendizajes", "Lessons")],
-  bodies: [
-    t("La conciliación se hacía con scripts nocturnos y hojas de cálculo. Los errores tardaban días en detectarse y soporte recibía cientos de tickets por semana.", "Reconciliation ran on nightly scripts and spreadsheets. Errors took days to surface and support received hundreds of tickets a week."),
-    t("Separamos la ingesta de eventos del cálculo de saldos, introdujimos un libro contable de doble entrada y construimos un panel donde cada comercio ve su dinero en tiempo casi real.", "We split event ingestion from balance computation, introduced a double-entry ledger and built a dashboard where every merchant sees their money in near real time."),
-    t("Cada movimiento es un asiento inmutable. Los saldos se derivan, nunca se editan; eso hizo triviales las auditorías y eliminó una clase entera de errores.", "Every movement is an immutable entry. Balances are derived, never edited; that made audits trivial and removed a whole class of bugs."),
-    t("Tras tres meses en producción, estos fueron los cambios medidos:", "After three months in production, these were the measured changes:"),
-    t("Un modelo de datos correcto simplifica más código que cualquier framework. El panel fue la parte visible, pero el libro contable fue lo que eliminó los tickets.", "A correct data model simplifies more code than any framework. The dashboard was the visible part, but the ledger is what killed the tickets."),
-  ],
-  code: "// ledger/entry.go\ntype Entry struct {\n  ID       uuid.UUID\n  Account  string\n  Amount   decimal.Decimal // + débito / − crédito\n  PostedAt time.Time\n}",
-  codeCap: t("Listado 1 — Estructura de un asiento contable.", "Listing 1 — Ledger entry structure."),
-  rows: [
-    { m: t("Latencia p95 de la API", "API p95 latency"), a: "840 ms", b: "120 ms" },
-    { m: t("Tickets de soporte / semana", "Support tickets / week"), a: "310", b: "45" },
-    { m: t("Tiempo de conciliación", "Reconciliation time"), a: "24 h", b: "5 min" },
-  ],
-  quote: t("El panel fue lo visible; el libro contable fue lo que resolvió el problema.", "The dashboard was what people saw; the ledger is what solved the problem."),
-  next: t("Editor colaborativo", "Collaborative editor"),
-};
 
-export const caseData = {
-  title: t("Predicción de abandono", "Churn prediction"),
-  deck: t("Un modelo de churn que el equipo comercial entiende, usa y en el que confía.", "A churn model the sales team understands, uses and trusts."),
-  meta: [
-    { k: t("Rol", "Role"), v: t("Científico de datos", "Data scientist") },
-    { k: t("Año", "Year"), v: "2026" },
-    { k: t("Duración", "Duration"), v: t("4 meses", "4 months") },
-    { k: "Stack", v: "Python · XGBoost · SHAP · dbt" },
-  ],
-  figPh: t("curva ROC / gráfico SHAP", "ROC curve / SHAP plot"),
-  figCap: t("Importancia de variables (SHAP) sobre el conjunto de validación.", "Feature importance (SHAP) on the validation set."),
-  heads: [t("Problema", "Problem"), t("Enfoque", "Approach"), t("Modelo", "Model"), t("Resultados", "Results"), t("Aprendizajes", "Lessons")],
-  bodies: [
-    t("El 9% de los clientes cancelaba cada trimestre y el equipo comercial solo se enteraba cuando ya era tarde para actuar.", "9% of customers churned every quarter and the sales team only found out when it was too late to act."),
-    t("Construimos variables de comportamiento con dbt, entrenamos un modelo de gradient boosting con validación temporal y generamos explicaciones SHAP por cliente para priorizar llamadas.", "We built behavioral features with dbt, trained a gradient boosting model with temporal validation and generated per-customer SHAP explanations to prioritize calls."),
-    t("Validación por ventanas de tiempo para evitar fuga de información, calibración de probabilidades y un umbral elegido según la capacidad real del equipo comercial.", "Time-window validation to avoid leakage, probability calibration and a threshold chosen from the real capacity of the sales team."),
-    t("Evaluado sobre el trimestre siguiente, fuera de muestra:", "Evaluated on the following quarter, out of sample:"),
-    t("La métrica que importó no fue el AUC, sino cuántas llamadas terminaron en retención. Diseñar la explicación fue tan importante como entrenar el modelo.", "The metric that mattered was not AUC, but how many calls ended in retention. Designing the explanation mattered as much as training the model."),
-  ],
-  code: "model = xgb.XGBClassifier(\n    n_estimators=600, max_depth=5,\n    learning_rate=0.03, subsample=0.8,\n)\nmodel.fit(X_train, y_train,\n          eval_set=[(X_val, y_val)])\nexplainer = shap.TreeExplainer(model)",
-  codeCap: t("Listado 1 — Entrenamiento y explicador.", "Listing 1 — Training and explainer."),
-  rows: [
-    { m: "AUC-ROC", a: "0.74", b: "0.91" },
-    { m: t("Precisión @ top 10%", "Precision @ top 10%"), a: "0.31", b: "0.62" },
-    { m: t("Churn trimestral", "Quarterly churn"), a: "9.0%", b: "6.8%" },
-  ],
-  quote: t("Un modelo que nadie entiende es un modelo que nadie usa.", "A model nobody understands is a model nobody uses."),
-  next: t("Motor de recomendaciones", "Recommendation engine"),
-};
-
-export const caseProfiles = { fullstack: caseFullstack, data: caseData };
-
-export const siteContent = { ui, fullstack, data, caseUi, caseFullstack, caseData };
+export const siteContent = { ui, fullstack, data, caseUi };
 export type SiteContent = typeof siteContent;

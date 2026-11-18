@@ -1,0 +1,59 @@
+---
+// Índice de casos de estudio (es/en), desde `{lang}/case-studies/index.json`.
+import Layout from "../layouts/Layout.astro";
+import SiteHeader from "./SiteHeader.astro";
+import { caseUi, pick } from "../data/content";
+import { GithubPortfolioSource } from "../lib/live-source";
+import type { Lang } from "../scripts/store";
+import { resolvePersonal } from "../utils/personal";
+import { caseUrl, pageUrl } from "../utils/urls";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = pick(caseUi, lang);
+const personal = resolvePersonal(lang);
+const cases = await new GithubPortfolioSource().fetchCaseIndex(lang);
+const contentJson = JSON.stringify({ ui: t, fullstack: {}, data: {}, personal, meta: { lang, homeUrl: pageUrl(lang, "home") } });
+---
+
+<Layout title={`${t.indexTitle} — ${personal.name}`} description={t.indexDeck} lang={lang}>
+  <div class="min-h-screen bg-paper text-ink font-sans antialiased">
+    <SiteHeader lang={lang} page="case" themeLabels={`${t.light}|${t.dark}`} spyFallback={t.indexTitle} />
+    <main class="max-w-page mx-auto px-[clamp(16px,3vw,40px)]">
+      <div class="py-[18px] font-mono text-xs tracking-[0.06em] uppercase text-ink-2">
+        <a href={`${pageUrl(lang, "home")}#trabajo`} class="no-underline">← {t.back}</a>
+      </div>
+      <section class="py-[clamp(40px,6vw,88px)] border-t border-rule">
+        <h1 class="font-display font-semibold uppercase text-[clamp(36px,6vw,96px)] leading-[0.95] tracking-[-0.035em] m-0">{t.indexTitle}</h1>
+        <p class="text-[clamp(20px,2.2vw,30px)] leading-[1.35] text-ink-2 mt-7 mb-0 max-w-[40ch] text-pretty">{t.indexDeck}</p>
+      </section>
+      <ol class="m-0 p-0 list-none border-t border-rule pb-[clamp(56px,7vw,104px)]">
+        {cases.map((c, i) => (
+          <li class="border-b border-rule">
+            <a href={caseUrl(lang, c.slug)} class="group grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[64px_minmax(0,1fr)_auto] gap-x-6 gap-y-3 items-baseline py-7 no-underline">
+              <span class="hidden md:block font-mono text-[13px] text-accent">{String(i + 1).padStart(2, "0")}</span>
+              <span class="min-w-0 flex flex-col gap-2">
+                <span class="font-display font-medium uppercase text-[clamp(24px,2.6vw,38px)] leading-[1.05] tracking-[-0.03em] group-hover:text-accent">{c.title}</span>
+                <span class="text-[15px] leading-[1.55] text-ink-2 max-w-[70ch] text-pretty">{c.deck}</span>
+                <span class="flex flex-wrap gap-1.5 mt-1">{c.stack.slice(0, 5).map((s) => <span class="mg-chip">{s}</span>)}</span>
+              </span>
+              <span class="font-mono text-[12px] tracking-[0.08em] uppercase text-ink-2 group-hover:text-accent whitespace-nowrap">{t.read} →</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </main>
+    <footer class="border-t border-rule">
+      <div class="max-w-page mx-auto px-[clamp(16px,3vw,40px)] py-5 pb-10 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-2">© 2026 {personal.name}</div>
+    </footer>
+  </div>
+  <script type="application/json" id="mg-content" set:html={contentJson} />
+  <script>
+    import { initSite, type PageData } from "../scripts/site";
+    window.__mgRender = () => {};
+    initSite(JSON.parse(document.getElementById("mg-content")!.textContent || "{}") as PageData);
+  </script>
+</Layout>

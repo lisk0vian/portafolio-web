@@ -7,9 +7,10 @@
 //
 // Implementaciones:
 // - `MockPortfolioSource` (src/lib/mock-source.ts): datos de la plantilla.
-// - `LivePortfolioSource` (src/lib/live-source.ts): wrapper fino sobre api.ts.
+// - `GithubPortfolioSource` (src/lib/live-source.ts): JSON del repo de datos (raw de GitHub).
 import type {
   CaseStudyDto,
+  CaseStudySummaryDto,
   CertificationDto,
   CertificationGroupDto,
   CertificationsQuery,
@@ -57,6 +58,18 @@ export interface PortfolioSource {
     query?: PublicationsQuery,
   ): Promise<Partial<PublicationDto>[]>;
   fetchEducation(lang: Lang): Promise<EducationDto[]>;
-  fetchCaseStudy(lang: Lang, slug: string): Promise<Partial<CaseStudyDto>>;
+  fetchCaseStudy(lang: Lang, slug: string): Promise<CaseStudyDto>;
+  fetchCaseIndex(lang: Lang): Promise<CaseStudySummaryDto[]>;
   fetchHomeLive(lang: Lang): Promise<HomeLiveData>;
+}
+
+export class ApiError extends Error {
+  status?: number;
+  path: string;
+  constructor(path: string, message: string, status?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.path = path;
+    this.status = status;
+  }
 }

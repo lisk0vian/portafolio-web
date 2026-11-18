@@ -10,6 +10,7 @@ interface Props {
 }
 
 const { title, description, lang = Astro.currentLocale ?? "es" } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 ---
 
 <!doctype html>
@@ -19,8 +20,15 @@ const { title, description, lang = Astro.currentLocale ?? "es" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href={`${base}favicon.ico`} sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
+    <link rel="manifest" href={`${base}site.webmanifest`} />
+    <meta name="theme-color" content="#12151a" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://raw.githubusercontent.com/lisk0vian/me/main/branding/linkedin/preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
     <script is:inline>
       try {

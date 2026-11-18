@@ -29,7 +29,7 @@ export const site = {
     github: { label: "GitHub", handle: "@lisk0vian", href: "https://github.com/lisk0vian", note: { es: "Código abierto, experimentos y notebooks.", en: "Open source, experiments and notebooks." } },
     linkedin: { label: "LinkedIn", handle: "@jeremi-aron", href: "https://www.linkedin.com/in/jeremi-aron", note: { es: "Trayectoria y recomendaciones.", en: "Career history and recommendations." } },
     kaggle: { label: "Orcid", handle: "@0009-0005-6789-076X", href: "https://orcid.org/0009-0005-6789-076X", note: { es: "Publicaciones y registro de investigador.", en: "Publications and researcher record." } },
-    cv: { label: "CV (PDF)", handle: "cv-jerremi-chancan.pdf", href: "/cv-jerremi-chancan.pdf" },
+    cv: { label: "CV (PDF)", handle: "cv-jerremi-chancan.pdf", href: "https://raw.githubusercontent.com/lisk0vian/portafolio-api/main/files/cv/cv-es.pdf" },
   } as Record<string, { label: string; handle: string; href: string; note?: LocaleText }>,
 };
 

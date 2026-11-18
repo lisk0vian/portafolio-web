@@ -61,6 +61,9 @@ export type ProfileDto = {
   now?: NowDto;
   /** NUEVO (ficha 005): textos que cambian por edición; ganan sobre los campos base. */
   editions?: Partial<Record<Edition, ProfileEditionDto>>;
+  /** Marca desde el repo `me` (URLs raw). */
+  avatarUrl?: string;
+  logo?: { dark: string; light: string };
 };
 
 /** NUEVO (ficha 005): titular del hero en tres partes ("… *de punta a punta* …"). */
@@ -84,6 +87,8 @@ export type ProjectDto = {
   featured: boolean;
   year: number;
   links: ProjectLinksDto;
+  /** Slug del caso de estudio del proyecto, si tiene uno. */
+  case?: string;
   metric?: string;
   /** NUEVO (ficha 004): rol en el proyecto, p. ej. "Líder técnico". */
   role?: string;
@@ -206,16 +211,39 @@ export type EducationDto = {
   editions?: Edition[];
 };
 
-export type CaseStudyDto = {
+/** Bloques de un caso de estudio (repo de datos: {lang}/case-studies/<slug>.json). */
+export type CaseBlockDto =
+  | { type: 'paragraph'; text: string }
+  | { type: 'list'; items: string[] }
+  | { type: 'code'; lang: string; code: string; caption?: string; source?: string }
+  | { type: 'diagram'; format: 'mermaid'; source: string; caption?: string }
+  | { type: 'table'; head: string[]; rows: string[][]; caption?: string }
+  | { type: 'metrics'; items: { value: string; label: string }[] };
+
+export type CaseSectionDto = { id: string; heading: string; blocks: CaseBlockDto[] };
+
+export type CaseStudySummaryDto = {
   slug: string;
   projectSlug: string;
   title: string;
   deck: string;
+  year: number;
+  stack: string[];
+};
+
+export type CaseStudyDto = CaseStudySummaryDto & {
+  meta: { label: string; value: string }[];
+  links: { label: string; url: string }[];
+  sections: CaseSectionDto[];
   quote?: string;
   nextCaseSlug?: string;
 };
 
-export const API_VERSION = '1';
+// Campos completos que pide el home (antes `CERTS_FIELDS`/`PUBS_FIELDS` de api.ts).
+export const CERTS_FIELDS =
+  'slug,title,issuer,category,tags,issueDate,expiryDate,credentialId,credentialUrl,skills,featured,level';
+export const PUBS_FIELDS =
+  'slug,title,authors,venue,type,year,publishedAt,doi,pdfUrl,url,abstract,keywords,featured';
 
 // Allowlist espejo de la API para `fields=` (certifications, publications, case-studies).
 // La API lanza 400 con `Unknown field(s)` si llega otro campo; el mock replica eso.

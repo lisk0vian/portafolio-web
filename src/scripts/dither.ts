@@ -11,6 +11,7 @@ export function initDither(scope: ParentNode = document) {
     const frame = canvas.closest<HTMLElement>("[data-dither-frame]");
     const img = new Image();
     img.decoding = "async";
+    img.crossOrigin = "anonymous"; // la foto viene del raw de GitHub (CORS *): sin esto el canvas queda bloqueado
     img.src = canvas.dataset.ditherSrc!;
 
     const paint = () => {

@@ -1,46 +1,25 @@
-# Astro Starter Kit: Basics
+# portafolio-web
 
-```sh
-pnpm create astro@latest -- --template basics
-```
+Portafolio de Jerremi Aron Chancan Labajos ([lisk0vian](https://github.com/lisk0vian)), hecho con Astro y publicado en GitHub Pages:
+**https://lisk0vian.github.io/portafolio-web/**
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## De dónde salen los datos
 
-## 🚀 Project Structure
+Todo el contenido (perfil, proyectos, experiencia, certificaciones, publicaciones, casos de estudio y CV) vive en el repo [portafolio-api](https://github.com/lisk0vian/portafolio-api) como JSON por idioma. El sitio los lee de `raw.githubusercontent.com`:
 
-Inside of your Astro project, you'll see the following folders and files:
+- **En build:** el HTML se genera con los datos reales y una página por caso de estudio (`/casos/<slug>/`, `/en/cases/<slug>/`).
+- **En el navegador:** el home vuelve a pedir los JSON, así un cambio en los datos se ve sin redesplegar.
+- La marca (íconos, foto) viene de [lisk0vian/me](https://github.com/lisk0vian/me).
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+El workflow `deploy` publica en cada push a `main`, a diario (para recoger casos nuevos) y a mano.
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Comandos
 
-## 🧞 Commands
+| Comando | Acción |
+|---|---|
+| `pnpm install` | Instala dependencias |
+| `pnpm dev` | Servidor local en `localhost:4321/portafolio-web/` |
+| `pnpm build` | Genera `dist/` |
+| `pnpm preview` | Sirve `dist/` |
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Variables (`.env.development`): `PUBLIC_DATA_URL` (base de los JSON; por defecto el raw de GitHub) y `PUBLIC_USE_MOCK=true` para usar datos plantilla sin red. Para probar datos locales sin hacer push: `node ../api/scripts/serve.mjs` y `PUBLIC_DATA_URL=http://localhost:8787`.

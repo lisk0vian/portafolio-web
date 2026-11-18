@@ -53,7 +53,7 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
     + `<p class="font-mono text-[12px] leading-[1.6] tracking-[0.08em] uppercase text-ink-2 m-0">${esc(opts.role)} · ${esc(opts.location)}</p>`
     + `<p class="text-[clamp(16px,min(1.35vw,2.4vh),20px)] leading-[1.5] text-ink-2 m-0 max-w-[50ch] text-pretty">${esc(opts.intro)}</p>`
     + `<div class="flex flex-wrap gap-2.5 pt-1">`
-    + `<a href="${esc(opts.caseHref)}" class="mg-btn-solid">${esc(ui.readCase)}${icon("arrow-right", "size-4")}</a>`
+    + (projects.find((p) => p.case) ? `<a href="${esc(caseLink(opts.caseHref, projects.find((p) => p.case).case))}" class="mg-btn-solid">${esc(ui.readCase)}${icon("arrow-right", "size-4")}</a>` : "")
     + `<a id="hero-cv" href="${esc(opts.cvUrl)}" class="mg-btn-ghost">${esc(ui.cv)}${icon("arrow-down", "size-4")}</a>`
     + `</div></div>`
     + `<div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 pt-4 border-t border-rule">`
@@ -77,6 +77,9 @@ export function releaseHeroHtml(projects: Any[], ui: Any, opts: {
 }
 
 /* ---------- § 01 — Trabajo: destacado + filas desplegables (5.5) ---------- */
+
+/** `caseHref` es la base de casos ("/casos/"); cada proyecto con caso enlaza a su página. */
+export const caseLink = (base: string, slug: string) => `${base.replace(/\/+$/, "")}/${slug}/`;
 
 function codeLinks(pr: Any, ui: Any) {
   const links = pr.links || {};
@@ -125,7 +128,7 @@ export function workHtml(projects: Any[], ui: Any, opts: { caseHref: string; ope
         + `</div>` : "")
       + `<div class="flex flex-wrap items-baseline gap-x-7 gap-y-3">`
       + (pr.role ? `<span class="${kicker}">${esc(ui.roleL)} · <span class="text-ink">${esc(pr.role)}</span></span>` : "")
-      + `<a href="${esc(opts.caseHref)}" class="mg-btn-primary">${esc(ui.readCase)}${arrow}</a>${codeLinks(pr, ui)}</div>`
+      + (pr.case ? `<a href="${esc(caseLink(opts.caseHref, pr.case))}" class="mg-btn-primary">${esc(ui.readCase)}${arrow}</a>` : "") + `${codeLinks(pr, ui)}</div>`
       + `</div></div>`;
   }).join("");
   const list = rest.length

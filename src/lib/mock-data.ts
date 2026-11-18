@@ -10,7 +10,6 @@
 import { profiles, pick, ui, type Profile } from '../data/content';
 import { fullName, site } from '../data/site';
 import type {
-  CaseStudyDto,
   CertificationDto,
   EducationDto,
   Edition,
@@ -339,44 +338,6 @@ const publicationsEn: PublicationDto[] = [
   },
 ];
 
-const casesEs: CaseStudyDto[] = [
-  {
-    slug: 'payments-platform',
-    projectSlug: 'payments-platform',
-    title: 'Plataforma de pagos',
-    deck: 'Cómo rediseñamos la conciliación de pagos para 4.000 comercios sin detener el servicio.',
-    quote: 'El panel fue lo visible; el libro contable fue lo que resolvió el problema.',
-    nextCaseSlug: 'collaborative-editor',
-  },
-  {
-    slug: 'churn-prediction',
-    projectSlug: 'churn-prediction',
-    title: 'Predicción de abandono',
-    deck: 'Un modelo de churn que el equipo comercial entiende, usa y en el que confía.',
-    quote: 'Un modelo que nadie entiende es un modelo que nadie usa.',
-    nextCaseSlug: 'recommendation-engine',
-  },
-];
-
-const casesEn: CaseStudyDto[] = [
-  {
-    slug: 'payments-platform',
-    projectSlug: 'payments-platform',
-    title: 'Payments platform',
-    deck: 'How we redesigned payment reconciliation for 4,000 merchants without stopping the service.',
-    quote: 'The dashboard was what people saw; the ledger is what solved the problem.',
-    nextCaseSlug: 'collaborative-editor',
-  },
-  {
-    slug: 'churn-prediction',
-    projectSlug: 'churn-prediction',
-    title: 'Churn prediction',
-    deck: 'A churn model the sales team understands, uses and trusts.',
-    quote: 'A model nobody understands is a model nobody uses.',
-    nextCaseSlug: 'recommendation-engine',
-  },
-];
-
 export const mockData: Record<
   Lang,
   {
@@ -387,7 +348,6 @@ export const mockData: Record<
     certifications: CertificationDto[];
     publications: PublicationDto[];
     education: EducationDto[];
-    cases: CaseStudyDto[];
   }
 > = {
   es: {
@@ -398,7 +358,6 @@ export const mockData: Record<
     certifications: certificationsEs,
     publications: publicationsEs,
     education: educationFor('es'),
-    cases: casesEs,
   },
   en: {
     profile: profileFor('en'),
@@ -408,6 +367,5 @@ export const mockData: Record<
     certifications: certificationsEn,
     publications: publicationsEn,
     education: educationFor('en'),
-    cases: casesEn,
   },
 };

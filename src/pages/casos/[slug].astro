@@ -1,0 +1,11 @@
+---
+// Casos de estudio (es): una página por caso del repo de datos, generada en build.
+// Siempre desde GitHub (aunque el home use mock): sin datos, el build falla en vez de publicar enlaces rotos.
+import CasePage from "../../components/CasePage.astro";
+import { caseStaticPaths } from "../../lib/case-paths";
+
+export const getStaticPaths = () => caseStaticPaths("es");
+const { c, nextTitle } = Astro.props;
+---
+
+<CasePage lang="es" c={c} nextTitle={nextTitle} />
